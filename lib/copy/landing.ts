@@ -13,7 +13,8 @@ export const landing = {
       file: {
         step: '1. Eksport z Meta Business Suite',
         fileName: 'posty-wrzesien.csv',
-        posts: '31 publikacji',
+        /** „31 publikacji” — liczba z raportu przykładowego, formy [1, 2–4, 5+]. */
+        posts: ['publikacja', 'publikacje', 'publikacji'] as const,
       },
       numbers: { step: '2. Trzy liczby z panelu' },
       send: { step: '3. Pobierz PDF', button: 'Pobierz PDF' },
@@ -71,10 +72,12 @@ export const landing = {
     lead: 'Płacisz Ty, nie Twoi klienci.',
     now: 'Teraz: za darmo, PDF ze stopką »Przygotowano w Sedno«.',
     soon: 'Wkrótce',
-    mostPopular: 'Najczęściej wybierany',
+    // Bez plakietki „Najczęściej wybierany”: nikt jeszcze nie wybierał, to byłaby zmyślona dana (zasada 6).
     perMonth: 'netto / miesiąc',
-    /** „do 10 klientów” */
-    clients: (n: number) => `do ${n} klientów`,
+    /** „do 10 klientów” (po „do” zawsze dopełniacz: „do 1 klienta”, „do 10 klientów”). */
+    clients: (n: number) => `do ${n} ${n === 1 ? 'klienta' : 'klientów'}`,
+    /** Separator ceny i limitu klientów: „netto / miesiąc · do 10 klientów”. */
+    separator: ' · ',
     free: {
       caption: 'bez konta',
       features: [
@@ -97,7 +100,9 @@ export const landing = {
     notify: 'Powiadom mnie o starcie',
     /** „Wkrótce także pojedynczy raport bez abonamentu: 9 zł netto.” */
     single: (price: string) => `Wkrótce także pojedynczy raport bez abonamentu: ${price} netto.`,
-    footnote: 'Ceny netto, doliczamy 23% VAT. Płatności uruchomimy razem z planem Solo.',
+    /** „Ceny netto, doliczamy 23% VAT. …” — stawka z config/pricing.ts. */
+    footnote: (vatPercent: number) =>
+      `Ceny netto, doliczamy ${vatPercent}% VAT. Płatności uruchomimy razem z planem Solo.`,
   },
   faq: {
     title: 'Pytania',
@@ -145,5 +150,44 @@ export const landing = {
     title: 'Przykładowy raport',
     lead: 'Tak wygląda raport, który dostaje klient: na telefonie i w PDF. Dane i marki są przykładowe.',
     cta: 'Zrób własny raport',
+    /** Etykieta raportu dla czytników ekranu. */
+    reportLabel: 'Przykładowy raport dla klienta',
+  },
+  template: {
+    /** Gdy szablonu jeszcze nie ma (brak NEXT_PUBLIC_TEMPLATE_URL). */
+    soonBody: 'Szablon przygotowujemy. Do tego czasu raport zrobisz w Sedno, bez zakładania konta.',
+  },
+  guides: {
+    title: 'Poradniki',
+    lead: 'Jak przygotować miesięczny raport z Instagrama dla klienta: eksport, liczby z panelu i komentarz.',
+    draft: 'Szkic',
+    /** Oznaczenie artykułu, który ma tylko nagłówki i miejsca na zrzuty ekranu. */
+    draftNotice: 'Szkic — zrzuty ekranu w przygotowaniu',
+    planned: 'Planowane',
+    plannedLead: 'Te artykuły dopiero piszemy.',
+    back: 'Wszystkie poradniki',
+  },
+  notFound: {
+    title: 'Nie ma takiej strony',
+    body: 'Adres może mieć literówkę albo strona została przeniesiona.',
+    home: 'Wróć na stronę główną',
+  },
+  /** Opisy stron dla wyszukiwarek i podglądów linków (bez cen i bez zmyślonych liczb). */
+  seo: {
+    home: {
+      description:
+        'Miesięczny raport z Instagrama dla klienta: wgrywasz eksport z Meta Business Suite, dopisujesz trzy liczby i pobierasz PDF. Bez łączenia kont, plik zostaje w przeglądarce.',
+    },
+    example: {
+      description:
+        'Przykładowy raport Sedno dla lokalnej firmy: rezerwacje, telefony i dojazdy na górze, wyświetlenia niżej. Dane przykładowe.',
+    },
+    template: {
+      description: 'Darmowy szablon raportu z Instagrama dla klienta: arkusz i szablon w Canvie z układem Sedno.',
+    },
+    guides: {
+      description:
+        'Poradniki Sedno o miesięcznym raporcie z Instagrama dla klienta: eksport z Meta Business Suite, liczby z panelu i komentarz.',
+    },
   },
 } as const;
