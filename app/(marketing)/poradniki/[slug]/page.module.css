@@ -1,0 +1,61 @@
+/* Poradnik: tekst w kolumnie --container-text (do 64 znaków w wierszu, brand/docs/0-zasady-marki.md). */
+
+.page {
+  max-width: calc(var(--container-text) + 2 * var(--space-7));
+  margin: 0 auto;
+  padding: var(--space-7) var(--space-7) var(--space-9);
+  display: grid;
+  gap: var(--space-5);
+  justify-items: start;
+}
+
+.back a {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.draft {
+  white-space: normal;
+}
+
+.article {
+  display: grid;
+  gap: var(--space-4);
+  width: 100%;
+}
+
+.article > h1 {
+  margin-bottom: var(--space-2);
+}
+
+.article > h2 {
+  margin-top: var(--space-6);
+}
+
+.article > h3 {
+  margin-top: var(--space-3);
+}
+
+/* Miejsce na zrzut ekranu: ramka przerywana jak pole wgrywania w marce (sd-upload). */
+.screenshot {
+  padding: var(--space-5);
+  border: 2px dashed var(--line-strong);
+  border-radius: var(--radius-m);
+  background: var(--surface);
+  color: var(--ink-secondary);
+}
+
+@media (max-width: 767px) {
+  .page {
+    padding: var(--space-5) var(--space-4) var(--space-8);
+  }
+
+  .screenshot {
+    padding: var(--space-4);
+  }
+
+  .back a {
+    min-height: var(--control-l);
+  }
+}

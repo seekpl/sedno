@@ -6,6 +6,21 @@
   display: none;
 }
 
+.button {
+  position: relative;
+}
+
+/* Cel dotyku 48 × 48 px na telefonie (brand/docs/5-ekrany.md) przy przycisku 32 px z marki:
+   niewidoczne pole wokół przycisku, wygląd bez zmian. */
+@media (max-width: 767px) {
+  .button::after {
+    content: '';
+    position: absolute;
+    inset: calc((var(--control-s) - var(--control-l)) / 2);
+    border-radius: var(--radius-pill);
+  }
+}
+
 @media (max-width: 479px) {
   .long {
     position: absolute;

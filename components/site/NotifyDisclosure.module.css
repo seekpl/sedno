@@ -1,0 +1,50 @@
+/* Bez display: grid na <details> — zamknięta treść zostawiałaby odstęp siatki pod przyciskiem. */
+.disclosure {
+  display: block;
+}
+
+/* Podsumowanie wygląda jak sd-btn: bez znacznika trójkąta, z widocznym fokusem (brand: 2 px --focus). */
+.summary {
+  list-style: none;
+}
+
+.summary::-webkit-details-marker {
+  display: none;
+}
+
+.summary::marker {
+  content: '';
+}
+
+.summary:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.disclosure[open] > .summary,
+.disclosure:has(:global(.sd-alert), :global(.sd-field--error)) > .summary {
+  background: var(--surface-sunken);
+}
+
+/*
+ * Wynik zapisu bez JavaScriptu: formularz wysyła się zwykłym POST, a nowa strona przychodzi z zamkniętym
+ * <details> — komunikat sukcesu albo błąd byłby ukryty. Gdy w środku jest komunikat (sd-alert) albo pole
+ * z błędem, treść jest widoczna także przy zamkniętym <details>. Klasy pochodzą z WaitlistForm
+ * (Alert, TextField, pole zgody); pilnuje tego tests/unit/site-notify.test.tsx.
+ */
+.disclosure:has(:global(.sd-alert), :global(.sd-field--error))::details-content {
+  content-visibility: visible;
+}
+
+.body {
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--line);
+}
+
+/* Telefon: cel dotyku 48 px (PROMPT.md §15). */
+@media (max-width: 767px) {
+  .summary {
+    height: var(--control-l);
+  }
+}

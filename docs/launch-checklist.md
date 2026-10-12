@@ -33,5 +33,6 @@ Zadania właściciela i warunki, które muszą być spełnione przed publikacją
 ## Marka i prawo
 
 - [ ] Wynik sprawdzenia znaku „Sedno” (UPRP, EUIPO) i dostępność domeny.
+- [ ] Adres kontaktowy i dane firmy na /kontakt (dziś „[DO UZUPEŁNIENIA]”, a FAQ prowadzi tam „Napisz do nas”).
 - [ ] Faktury: system zgodny z KSeF wybrany z księgową (Sedno nie wystawia faktur samo).
 - [ ] Darmowy szablon gotowy i `NEXT_PUBLIC_TEMPLATE_URL` ustawione (inaczej strona pokazuje „Wkrótce”).

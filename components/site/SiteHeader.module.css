@@ -48,6 +48,12 @@
   display: none;
 }
 
+/* <summary> nie jest objęty globalnym :focus-visible z brand/components.css — ten sam obrys 2 px. */
+.menuButton:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
 .menuList {
   position: absolute;
   left: var(--space-4);
@@ -80,6 +86,13 @@
   .inner {
     height: 60px;
     padding-inline: var(--space-4);
+  }
+
+  /* Cel dotyku 48 px (brand/docs/5-ekrany.md): link logo ma wysokość przycisku menu, logo dalej 22 px. */
+  .home {
+    display: flex;
+    align-items: center;
+    min-height: var(--control-l);
   }
 
   .logo {

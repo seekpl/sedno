@@ -23,6 +23,7 @@ export function MonthSwitcher({ month, onChange, max, min }: MonthSwitcherProps)
     <div className="sd-month" role="group" aria-label={copy.ui.month}>
       <button
         type="button"
+        className={styles.button}
         aria-label={copy.ui.prevMonth}
         aria-disabled={prevBlocked || undefined}
         onClick={() => !prevBlocked && onChange(prev)}
@@ -37,6 +38,7 @@ export function MonthSwitcher({ month, onChange, max, min }: MonthSwitcherProps)
       </span>
       <button
         type="button"
+        className={styles.button}
         aria-label={copy.ui.nextMonth}
         aria-disabled={nextBlocked || undefined}
         onClick={() => !nextBlocked && onChange(next)}

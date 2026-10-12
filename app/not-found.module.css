@@ -1,0 +1,38 @@
+.site {
+  background: var(--paper);
+  color: var(--ink);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.main {
+  flex: 1;
+  width: 100%;
+  max-width: calc(var(--container-text) + 2 * var(--space-7));
+  margin: 0 auto;
+  padding: var(--space-9) var(--space-7);
+  display: grid;
+  gap: var(--space-4);
+  align-content: start;
+  justify-items: start;
+}
+
+.home {
+  margin-top: var(--space-2);
+}
+
+@media (max-width: 767px) {
+  .main {
+    padding: var(--space-7) var(--space-4);
+  }
+
+  h1.title {
+    font-size: 32px; /* ref: brand/reference/screens/EkranLandingMobile.html (nagłówki sekcji 32/36) */
+    line-height: 36px;
+  }
+
+  .home {
+    width: 100%;
+  }
+}

@@ -1,0 +1,12 @@
+/* .note-ex z brand/reference/screens/EkranLanding.html */
+.note {
+  display: inline-block;
+  justify-self: start;
+  margin: 0;
+  padding: 1px var(--space-2); /* ref: brand/reference/screens/EkranLanding.html .note-ex */
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  font-size: 12px; /* ref: brand/reference/screens/EkranLanding.html .note-ex */
+  line-height: 16px;
+  color: var(--ink-muted);
+}

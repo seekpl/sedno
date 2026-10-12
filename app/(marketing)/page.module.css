@@ -1,0 +1,485 @@
+/*
+ * Strona główna: brand/reference/screens/EkranLanding.html (od 1024 px) i EkranLandingMobile.html (390 px).
+ * Wartości z tokenów; liczby spoza skali odstępów przepisane z makiety z komentarzem „ref:”.
+ */
+
+.container {
+  width: 100%;
+  max-width: var(--container-site);
+  margin: 0 auto;
+  padding-inline: var(--space-7);
+}
+
+/* Pas na powierzchni (Jak to działa, Cennik). */
+.band {
+  background: var(--surface);
+  border-block: 1px solid var(--line);
+}
+
+h2.sectionTitle {
+  max-width: 20em;
+}
+
+.sectionHead {
+  display: grid;
+  gap: var(--space-2);
+}
+
+/* ---------- Hero ---------- */
+
+.hero {
+  padding-block: var(--space-8);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 56px; /* ref: brand/reference/screens/EkranLanding.html (hero) */
+  align-items: center;
+}
+
+.heroText {
+  display: grid;
+  gap: var(--space-5);
+  align-content: start;
+  min-width: 0;
+}
+
+.lead {
+  max-width: 34em;
+}
+
+.ctas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.flow {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.flowSteps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.flowCard {
+  padding: 14px; /* ref: brand/reference/screens/EkranLanding.html (kroki przepływu) */
+  display: grid;
+  gap: 10px; /* ref: brand/reference/screens/EkranLanding.html (kroki przepływu) */
+  align-content: start;
+  box-shadow: var(--shadow-1);
+}
+
+.flowFile :global(.sd-file) {
+  padding: var(--space-2) 10px; /* ref: brand/reference/screens/EkranLanding.html (chip pliku) */
+}
+
+.flowFile :global(.sd-file__name) {
+  font-size: 13px; /* ref: brand/reference/screens/EkranLanding.html (chip pliku) */
+}
+
+.flowBadge {
+  justify-self: start;
+}
+
+.flowNumbers {
+  margin: 0;
+  display: grid;
+  gap: 6px; /* ref: brand/reference/screens/EkranLanding.html (trzy liczby) */
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.flowNumber {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px; /* ref: brand/reference/screens/EkranLanding.html (trzy liczby) */
+}
+
+.flowNumber dd {
+  margin: 0;
+  font-weight: 700;
+}
+
+/* Ilustracja przycisku: nie reaguje na wskaźnik, bo na tej stronie nic nie robi. */
+.flowButton {
+  cursor: default;
+  pointer-events: none;
+}
+
+.heroPhone {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-2);
+}
+
+.phone {
+  zoom: 0.8; /* ref: brand/reference/screens/EkranLanding.html (zoom:.8) */
+}
+
+.heroPhone .phoneNote {
+  justify-self: center;
+}
+
+/* ---------- Jak to działa ---------- */
+
+.how {
+  padding-block: 72px; /* ref: brand/reference/screens/EkranLanding.html (sekcje na pasie) */
+  display: grid;
+  gap: 40px; /* ref: brand/reference/screens/EkranLanding.html (Jak to działa) */
+}
+
+.steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 40px; /* ref: brand/reference/screens/EkranLanding.html (Jak to działa) */
+}
+
+.step {
+  display: grid;
+  gap: var(--space-2);
+  align-content: start;
+}
+
+.stepNumber {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 44px; /* ref: brand/reference/screens/EkranLanding.html (numer kroku) */
+  line-height: 44px;
+  color: var(--pen);
+}
+
+/* ---------- Efekty przed zasięgami ---------- */
+
+.effects {
+  padding-block: 80px; /* ref: brand/reference/screens/EkranLanding.html (Efekty przed zasięgami) */
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-7);
+  align-items: center;
+}
+
+.effectsText {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.effectsText p {
+  max-width: var(--container-text);
+}
+
+.compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+.compareCard {
+  display: grid;
+  gap: 10px; /* ref: brand/reference/screens/EkranLanding.html (karty porównania) */
+  align-content: start;
+}
+
+.compareCard b {
+  font-weight: 700;
+}
+
+.compareSedno {
+  border: 2px solid var(--pen);
+}
+
+.sednoValue {
+  font-weight: 700;
+  font-size: 44px; /* ref: brand/reference/screens/EkranLanding.html (liczba w raporcie Sedno) */
+  line-height: 48px;
+}
+
+.sednoRest {
+  font-size: 15px; /* ref: brand/reference/screens/EkranLanding.html (raport Sedno) */
+}
+
+.compareNote {
+  margin-top: var(--space-1);
+}
+
+/* ---------- Twoja marka, Pliki i prywatność ---------- */
+
+.infoCards {
+  padding-bottom: 80px; /* ref: brand/reference/screens/EkranLanding.html (dwie karty) */
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-5);
+}
+
+.infoCard {
+  display: grid;
+  gap: 10px; /* ref: brand/reference/screens/EkranLanding.html (dwie karty) */
+  align-content: start;
+}
+
+.infoHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-3);
+}
+
+.iconTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px; /* ref: brand/reference/screens/EkranLanding.html (Pliki i prywatność) */
+}
+
+/* ---------- Cennik ---------- */
+
+.pricing {
+  padding-block: 72px; /* ref: brand/reference/screens/EkranLanding.html (sekcje na pasie) */
+  display: grid;
+  gap: var(--space-6);
+}
+
+.plans {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px; /* ref: brand/reference/screens/EkranLanding.html (karty planów) */
+  /* Otwarty formularz w jednej karcie nie rozciąga pozostałych. */
+  align-items: start;
+}
+
+.pricingNotes {
+  display: grid;
+  gap: var(--space-1);
+}
+
+/* ---------- Pytania ---------- */
+
+.faq {
+  padding-block: 72px; /* ref: brand/reference/screens/EkranLanding.html (Pytania) */
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap: var(--space-7);
+}
+
+.faqHead {
+  display: grid;
+  gap: var(--space-4);
+  align-content: start;
+}
+
+.faqList {
+  display: grid;
+  gap: var(--space-3);
+  align-content: start;
+}
+
+/* Cała linia pytania jest celem kliknięcia (padding na <summary>, nie na karcie). */
+.faqItem {
+  padding: 0;
+}
+
+.faqQuestion {
+  padding: var(--space-4) 20px; /* ref: brand/reference/screens/EkranLanding.html (pytanie) */
+  font-weight: 700;
+  cursor: pointer;
+  border-radius: var(--radius-m);
+}
+
+.faqQuestion:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.faqAnswer {
+  margin-top: calc(-1 * var(--space-2));
+  padding: 0 20px var(--space-4); /* ref: brand/reference/screens/EkranLanding.html (odpowiedź) */
+}
+
+/* ---------- Darmowe narzędzia ---------- */
+
+.tools {
+  padding-bottom: 72px; /* ref: brand/reference/screens/EkranLanding.html (Darmowe narzędzia) */
+  display: grid;
+  gap: 20px; /* ref: brand/reference/screens/EkranLanding.html (Darmowe narzędzia) */
+}
+
+.toolsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px; /* ref: brand/reference/screens/EkranLanding.html (Darmowe narzędzia) */
+}
+
+.toolCard {
+  display: grid;
+  gap: 10px; /* ref: brand/reference/screens/EkranLanding.html (Darmowe narzędzia) */
+  align-content: start;
+  justify-items: start;
+}
+
+/* ---------- Pas CTA ---------- */
+
+.ctaBand {
+  background: var(--secondary);
+  color: var(--on-secondary);
+}
+
+/* Obrys fokusu na ciemnym pasie w kolorze tekstu pasa — ta sama grubość i odstęp co w marce. */
+.ctaBand :focus-visible {
+  outline-color: var(--on-secondary);
+}
+
+.ctaBandInner {
+  padding-block: var(--space-8);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-6);
+}
+
+h2.ctaTitle {
+  max-width: 16em;
+  /* Dwie równe linie jak w makiecie („…raport / za wrzesień…”). */
+  text-wrap: balance;
+}
+
+/* ---------- Tablet: jedna kolumna w hero (raport pod tekstem) ---------- */
+
+@media (max-width: 1023px) {
+  .hero {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-6);
+  }
+
+  .effects,
+  .faq {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-5);
+  }
+}
+
+/* ---------- Telefon (EkranLandingMobile.html) ---------- */
+
+@media (max-width: 767px) {
+  .container {
+    padding-inline: var(--space-4);
+  }
+
+  .hero {
+    padding-top: var(--space-6);
+    padding-bottom: var(--space-5);
+    gap: var(--space-6);
+  }
+
+  .heroText {
+    gap: 20px; /* ref: brand/reference/screens/EkranLandingMobile.html (hero) */
+  }
+
+  h1.heroTitle {
+    font-size: 40px; /* ref: brand/reference/screens/EkranLandingMobile.html (hero 40/44) */
+    line-height: 44px;
+  }
+
+  .lead.lead {
+    font-size: 17px; /* ref: brand/reference/screens/EkranLandingMobile.html (podtytuł) */
+    line-height: 26px;
+  }
+
+  .ctas {
+    display: grid;
+    gap: 20px; /* ref: brand/reference/screens/EkranLandingMobile.html (CTA) */
+  }
+
+  .ctas > a {
+    width: 100%;
+  }
+
+  /* Kroki przepływu powtarza sekcja „Jak to działa” tuż pod raportem — makieta telefonu ich nie ma. */
+  .flow {
+    display: none;
+  }
+
+  .phone {
+    zoom: 0.86; /* ref: brand/reference/screens/EkranLandingMobile.html (zoom:.86) */
+  }
+
+  h2.sectionTitle {
+    font-size: 32px; /* ref: brand/reference/screens/EkranLandingMobile.html (Jak to działa 32/36) */
+    line-height: 36px;
+  }
+
+  .how {
+    padding-block: var(--space-6);
+    gap: var(--space-5);
+  }
+
+  .steps {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-5);
+  }
+
+  .effects,
+  .pricing,
+  .faq {
+    padding-block: var(--space-7);
+  }
+
+  .infoCards,
+  .tools {
+    padding-bottom: var(--space-7);
+  }
+
+  .infoCards,
+  .toolsGrid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+  }
+
+  .plans {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* Cele dotyku 48 px (PROMPT.md §15). */
+  .plans :global(.sd-btn) {
+    height: var(--control-l);
+  }
+
+  .faqQuestion {
+    min-height: var(--control-l);
+    padding-block: var(--space-3);
+  }
+
+  /* Samodzielne linki („Pobierz szablon” w karcie, „Napisz do nas” przy pytaniach): też cel dotyku 48 px. */
+  .toolLink,
+  .contactLink {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--control-l);
+  }
+
+  .faqAnswer {
+    margin-top: calc(-1 * var(--space-1));
+  }
+
+  .ctaBandInner {
+    padding-block: var(--space-7);
+    gap: var(--space-5);
+  }
+
+  .ctaBandInner > a {
+    width: 100%;
+  }
+}
+
+@media (max-width: 559px) {
+  .compare {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

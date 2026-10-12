@@ -16,7 +16,11 @@ export const landing = {
         /** „31 publikacji” — liczba z raportu przykładowego, formy [1, 2–4, 5+]. */
         posts: ['publikacja', 'publikacje', 'publikacji'] as const,
       },
-      numbers: { step: '2. Trzy liczby z panelu' },
+      numbers: {
+        step: '2. Trzy liczby z panelu',
+        /** Nazwa przycisku z Instagrama w cudzysłowie: „Zarezerwuj”. */
+        button: (name: string) => `„${name}”`,
+      },
       send: { step: '3. Pobierz PDF', button: 'Pobierz PDF' },
     },
     phoneLabel: 'Przykładowy raport na telefonie',
@@ -148,7 +152,8 @@ export const landing = {
   example: {
     badge: 'Dane przykładowe',
     title: 'Przykładowy raport',
-    lead: 'Tak wygląda raport, który dostaje klient: na telefonie i w PDF. Dane i marki są przykładowe.',
+    // Faza 1: klient dostaje PDF (link dopiero z kontami, docs/decisions.md, p. 17).
+    lead: 'Tak wygląda raport dla klienta. PDF ma ten sam układ na arkuszu A4. Dane i marki są przykładowe.',
     cta: 'Zrób własny raport',
     /** Etykieta raportu dla czytników ekranu. */
     reportLabel: 'Przykładowy raport dla klienta',
@@ -166,6 +171,8 @@ export const landing = {
     planned: 'Planowane',
     plannedLead: 'Te artykuły dopiero piszemy.',
     back: 'Wszystkie poradniki',
+    /** Miejsce na zrzut ekranu w szkicu: „[ZRZUT EKRANU: panel profesjonalny…]” (PROMPT.md §12). */
+    screenshot: (what: string) => `[ZRZUT EKRANU: ${what}]`,
   },
   notFound: {
     title: 'Nie ma takiej strony',
@@ -183,7 +190,8 @@ export const landing = {
         'Przykładowy raport Sedno dla lokalnej firmy: rezerwacje, telefony i dojazdy na górze, wyświetlenia niżej. Dane przykładowe.',
     },
     template: {
-      description: 'Darmowy szablon raportu z Instagrama dla klienta: arkusz i szablon w Canvie z układem Sedno.',
+      description:
+        'Darmowy szablon raportu z Instagrama dla klienta: arkusz i szablon w Canvie z układem Sedno.',
     },
     guides: {
       description:

@@ -3,7 +3,10 @@
 }
 
 .home {
-  display: block;
+  /* Cel dotyku 48 px wysokości przy logo 24 px; pasek jest wyższy, więc wygląd bez zmian. */
+  display: flex;
+  align-items: center;
+  min-height: var(--control-l);
   flex: none;
 }
 

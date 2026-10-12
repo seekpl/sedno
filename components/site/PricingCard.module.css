@@ -1,0 +1,55 @@
+/* Karta planu: brand/reference/screens/EkranLanding.html, sekcja Cennik. */
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px; /* ref: brand/reference/screens/EkranLanding.html (karta planu) */
+}
+
+.highlighted {
+  border: 2px solid var(--pen);
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.priceBlock {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.price {
+  font-weight: 700;
+  font-size: 40px; /* ref: brand/reference/screens/EkranLanding.html (cena) */
+  line-height: 44px;
+}
+
+.features {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-2);
+  font-size: 15px; /* ref: brand/reference/screens/EkranLanding.html (lista cech) */
+  line-height: 22px;
+  color: var(--ink-secondary);
+}
+
+.features li {
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-start;
+}
+
+.check {
+  margin-top: 3px; /* ref: brand/reference/screens/EkranLanding.html (ikona przy pierwszej linii) */
+}
+
+.action {
+  display: grid;
+  margin-top: auto;
+}

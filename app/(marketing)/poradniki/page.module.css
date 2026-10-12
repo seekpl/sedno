@@ -1,0 +1,51 @@
+.page {
+  max-width: calc(var(--container-text) + 2 * var(--space-7));
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-7) var(--space-9);
+  display: grid;
+  gap: var(--space-6);
+}
+
+.head {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-4);
+}
+
+.card {
+  display: grid;
+  gap: var(--space-2);
+  justify-items: start;
+}
+
+.planned {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.plannedList {
+  margin: var(--space-2) 0 0;
+  padding-left: var(--space-5);
+  display: grid;
+  gap: var(--space-2);
+  color: var(--ink-secondary);
+}
+
+@media (max-width: 767px) {
+  .page {
+    padding: var(--space-6) var(--space-4) var(--space-8);
+    gap: var(--space-5);
+  }
+
+  h1.title {
+    font-size: 32px; /* ref: brand/reference/screens/EkranLandingMobile.html (nagłówki sekcji 32/36) */
+    line-height: 36px;
+  }
+}

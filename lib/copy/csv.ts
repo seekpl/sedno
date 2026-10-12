@@ -3,6 +3,7 @@
  * Tytuł to pierwsze zdanie tekstu z §14, treść — reszta.
  */
 import type { RequiredField } from '@/lib/csv/types';
+import { plural } from '@/lib/i18n/pl';
 
 /** Nazwy kolumn w komunikatach (jak w polskim interfejsie Meta Business Suite — do potwierdzenia, §19). */
 export const columnNames: Record<RequiredField, string> = {
@@ -48,9 +49,9 @@ export const csv = {
     W_INCOMPLETE_MONTH: {
       /** „Eksport kończy się 27 września” */
       title: (date: string) => `Eksport kończy się ${date}`,
-      /** „Porównanie z sierpniem obejmie 27 dni, nie 30. Wgraj pełny plik albo zostaw przypis w raporcie.” */
+      /** „Porównanie z sierpniem obejmie 27 dni, nie 30. Wgraj pełny plik albo zostaw przypis w raporcie.” („1 dzień”) */
       body: (previousIns: string, days: number, monthDays: number) =>
-        `Porównanie z ${previousIns} obejmie ${days} dni, nie ${monthDays}. Wgraj pełny plik albo zostaw przypis w raporcie.`,
+        `Porównanie z ${previousIns} obejmie ${days} ${plural(days, ['dzień', 'dni', 'dni'])}, nie ${monthDays}. Wgraj pełny plik albo zostaw przypis w raporcie.`,
     },
     W_MONTH_IN_PROGRESS: {
       /** „Październik jeszcze trwa” */

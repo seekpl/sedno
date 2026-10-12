@@ -1,0 +1,359 @@
+/*
+ * Układ narzędzia /nowy (EkranWgrywanie.html — telefon, EkranUzupelnij.html — od 1024 px).
+ * Wygląd kontrolek wyłącznie z klas sd-* (brand/components.css); tu tylko układ i odstępy z tokenów.
+ */
+
+.main {
+  max-width: var(--container-app);
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-7) var(--space-8);
+}
+
+@media (max-width: 767px) {
+  .main {
+    padding: var(--space-4) var(--space-4) var(--space-7);
+  }
+}
+
+/* ---------- Nagłówek kroku ---------- */
+
+.header {
+  display: grid;
+  gap: var(--space-1);
+}
+
+/* Telefon: heading-2 (24/30), od 768 px: heading-1 (32/38) jak h1 w EkranUzupelnij.html. */
+.title:focus {
+  outline: none;
+}
+
+.title:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+@media (min-width: 768px) {
+  .title {
+    font-size: 32px; /* ref: brand/reference/screens/EkranUzupelnij.html .h1 (heading-1) */
+    line-height: 38px; /* ref: brand/reference/screens/EkranUzupelnij.html .h1 (heading-1) */
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+}
+
+.wideHeader {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.steps {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+/* ---------- Krok 1: wąska kolumna ---------- */
+
+.narrow {
+  max-width: var(--container-text);
+  margin-inline: auto;
+  display: grid;
+  gap: var(--space-4);
+}
+
+/* Podpowiedź w polu wgrywania: z przeciąganiem na komputerze, bez niego na telefonie. */
+.coarseHint {
+  display: none;
+}
+
+@media (pointer: coarse), (max-width: 767px) {
+  .fineHint {
+    display: none;
+  }
+
+  .coarseHint {
+    display: inline;
+  }
+}
+
+.parsing {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.skeletons {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.progress {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.howTo {
+  justify-self: start;
+  font-size: 15px; /* ref: brand/reference/screens/EkranWgrywanie.html */
+}
+
+@media (pointer: coarse), (max-width: 767px) {
+  .howTo {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--control-l);
+  }
+}
+
+.form {
+  display: grid;
+  gap: var(--space-5);
+  align-content: start;
+  min-width: 0;
+}
+
+.fields {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+/* ---------- Krok 2: efekty ---------- */
+
+.effects {
+  display: grid;
+  gap: var(--space-6);
+  align-items: start;
+}
+
+@media (min-width: 1024px) {
+  .effects {
+    grid-template-columns: minmax(0, 1fr) 380px; /* ref: brand/reference/screens/EkranUzupelnij.html (podgląd w zoom 0.9) */
+  }
+}
+
+@media (min-width: 1280px) {
+  .effects {
+    grid-template-columns: minmax(0, 1fr) 460px; /* ref: brand/reference/screens/EkranUzupelnij.html */
+  }
+}
+
+@media (max-width: 767px) {
+  .form {
+    gap: var(--space-4);
+  }
+}
+
+.fileRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+}
+
+.fileRow > :first-child {
+  flex: 1 1 240px;
+  min-width: 0;
+}
+
+.card {
+  display: grid;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.cardHead {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.cardLead {
+  color: var(--ink-secondary);
+}
+
+/* Trzy pola efektów obok siebie, gdy jest miejsce (EkranUzupelnij.html), jedno pod drugim na telefonie. */
+.numbers {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  align-items: start;
+}
+
+.details {
+  border-top: 1px solid var(--line);
+  padding-top: var(--space-2);
+}
+
+.summary {
+  cursor: pointer;
+  padding-block: var(--space-2);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* <summary> nie ma globalnego fokusu z brand/components.css (a, button, input…): ten sam pierścień --focus. */
+.summary:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+@media (pointer: coarse), (max-width: 767px) {
+  .summary {
+    padding-block: var(--space-3);
+  }
+}
+
+.detailsBody {
+  display: grid;
+  gap: var(--space-4);
+  padding-top: var(--space-3);
+}
+
+/* Wybór kluczowej liczby: radio ukryte w etykiecie, wygląd plakietki sd-badge (EkranUzupelnij.html). */
+.fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+  display: grid;
+  gap: var(--space-2);
+}
+
+.fieldset > legend {
+  padding: 0;
+  margin-bottom: var(--space-2);
+}
+
+.options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.option {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.option:has(:focus-visible) > :global(.sd-badge) {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.optionUnavailable {
+  cursor: not-allowed;
+}
+
+.optionUnavailable > :global(.sd-badge) {
+  color: var(--ink-muted);
+}
+
+@media (pointer: coarse), (max-width: 767px) {
+  .option {
+    min-height: var(--control-l);
+  }
+}
+
+.hintIcon {
+  display: flex;
+  gap: var(--space-1);
+  align-items: flex-start;
+}
+
+.hintIcon > svg {
+  margin-top: 2px;
+  color: var(--info);
+}
+
+.inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+}
+
+.markText {
+  overflow-wrap: anywhere;
+}
+
+.noteLine {
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-start;
+  color: var(--ink-secondary);
+}
+
+.noteLine > svg {
+  margin-top: 2px;
+  color: var(--success);
+}
+
+.noteLine:focus {
+  outline: none;
+}
+
+.noteLine:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Podgląd na żywo od 1024 px: przyklejony obok formularza. */
+.live {
+  position: sticky;
+  top: var(--space-4);
+  display: grid;
+  gap: var(--space-2);
+  align-content: start;
+  min-width: 0;
+}
+
+/* ---------- Krok 3: podgląd i PDF ---------- */
+
+.preview {
+  max-width: var(--report-sheet);
+  margin-inline: auto;
+  display: grid;
+  gap: var(--space-4);
+}
+
+.soon {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--ink-secondary);
+}
+
+/* Arkusz jak w brand/reference/screens/EkranRaport.html (PDF A4) i na /przyklad. */
+.sheet {
+  border: 1px solid var(--report-line);
+  border-radius: var(--radius-l);
+  overflow: hidden;
+  background: var(--report-paper);
+  box-shadow: var(--shadow-2);
+}
+
+/* Telefon: raport na całą szerokość ekranu, bez ramki arkusza (jak /przyklad). */
+@media (max-width: 767px) {
+  .sheet {
+    margin-inline: calc(-1 * var(--space-4));
+    border: 0;
+    border-block: 1px solid var(--report-line);
+    border-radius: 0;
+    box-shadow: none;
+  }
+}

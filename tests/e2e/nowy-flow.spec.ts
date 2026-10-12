@@ -143,3 +143,47 @@ test('brak publikacji z wybranego miesiąca → przełączenie na miesiąc z pli
   await page.getByRole('button', { name: /Przełącz na Wrzesień 2026/ }).click();
   await expect(page.getByText('Wczytano 31 publikacji z września')).toBeVisible();
 });
+
+test('CTA ze strony głównej wczytuje /nowy jako nowy dokument z CSP z nonce', async ({ page }) => {
+  await page.goto('/');
+  const response = page.waitForResponse(
+    (r) => r.url().endsWith('/nowy?src=hero') && r.request().resourceType() === 'document',
+  );
+  await page.locator('a[href="/nowy?src=hero"]').click();
+  const csp = (await response).headers()['content-security-policy'] ?? '';
+  expect(csp).toMatch(/script-src 'nonce-[^']+' 'strict-dynamic' 'wasm-unsafe-eval'/);
+  expect(csp).toContain("connect-src 'self';");
+  // Parametr src znika z adresu po zapisaniu zdarzenia, a „Wstecz” po wyjściu wraca do narzędzia.
+  await expect(page).toHaveURL(/\/nowy$/);
+  await page.getByRole('link', { name: 'Sedno, strona główna' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Raport, który klient rozumie' })).toBeVisible();
+  await page.goBack();
+  await expect(page.getByRole('heading', { level: 1, name: /Wgraj eksport za/ })).toBeVisible();
+});
+
+test.describe('pasek /nowy na telefonie', () => {
+  test.use({ viewport: VIEWPORTS.phone });
+
+  test('logo i przełącznik miesiąca mają cel dotyku 48 × 48 px', async ({ page }) => {
+    await page.goto('/nowy');
+    const targets = [
+      page.getByRole('link', { name: 'Sedno, strona główna' }),
+      page.getByRole('button', { name: 'Poprzedni miesiąc' }),
+      page.getByRole('button', { name: 'Następny miesiąc' }),
+    ];
+    for (const target of targets) {
+      const hits = await target.evaluate((el) => {
+        const box = el.getBoundingClientRect();
+        const cx = box.left + box.width / 2;
+        const cy = box.top + box.height / 2;
+        return [
+          [-23, 0],
+          [23, 0],
+          [0, -23],
+          [0, 23],
+        ].map(([dx, dy]) => document.elementFromPoint(cx + dx!, cy + dy!)?.closest('a, button') === el);
+      });
+      expect(hits).toEqual([true, true, true, true]);
+    }
+  });
+});

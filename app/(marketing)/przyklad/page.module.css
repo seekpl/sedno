@@ -1,0 +1,68 @@
+/* Przykładowy raport: arkusz jak w brand/reference/screens/EkranRaport.html (PDF A4). */
+
+.page {
+  max-width: var(--container-site);
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-7) var(--space-9);
+  display: grid;
+  gap: var(--space-6);
+}
+
+.head {
+  display: grid;
+  gap: var(--space-3);
+  justify-items: start;
+  max-width: var(--report-sheet);
+  width: 100%;
+  margin-inline: auto;
+}
+
+.lead {
+  max-width: var(--container-text);
+}
+
+.sheet {
+  width: 100%;
+  max-width: var(--report-sheet);
+  margin-inline: auto;
+  background: var(--report-paper);
+  border: 1px solid var(--report-line);
+  border-radius: var(--radius-l);
+  box-shadow: var(--shadow-2);
+  overflow: hidden;
+}
+
+.cta {
+  display: flex;
+  justify-content: center;
+}
+
+/* Telefon: raport na całą szerokość, bez ramki arkusza (zapytanie kontenera w raporcie daje układ telefonu). */
+@media (max-width: 767px) {
+  .page {
+    padding: var(--space-6) 0 var(--space-7);
+    gap: var(--space-5);
+  }
+
+  .head,
+  .cta {
+    padding-inline: var(--space-4);
+  }
+
+  h1.title {
+    font-size: 32px; /* ref: brand/reference/screens/EkranLandingMobile.html (nagłówki sekcji 32/36) */
+    line-height: 36px;
+  }
+
+  .sheet {
+    border: 0;
+    border-block: 1px solid var(--report-line);
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .cta > a {
+    width: 100%;
+    height: var(--control-l);
+  }
+}
