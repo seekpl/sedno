@@ -1,0 +1,14 @@
+.figure {
+  margin: 0;
+  max-width: 100%;
+}
+
+/* Ramka telefonu z makiet (klasa .phone w brand/reference/screens/*.html). */
+.phone {
+  width: 390px;
+  max-width: 100%;
+  border: 8px solid var(--line-strong);
+  border-radius: 44px; /* ref: brand/reference/screens/EkranRaport.html .phone */
+  overflow: hidden;
+  background: var(--report-paper);
+}

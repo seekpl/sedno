@@ -1,58 +1,38 @@
+import createMDX from '@next/mdx';
 import type { NextConfig } from 'next';
+import { buildCsp, SECURITY_HEADERS } from './lib/security/csp';
 
-const isDev = process.env.NODE_ENV !== 'production';
-
-function origin(url: string | undefined): string | null {
-  if (!url) return null;
-  try {
-    return new URL(url).origin;
-  } catch {
-    return null;
-  }
-}
-
-const supabase = origin(process.env.NEXT_PUBLIC_SUPABASE_URL);
+const dev = process.env.NODE_ENV !== 'production';
 
 /**
- * CSP (PROMPT.md §15). Strony marketingowe są statyczne, więc bez nonce: 'unsafe-inline' dla skryptów
- * Next.js. 'wasm-unsafe-eval' potrzebuje silnik układu w @react-pdf/renderer (PDF w przeglądarce).
- * Decyzja w docs/decisions.md.
+ * Statyczna CSP dla stron marketingowych i pozostałych tras bez nonce. Trasy z nonce
+ * (/nowy, /app, /r, /logowanie) dostają CSP z proxy.ts — tu są wykluczone, żeby nie nakładać dwóch polityk.
  */
-const csp = [
-  "default-src 'self'",
-  `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'${isDev ? " 'unsafe-eval'" : ''}`,
-  "style-src 'self' 'unsafe-inline'",
-  `img-src 'self' data: blob:${supabase ? ` ${supabase}` : ''}`,
-  "font-src 'self'",
-  `connect-src 'self'${supabase ? ` ${supabase}` : ''} https://api.stripe.com${isDev ? ' ws: wss:' : ''}`,
-  "worker-src 'self' blob:",
-  "frame-src 'none'",
-  "frame-ancestors 'none'",
-  "object-src 'none'",
-  "base-uri 'self'",
-  "form-action 'self' https://checkout.stripe.com",
-].join('; ');
-
-const securityHeaders = [
-  { key: 'Content-Security-Policy', value: csp },
-  { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
-  { key: 'X-Content-Type-Options', value: 'nosniff' },
-  { key: 'X-Frame-Options', value: 'DENY' },
-  { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-  { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), payment=()' },
-];
+const STATIC_CSP_SOURCE = '/((?!(?:nowy|app|logowanie)(?:/|$)|r/).*)';
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   devIndicators: false,
   reactStrictMode: true,
+  pageExtensions: ['ts', 'tsx', 'md', 'mdx'],
   async headers() {
     return [
-      { source: '/:path*', headers: securityHeaders },
+      { source: '/:path*', headers: SECURITY_HEADERS },
+      {
+        source: STATIC_CSP_SOURCE,
+        headers: [
+          {
+            key: 'Content-Security-Policy',
+            value: buildCsp({ pathname: '/', dev, supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL }),
+          },
+        ],
+      },
       // Raport publiczny: bez nagłówka Referer (PROMPT.md §11).
       { source: '/r/:token*', headers: [{ key: 'Referrer-Policy', value: 'no-referrer' }] },
     ];
   },
 };
 
-export default nextConfig;
+const withMDX = createMDX({});
+
+export default withMDX(nextConfig);

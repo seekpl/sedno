@@ -2,8 +2,15 @@ import { describe, expect, it } from 'vitest';
 import {
   addMonths,
   formatCurrency,
+  formatDate,
+  formatDateRange,
+  formatDateRangeShort,
+  formatDayMonth,
   formatFileSize,
+  formatMonthChange,
   formatNumber,
+  slugify,
+  warsawMonthKey,
   monthForms,
   monthLabel,
   monthLabelShort,
@@ -82,5 +89,62 @@ describe('formaty', () => {
   it('rozmiar pliku', () => {
     expect(formatFileSize(48 * 1024)).toBe('48 KB');
     expect(formatFileSize(1.25 * 1024 * 1024)).toBe('1,3 MB');
+  });
+});
+
+describe('daty (Europe/Warsaw)', () => {
+  const d = (iso: string) => new Date(iso);
+
+  it('zakres w jednym miesiącu z półpauzą', () => {
+    expect(formatDateRange(d('2026-09-01T10:00:00+02:00'), d('2026-09-30T20:00:00+02:00'))).toBe(
+      '1–30 września 2026',
+    );
+  });
+
+  it('zakres przez granicę miesiąca i roku', () => {
+    expect(formatDateRange(d('2026-08-28T10:00:00+02:00'), d('2026-09-03T10:00:00+02:00'))).toBe(
+      '28 sierpnia – 3 września 2026',
+    );
+    expect(formatDateRange(d('2025-12-28T10:00:00+01:00'), d('2026-01-03T10:00:00+01:00'))).toBe(
+      '28 grudnia 2025 – 3 stycznia 2026',
+    );
+  });
+
+  it('jeden dzień', () => {
+    expect(formatDateRange(d('2026-09-27T10:00:00+02:00'), d('2026-09-27T12:00:00+02:00'))).toBe(
+      '27 września 2026',
+    );
+  });
+
+  it('krótki zakres do PDF', () => {
+    expect(formatDateRangeShort(d('2026-09-01T10:00:00+02:00'), d('2026-09-30T10:00:00+02:00'))).toBe(
+      '1–30.09.2026',
+    );
+  });
+
+  it('miesiąc liczony w strefie Warszawy, nie UTC', () => {
+    // 30.09 23:30 UTC = 1.10 01:30 w Warszawie
+    expect(warsawMonthKey(d('2026-09-30T23:30:00Z'))).toBe('2026-10');
+    expect(formatDayMonth(d('2026-09-30T23:30:00Z'))).toBe('1 października');
+    expect(formatDate(d('2026-01-31T23:30:00Z'))).toBe('1 lutego 2026');
+  });
+});
+
+describe('formatMonthChange', () => {
+  it('pokazuje zmianę tylko przy M−1 ≥ 1000 i |zmiana| ≥ 1%', () => {
+    expect(formatMonthChange(12480, 11420)).toBe('+9% m/m');
+    expect(formatMonthChange(9600, 10000)).toBe('−4% m/m');
+    expect(formatMonthChange(1500, 999)).toBeNull();
+    expect(formatMonthChange(10050, 10000)).toBeNull();
+    expect(formatMonthChange(null, 10000)).toBeNull();
+    expect(formatMonthChange(5000, null)).toBeNull();
+  });
+});
+
+describe('slugify', () => {
+  it('usuwa polskie znaki', () => {
+    expect(slugify('Bistro Pod Lipą')).toBe('bistro-pod-lipa');
+    expect(slugify('Żółć & Gęśla Jaźń — Łódź')).toBe('zolc-gesla-jazn-lodz');
+    expect(slugify('***')).toBe('klient');
   });
 });

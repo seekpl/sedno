@@ -107,3 +107,84 @@ export function formatFileSize(bytes: number): string {
   const mb = new Intl.NumberFormat('pl-PL', { maximumFractionDigits: 1 }).format(bytes / (1024 * 1024));
   return `${mb} MB`;
 }
+
+/** Strefa czasowa wszystkich dat w raporcie (PROMPT.md §6). */
+export const TIME_ZONE = 'Europe/Warsaw';
+
+/** Dzień, miesiąc i rok daty w strefie Europe/Warsaw. */
+export function warsawParts(date: Date): { year: number; month: number; day: number } {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: TIME_ZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(date);
+  const get = (type: string) => Number(parts.find((p) => p.type === type)?.value);
+  return { year: get('year'), month: get('month'), day: get('day') };
+}
+
+/** 'YYYY-MM' daty w strefie Europe/Warsaw. */
+export function warsawMonthKey(date: Date): MonthKey {
+  const { year, month } = warsawParts(date);
+  return monthKey(year, month);
+}
+
+/** „27 września” (bez roku). */
+export function formatDayMonth(date: Date): string {
+  const { month, day } = warsawParts(date);
+  return `${day} ${MONTHS[month - 1]!.gen}`;
+}
+
+/** „27 września 2026”. */
+export function formatDate(date: Date): string {
+  return `${formatDayMonth(date)} ${warsawParts(date).year}`;
+}
+
+/**
+ * Zakres dat z półpauzą (U+2013): „1–30 września 2026”, „28 sierpnia – 3 września 2026”,
+ * „28 grudnia 2025 – 3 stycznia 2026”.
+ */
+export function formatDateRange(from: Date, to: Date): string {
+  const a = warsawParts(from);
+  const b = warsawParts(to);
+  if (a.year === b.year && a.month === b.month) {
+    return a.day === b.day ? formatDate(from) : `${a.day}–${b.day} ${MONTHS[b.month - 1]!.gen} ${b.year}`;
+  }
+  if (a.year === b.year) return `${formatDayMonth(from)} – ${formatDate(to)}`;
+  return `${formatDate(from)} – ${formatDate(to)}`;
+}
+
+/** Krótki zakres do nagłówka PDF: „1–30.09.2026”. */
+export function formatDateRangeShort(from: Date, to: Date): string {
+  const a = warsawParts(from);
+  const b = warsawParts(to);
+  const dm = (p: { day: number; month: number }) => `${p.day}.${String(p.month).padStart(2, '0')}`;
+  if (a.year === b.year && a.month === b.month) return `${a.day}–${dm(b)}.${b.year}`;
+  return `${dm(a)}.${a.year}–${dm(b)}.${b.year}`;
+}
+
+/**
+ * Zmiana procentowa m/m: „+9% m/m”, „−4% m/m” (prawdziwy minus). Zaokrąglenie do całości.
+ * Zwraca null, gdy zmiany nie pokazujemy (PROMPT.md §7: poprzedni miesiąc ≥ 1000 i |zmiana| ≥ 1%).
+ */
+export function formatMonthChange(current: number | null, previous: number | null): string | null {
+  if (current == null || previous == null || previous < 1000) return null;
+  const change = ((current - previous) / previous) * 100;
+  if (Math.abs(change) < 1) return null;
+  const rounded = Math.round(Math.abs(change));
+  return `${change > 0 ? '+' : '−'}${formatNumber(rounded)}% m/m`;
+}
+
+/** Slug do nazwy pliku: „Bistro Pod Lipą” → „bistro-pod-lipa”. */
+export function slugify(text: string): string {
+  const slug = text
+    .toLocaleLowerCase('pl-PL')
+    .replace(/ł/g, 'l')
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 60)
+    .replace(/-+$/g, '');
+  return slug || 'klient';
+}

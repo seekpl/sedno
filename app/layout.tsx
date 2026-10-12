@@ -7,7 +7,7 @@ import './globals.css';
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'),
-  title: { default: `${PRODUCT_NAME} — ${copy.landing.h1}`, template: `%s — ${PRODUCT_NAME}` },
+  title: { default: `${PRODUCT_NAME} — ${copy.meta.h1}`, template: `%s — ${PRODUCT_NAME}` },
   description: copy.meta.description,
   icons: {
     icon: [
