@@ -1,0 +1,124 @@
+/* Sedno — tokens.css, wygenerowane z brand/tokens.json przez scripts/build-tokens.ts. Nie edytuj ręcznie: zmieniaj tokens.json i uruchom pnpm tokens. */
+:root, [data-theme="light"] {
+  --paper: #F5F6FA;
+  --surface: #FFFFFF;
+  --surface-raised: #FFFFFF;
+  --surface-sunken: #ECEEF5;
+  --line: #DADDE8;
+  --line-strong: #7A809B;
+  --ink: #171B33;
+  --ink-secondary: #454B67;
+  --ink-muted: #636987;
+  --pen: #2A3CD4;
+  --pen-hover: #2131B0;
+  --pen-active: #19268C;
+  --on-pen: #FFFFFF;
+  --pen-soft: #E7EAFC;
+  --secondary: #171B33;
+  --on-secondary: #FFFFFF;
+  --marker: #FFE14D;
+  --marker-soft: #FFF5BF;
+  --on-marker: #171B33;
+  --success: #1B7547;
+  --success-soft: #E2F3E9;
+  --warning: #8F5400;
+  --warning-soft: #FFF0D4;
+  --error: #BE2F28;
+  --error-soft: #FCE7E5;
+  --info: #0E6683;
+  --info-soft: #E0F1F6;
+  --focus: var(--pen);
+  --chart-current: var(--pen);
+  --chart-previous: #8E94AE;
+  --chart-grid: #E6E8F0;
+  --report-paper: #FFFFFF;
+  --report-ink: #171B33;
+  --report-ink-secondary: #454B67;
+  --report-line: #DADDE8;
+  --report-pen: #2A3CD4;
+  --report-previous: #8E94AE;
+  --shadow-1: 0 1px 2px rgba(23, 27, 51, 0.08);
+  --shadow-2: 0 12px 32px rgba(23, 27, 51, 0.14), 0 2px 6px rgba(23, 27, 51, 0.08);
+}
+[data-theme="dark"] {
+  --paper: #0E1120;
+  --surface: #161A2E;
+  --surface-raised: #1E2340;
+  --surface-sunken: #0A0C18;
+  --line: #2C3252;
+  --line-strong: #6C7398;
+  --ink: #EEF0F8;
+  --ink-secondary: #BCC1D6;
+  --ink-muted: #9095B0;
+  --pen: #8D9BFF;
+  --pen-hover: #A6B1FF;
+  --pen-active: #C3CAFF;
+  --on-pen: #0E1120;
+  --pen-soft: #232A55;
+  --secondary: #EEF0F8;
+  --on-secondary: #0E1120;
+  --marker: #FFE14D;
+  --marker-soft: #4A4214;
+  --on-marker: #171B33;
+  --success: #62D193;
+  --success-soft: #15301F;
+  --warning: #F3B64B;
+  --warning-soft: #33260A;
+  --error: #FF8B82;
+  --error-soft: #3A1614;
+  --info: #5CC3E2;
+  --info-soft: #0F2A33;
+  --focus: var(--pen);
+  --chart-current: var(--pen);
+  --chart-previous: #6C7398;
+  --chart-grid: #252A47;
+  --report-paper: #FFFFFF;
+  --report-ink: #171B33;
+  --report-ink-secondary: #454B67;
+  --report-line: #DADDE8;
+  --report-pen: #2A3CD4;
+  --report-previous: #8E94AE;
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-2: 0 12px 32px rgba(0, 0, 0, 0.55);
+  color-scheme: dark;
+}
+:root {
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 96px;
+  --radius-s: 6px;
+  --radius-m: 10px;
+  --radius-l: 16px;
+  --radius-pill: 999px;
+  --control-s: 32px;
+  --control-m: 40px;
+  --control-l: 48px;
+  --container-site: 1120px;
+  --container-app: 1280px;
+  --container-text: 640px;
+  --report-sheet: 720px;
+  --font-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-text: "Atkinson Hyperlegible Next", "Segoe UI", system-ui, sans-serif;
+}
+@font-face { font-family: "Bricolage Grotesque"; src: url("/fonts/BricolageGrotesque-Variable.woff2") format("woff2"); font-weight: 200 800; font-style: normal; font-display: swap; }
+@font-face { font-family: "Atkinson Hyperlegible Next"; src: url("/fonts/AtkinsonHyperlegibleNext-Variable.woff2") format("woff2"); font-weight: 200 800; font-style: normal; font-display: swap; }
+.display-xl { font-family: var(--font-display); font-size: 64px; line-height: 68px; font-weight: 700; letter-spacing: -0.02em; }
+.display-l { font-family: var(--font-display); font-size: 44px; line-height: 48px; font-weight: 700; letter-spacing: -0.015em; }
+.heading-1 { font-family: var(--font-display); font-size: 32px; line-height: 38px; font-weight: 700; letter-spacing: -0.01em; }
+.heading-2 { font-family: var(--font-display); font-size: 24px; line-height: 30px; font-weight: 650; }
+.heading-3 { font-family: var(--font-display); font-size: 19px; line-height: 26px; font-weight: 650; }
+.number-hero { font-family: var(--font-display); font-size: 72px; line-height: 72px; font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.number-l { font-family: var(--font-display); font-size: 32px; line-height: 36px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.body-l { font-family: var(--font-text); font-size: 18px; line-height: 28px; font-weight: 400; }
+.body { font-family: var(--font-text); font-size: 16px; line-height: 24px; font-weight: 400; }
+.body-s { font-family: var(--font-text); font-size: 14px; line-height: 20px; font-weight: 400; }
+.label { font-family: var(--font-text); font-size: 14px; line-height: 20px; font-weight: 600; }
+.button { font-family: var(--font-text); font-size: 16px; line-height: 20px; font-weight: 600; }
+.caption { font-family: var(--font-text); font-size: 13px; line-height: 18px; font-weight: 400; }
+.table-number { font-family: var(--font-display); font-size: 15px; line-height: 20px; font-weight: 500; font-variant-numeric: tabular-nums; }

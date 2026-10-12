@@ -1,0 +1,26 @@
+# zależności
+node_modules/
+.pnpm-store/
+
+# Next.js
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+
+# testy
+test-results/
+playwright-report/
+blob-report/
+artifacts/
+coverage/
+
+# środowisko
+.env
+.env*.local
+
+# paczka marki: źródłem prawdy jest rozpakowany katalog brand/
+sedno-brand-kit.zip
+
+.DS_Store
+.vercel

@@ -1,0 +1,9 @@
+brand/
+pnpm-lock.yaml
+styles/tokens.css
+lib/brand/*.generated.ts
+public/
+tests/fixtures/
+.next/
+PROMPT.md
+AGENTS.md

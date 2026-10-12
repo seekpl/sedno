@@ -1,0 +1,22 @@
+.anchor {
+  position: relative;
+  display: inline-block;
+}
+
+.bubble {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + var(--space-2));
+  width: max-content;
+  z-index: 30;
+  display: none;
+}
+
+.anchor:hover .bubble,
+.anchor:focus-within .bubble {
+  display: inline-block;
+}
+
+.anchor[data-dismissed] .bubble {
+  display: none;
+}

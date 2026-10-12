@@ -1,0 +1,11 @@
+.site {
+  background: var(--paper);
+  color: var(--ink);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.site > main {
+  flex: 1;
+}

@@ -1,0 +1,15 @@
+.report {
+  width: 100%;
+  max-width: var(--report-sheet);
+  margin-inline: auto;
+}
+
+/* Ramka telefonu z makiet (EkranRaport, EkranLanding, EkranUzupelnij). */
+.phone {
+  width: 390px;
+  max-width: 100%;
+  flex: none;
+  border: 8px solid var(--line-strong);
+  border-radius: 44px; /* ref: brand/reference/screens/EkranRaport.html .phone */
+  overflow: hidden;
+}

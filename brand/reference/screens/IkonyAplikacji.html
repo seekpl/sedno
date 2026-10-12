@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>/* Sedno — tokens.css, wygenerowane z tokens.json. Nie edytuj ręcznie: zmieniaj tokens.json. */
+:root, [data-theme="light"] {
+  --paper: #F5F6FA;
+  --surface: #FFFFFF;
+  --surface-raised: #FFFFFF;
+  --surface-sunken: #ECEEF5;
+  --line: #DADDE8;
+  --line-strong: #7A809B;
+  --ink: #171B33;
+  --ink-secondary: #454B67;
+  --ink-muted: #636987;
+  --pen: #2A3CD4;
+  --pen-hover: #2131B0;
+  --pen-active: #19268C;
+  --on-pen: #FFFFFF;
+  --pen-soft: #E7EAFC;
+  --secondary: #171B33;
+  --on-secondary: #FFFFFF;
+  --marker: #FFE14D;
+  --marker-soft: #FFF5BF;
+  --on-marker: #171B33;
+  --success: #1B7547;
+  --success-soft: #E2F3E9;
+  --warning: #8F5400;
+  --warning-soft: #FFF0D4;
+  --error: #BE2F28;
+  --error-soft: #FCE7E5;
+  --info: #0E6683;
+  --info-soft: #E0F1F6;
+  --focus: var(--pen);
+  --chart-current: var(--pen);
+  --chart-previous: #8E94AE;
+  --chart-grid: #E6E8F0;
+  --report-paper: #FFFFFF;
+  --report-ink: #171B33;
+  --report-ink-secondary: #454B67;
+  --report-line: #DADDE8;
+  --report-pen: #2A3CD4;
+  --report-previous: #8E94AE;
+  --shadow-1: 0 1px 2px rgba(23, 27, 51, 0.08);
+  --shadow-2: 0 12px 32px rgba(23, 27, 51, 0.14), 0 2px 6px rgba(23, 27, 51, 0.08);
+}
+[data-theme="dark"] {
+  --paper: #0E1120;
+  --surface: #161A2E;
+  --surface-raised: #1E2340;
+  --surface-sunken: #0A0C18;
+  --line: #2C3252;
+  --line-strong: #6C7398;
+  --ink: #EEF0F8;
+  --ink-secondary: #BCC1D6;
+  --ink-muted: #9095B0;
+  --pen: #8D9BFF;
+  --pen-hover: #A6B1FF;
+  --pen-active: #C3CAFF;
+  --on-pen: #0E1120;
+  --pen-soft: #232A55;
+  --secondary: #EEF0F8;
+  --on-secondary: #0E1120;
+  --marker: #FFE14D;
+  --marker-soft: #4A4214;
+  --on-marker: #171B33;
+  --success: #62D193;
+  --success-soft: #15301F;
+  --warning: #F3B64B;
+  --warning-soft: #33260A;
+  --error: #FF8B82;
+  --error-soft: #3A1614;
+  --info: #5CC3E2;
+  --info-soft: #0F2A33;
+  --focus: var(--pen);
+  --chart-current: var(--pen);
+  --chart-previous: #6C7398;
+  --chart-grid: #252A47;
+  --report-paper: #FFFFFF;
+  --report-ink: #171B33;
+  --report-ink-secondary: #454B67;
+  --report-line: #DADDE8;
+  --report-pen: #2A3CD4;
+  --report-previous: #8E94AE;
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-2: 0 12px 32px rgba(0, 0, 0, 0.55);
+  color-scheme: dark;
+}
+:root {
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 96px;
+  --radius-s: 6px;
+  --radius-m: 10px;
+  --radius-l: 16px;
+  --radius-pill: 999px;
+  --control-s: 32px;
+  --control-m: 40px;
+  --control-l: 48px;
+  --container-site: 1120px;
+  --container-app: 1280px;
+  --container-text: 640px;
+  --report-sheet: 720px;
+  --font-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-text: "Atkinson Hyperlegible Next", "Segoe UI", system-ui, sans-serif;
+}
+@font-face { font-family: "Bricolage Grotesque"; src: url("../../fonts/web/BricolageGrotesque-Variable.woff2") format("woff2"); font-weight: 200 800; font-style: normal; font-display: swap; }
+@font-face { font-family: "Atkinson Hyperlegible Next"; src: url("../../fonts/web/AtkinsonHyperlegibleNext-Variable.woff2") format("woff2"); font-weight: 200 800; font-style: normal; font-display: swap; }
+.display-xl { font-family: var(--font-display); font-size: 64px; line-height: 68px; font-weight: 700; letter-spacing: -0.02em; }
+.display-l { font-family: var(--font-display); font-size: 44px; line-height: 48px; font-weight: 700; letter-spacing: -0.015em; }
+.heading-1 { font-family: var(--font-display); font-size: 32px; line-height: 38px; font-weight: 700; letter-spacing: -0.01em; }
+.heading-2 { font-family: var(--font-display); font-size: 24px; line-height: 30px; font-weight: 650; }
+.heading-3 { font-family: var(--font-display); font-size: 19px; line-height: 26px; font-weight: 650; }
+.number-hero { font-family: var(--font-display); font-size: 72px; line-height: 72px; font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.number-l { font-family: var(--font-display); font-size: 32px; line-height: 36px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.body-l { font-family: var(--font-text); font-size: 18px; line-height: 28px; font-weight: 400; }
+.body { font-family: var(--font-text); font-size: 16px; line-height: 24px; font-weight: 400; }
+.body-s { font-family: var(--font-text); font-size: 14px; line-height: 20px; font-weight: 400; }
+.label { font-family: var(--font-text); font-size: 14px; line-height: 20px; font-weight: 600; }
+.button { font-family: var(--font-text); font-size: 16px; line-height: 20px; font-weight: 600; }
+.caption { font-family: var(--font-text); font-size: 13px; line-height: 18px; font-weight: 400; }
+.table-number { font-family: var(--font-display); font-size: 15px; line-height: 20px; font-weight: 500; font-variant-numeric: tabular-nums; }
+/* Sedno — komponenty. Wszystkie wartości z tokens.json (tokens.css). Prefiks klas: sd- */
+
+/* ---------- Podstawa ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--font-text); font-size: 16px; line-height: 24px; -webkit-font-smoothing: antialiased; }
+.sd-num { font-family: var(--font-display); font-variant-numeric: tabular-nums lining-nums; }
+.sd-display { font-family: var(--font-display); }
+.sd-muted { color: var(--ink-muted); }
+.sd-secondary { color: var(--ink-secondary); }
+.sd-stack { display: flex; flex-direction: column; gap: var(--space-4); }
+.sd-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
+.sd-pad { padding: var(--space-5); }
+.sd-icon { width: 20px; height: 20px; flex: none; stroke: currentColor; fill: none; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+.sd-icon--s { width: 16px; height: 16px; }
+.sd-icon--l { width: 24px; height: 24px; }
+:where(a, button, input, select, textarea, [tabindex]):focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+a.sd-link, .sd-link { color: var(--pen); text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+a.sd-link:hover { color: var(--pen-hover); text-decoration-thickness: 2px; }
+.sd-visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ---------- Przyciski ---------- */
+.sd-btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); height: var(--control-m); padding: 0 var(--space-4); border-radius: var(--radius-s); border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); font: 600 16px/20px var(--font-text); cursor: pointer; text-decoration: none; white-space: nowrap; }
+.sd-btn:hover { background: var(--surface-sunken); }
+.sd-btn--primary { background: var(--pen); border-color: var(--pen); color: var(--on-pen); }
+.sd-btn--primary:hover { background: var(--pen-hover); border-color: var(--pen-hover); }
+.sd-btn--primary:active { background: var(--pen-active); border-color: var(--pen-active); }
+.sd-btn--ghost { border-color: transparent; background: transparent; color: var(--pen); }
+.sd-btn--ghost:hover { background: var(--pen-soft); }
+.sd-btn--danger { background: var(--surface); border-color: var(--error); color: var(--error); }
+.sd-btn--danger:hover { background: var(--error-soft); }
+.sd-btn--l { height: var(--control-l); padding: 0 var(--space-5); font-size: 17px; }
+.sd-btn--s { height: var(--control-s); padding: 0 var(--space-3); font-size: 14px; }
+.sd-btn--block { width: 100%; }
+.sd-btn[disabled], .sd-btn[aria-disabled="true"] { background: var(--surface-sunken); border-color: var(--line); color: var(--ink-muted); cursor: not-allowed; }
+.sd-btn__spin { width: 16px; height: 16px; border-radius: 50%; border: 2px solid currentColor; border-right-color: transparent; animation: sd-spin .8s linear infinite; }
+@keyframes sd-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .sd-btn__spin { animation-duration: 2.4s; } }
+
+/* ---------- Pola ---------- */
+.sd-field { display: flex; flex-direction: column; gap: var(--space-2); max-width: var(--container-text); }
+.sd-field__label { font: 600 14px/20px var(--font-text); color: var(--ink); }
+.sd-field__hint { font-size: 14px; line-height: 20px; color: var(--ink-muted); }
+.sd-input { width: 100%; min-width: 0; height: var(--control-m); padding: 0 var(--space-3); border-radius: var(--radius-s); border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); font: 400 16px/24px var(--font-text); }
+.sd-input::placeholder { color: var(--ink-muted); }
+.sd-input:hover { border-color: var(--ink-secondary); }
+.sd-input:focus { outline: 2px solid var(--focus); outline-offset: 0; border-color: var(--pen); }
+.sd-input--num { font-family: var(--font-display); font-variant-numeric: tabular-nums; text-align: right; max-width: 160px; }
+.sd-field--error .sd-input { border-color: var(--error); border-width: 2px; }
+.sd-field__error { display: flex; gap: var(--space-1); align-items: flex-start; font-size: 14px; line-height: 20px; color: var(--error); }
+textarea.sd-input { height: auto; min-height: 96px; padding: var(--space-2) var(--space-3); resize: vertical; }
+@media (max-width: 767px) { .sd-input { height: var(--control-l); } }
+
+/* ---------- Wgrywanie pliku ---------- */
+.sd-upload { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-3); padding: var(--space-6) var(--space-5); border: 2px dashed var(--line-strong); border-radius: var(--radius-m); background: var(--surface); text-align: center; }
+.sd-upload__title { font: 650 19px/26px var(--font-display); margin: 0; }
+.sd-upload__hint { margin: 0; font-size: 14px; line-height: 20px; color: var(--ink-secondary); max-width: 38ch; }
+.sd-upload--over { border-style: solid; border-color: var(--pen); background: var(--pen-soft); }
+.sd-upload--error { border-style: solid; border-color: var(--error); background: var(--error-soft); }
+.sd-file { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4); border-radius: var(--radius-s); background: var(--surface-sunken); font-size: 14px; line-height: 20px; }
+.sd-file__name { font-weight: 600; overflow-wrap: anywhere; }
+.sd-privacy { display: flex; gap: var(--space-2); align-items: flex-start; font-size: 14px; line-height: 20px; color: var(--ink-secondary); }
+
+/* ---------- Karty ---------- */
+.sd-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-m); padding: var(--space-5); }
+.sd-card__title { margin: 0 0 var(--space-2); font: 650 19px/26px var(--font-display); }
+@media (max-width: 767px) { .sd-card { padding: var(--space-4); } }
+
+/* ---------- Kluczowa liczba i zakreślenie ---------- */
+.sd-key { display: grid; gap: var(--space-2); }
+.sd-key__label { display: flex; align-items: center; gap: var(--space-2); font-size: 16px; line-height: 24px; color: var(--ink-secondary); }
+.sd-key__value { font: 700 72px/72px var(--font-display); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.sd-key__delta { font-size: 14px; line-height: 20px; color: var(--ink-secondary); }
+.sd-circled { position: relative; display: inline-block; padding: .08em .28em .02em; isolation: isolate; }
+.sd-circled__ring { position: absolute; inset: -0.12em -0.1em -0.1em -0.12em; width: calc(100% + .22em); height: calc(100% + .22em); overflow: visible; color: var(--pen); pointer-events: none; z-index: -1; }
+.sd-circled__ring path { fill: none; stroke: currentColor; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.sd-mark { background: linear-gradient(transparent 58%, var(--marker) 58%, var(--marker) 92%, transparent 92%); color: inherit; padding: 0 .12em; }
+.sd-metric { display: grid; gap: var(--space-1); }
+.sd-metric__label { font-size: 14px; line-height: 20px; color: var(--ink-secondary); display: flex; gap: var(--space-2); align-items: center; }
+.sd-metric__value { font: 650 32px/36px var(--font-display); font-variant-numeric: tabular-nums; }
+.sd-metric__delta { font-size: 14px; line-height: 20px; color: var(--ink-secondary); font-variant-numeric: tabular-nums; }
+@media (max-width: 767px) { .sd-key__value { font-size: 56px; line-height: 56px; } }
+
+/* ---------- Plakietki statusu ---------- */
+.sd-badge { display: inline-flex; align-items: center; gap: var(--space-1); padding: 2px 10px 2px 8px; border-radius: var(--radius-pill); font: 600 13px/18px var(--font-text); background: var(--surface-sunken); color: var(--ink-secondary); white-space: nowrap; }
+.sd-badge .sd-icon { width: 14px; height: 14px; stroke-width: 2; }
+.sd-badge--success { background: var(--success-soft); color: var(--success); }
+.sd-badge--warning { background: var(--warning-soft); color: var(--warning); }
+.sd-badge--error { background: var(--error-soft); color: var(--error); }
+.sd-badge--pen { background: var(--pen-soft); color: var(--pen); }
+.sd-badge--plan { background: var(--secondary); color: var(--on-secondary); }
+
+/* ---------- Alerty ---------- */
+.sd-alert { display: grid; grid-template-columns: auto 1fr; gap: var(--space-1) var(--space-3); padding: var(--space-4); border-radius: var(--radius-m); background: var(--info-soft); color: var(--ink); }
+.sd-alert > .sd-icon { color: var(--info); margin-top: 2px; }
+.sd-alert__title { margin: 0; font-weight: 700; font-size: 16px; line-height: 24px; }
+.sd-alert__body { margin: 0; grid-column: 2; font-size: 14px; line-height: 20px; color: var(--ink-secondary); }
+.sd-alert__actions { grid-column: 2; display: flex; gap: var(--space-2); flex-wrap: wrap; margin-top: var(--space-2); }
+.sd-alert--success { background: var(--success-soft); } .sd-alert--success > .sd-icon { color: var(--success); }
+.sd-alert--warning { background: var(--warning-soft); } .sd-alert--warning > .sd-icon { color: var(--warning); }
+.sd-alert--error { background: var(--error-soft); } .sd-alert--error > .sd-icon { color: var(--error); }
+
+/* ---------- Toast ---------- */
+.sd-toast { display: flex; align-items: center; gap: var(--space-3); min-width: 280px; max-width: 420px; padding: var(--space-3) var(--space-4); border-radius: var(--radius-m); background: var(--surface-raised); box-shadow: var(--shadow-2); border: 1px solid var(--line); font-size: 15px; line-height: 22px; }
+.sd-toast > .sd-icon { color: var(--success); }
+.sd-toast--error > .sd-icon { color: var(--error); }
+.sd-toast__action { margin-left: auto; }
+
+/* ---------- Modal ---------- */
+.sd-scrim { background: rgba(14, 17, 32, .48); display: grid; place-items: center; padding: var(--space-4); }
+.sd-modal { width: min(480px, 100%); background: var(--surface-raised); border-radius: var(--radius-l); box-shadow: var(--shadow-2); padding: var(--space-5); display: grid; gap: var(--space-4); }
+.sd-modal__title { margin: 0; font: 650 19px/26px var(--font-display); }
+.sd-modal__body { margin: 0; color: var(--ink-secondary); }
+.sd-modal__actions { display: flex; justify-content: flex-end; gap: var(--space-2); flex-wrap: wrap; }
+
+/* ---------- Tabela ---------- */
+.sd-table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius-m); background: var(--surface); }
+.sd-table { width: 100%; border-collapse: collapse; font-size: 15px; line-height: 20px; }
+.sd-table th { text-align: left; font: 600 14px/20px var(--font-text); color: var(--ink-secondary); background: var(--surface-sunken); padding: var(--space-2) var(--space-4); white-space: nowrap; }
+.sd-table td { padding: var(--space-3) var(--space-4); border-top: 1px solid var(--line); vertical-align: middle; }
+.sd-table .sd-num, .sd-table td.num, .sd-table th.num { text-align: right; font-variant-numeric: tabular-nums; }
+.sd-table td.num { font-family: var(--font-display); font-weight: 500; }
+.sd-table tr[aria-selected="true"] td { background: var(--pen-soft); }
+.sd-table tbody tr:hover td { background: var(--surface-sunken); }
+.sd-client { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
+.sd-avatar { width: 32px; height: 32px; flex: none; border-radius: var(--radius-s); background: var(--surface-sunken); color: var(--ink-secondary); display: grid; place-items: center; font: 700 13px/1 var(--font-display); }
+
+/* ---------- Tooltip ---------- */
+.sd-tip { position: relative; display: inline-block; max-width: 260px; padding: var(--space-2) var(--space-3); border-radius: var(--radius-s); background: var(--secondary); color: var(--on-secondary); font-size: 14px; line-height: 20px; }
+.sd-tip::after { content: ""; position: absolute; left: 16px; bottom: -6px; border: 6px solid transparent; border-bottom: 0; border-top-color: var(--secondary); }
+
+/* ---------- Nawigacja ---------- */
+.sd-topbar { display: flex; align-items: center; gap: var(--space-5); height: 64px; padding: 0 var(--space-5); background: var(--surface); border-bottom: 1px solid var(--line); }
+.sd-topbar__logo { height: 26px; width: auto; display: block; }
+.sd-nav { display: flex; gap: var(--space-1); }
+.sd-nav a { display: inline-flex; align-items: center; height: 40px; padding: 0 var(--space-3); border-radius: var(--radius-s); color: var(--ink-secondary); text-decoration: none; font-weight: 600; font-size: 15px; }
+.sd-nav a:hover { background: var(--surface-sunken); color: var(--ink); }
+.sd-nav a[aria-current="page"] { background: var(--pen-soft); color: var(--pen-active); }
+.sd-month { display: inline-flex; align-items: center; gap: var(--space-1); border: 1px solid var(--line-strong); border-radius: var(--radius-pill); padding: 2px; }
+.sd-month button { width: 32px; height: 32px; border: 0; border-radius: 50%; background: transparent; color: var(--ink-secondary); display: grid; place-items: center; cursor: pointer; }
+.sd-month button:hover { background: var(--surface-sunken); }
+.sd-month span { font-weight: 600; font-size: 15px; padding: 0 var(--space-2); }
+
+/* ---------- Paginacja ---------- */
+.sd-pages { display: flex; align-items: center; gap: var(--space-1); }
+.sd-pages a, .sd-pages span { min-width: 36px; height: 36px; display: inline-grid; place-items: center; border-radius: var(--radius-s); color: var(--ink-secondary); text-decoration: none; font-variant-numeric: tabular-nums; font-weight: 600; font-size: 15px; }
+.sd-pages a:hover { background: var(--surface-sunken); }
+.sd-pages [aria-current="page"] { background: var(--pen); color: var(--on-pen); }
+
+/* ---------- Pusty stan ---------- */
+.sd-empty { display: grid; justify-items: start; gap: var(--space-3); padding: var(--space-6); border: 1px dashed var(--line); border-radius: var(--radius-m); background: var(--surface); max-width: 560px; }
+.sd-empty__title { margin: 0; font: 650 22px/28px var(--font-display); }
+.sd-empty__body { margin: 0; color: var(--ink-secondary); }
+
+/* ---------- Ładowanie ---------- */
+.sd-skel { background: var(--surface-sunken); border-radius: var(--radius-s); position: relative; overflow: hidden; }
+.sd-skel::after { content: ""; position: absolute; inset: 0; transform: translateX(-100%); background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent); animation: sd-shine 1.6s ease-in-out infinite; }
+:root[data-theme="dark"] .sd-skel::after { background: linear-gradient(90deg, transparent, rgba(255,255,255,.06), transparent); }
+@keyframes sd-shine { to { transform: translateX(100%); } }
+@media (prefers-reduced-motion: reduce) { .sd-skel::after { animation: none; } }
+.sd-progress { height: 6px; border-radius: var(--radius-pill); background: var(--surface-sunken); overflow: hidden; }
+.sd-progress > span { display: block; height: 100%; background: var(--pen); border-radius: inherit; }
+
+/* ---------- Raport dla klienta (zawsze jasny) ---------- */
+.sd-report { color-scheme: light; background: var(--report-paper); color: var(--report-ink); font-family: var(--font-text); }
+.sd-report .sd-key__label, .sd-report .sd-metric__label, .sd-report .sd-metric__delta, .sd-report .sd-key__delta, .sd-report .sd-r-secondary { color: var(--report-ink-secondary); }
+.sd-report .sd-circled__ring { color: var(--report-pen); }
+.sd-report hr { border: 0; border-top: 1px solid var(--report-line); margin: 0; }
+.sd-r-brand { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.sd-r-title { margin: 0; font: 700 26px/32px var(--font-display); letter-spacing: -0.01em; }
+.sd-r-bars { display: grid; gap: var(--space-2); }
+.sd-r-bar { display: grid; grid-template-columns: 7.5em 1fr auto; gap: var(--space-2); align-items: center; font-size: 14px; line-height: 20px; }
+.sd-r-bar i { display: block; height: 10px; border-radius: 3px; background: var(--report-pen); }
+.sd-r-bar i.prev { background: var(--report-previous); }
+.sd-report .sd-num, .sd-report .sd-metric__delta, .sd-report .sd-key__delta { font-family: var(--font-display); font-variant-numeric: tabular-nums; }
+.sd-r-foot { font-size: 12px; line-height: 16px; color: var(--report-ink-secondary); }
+</style>
+<meta charset="utf-8">
+<title>IkonyAplikacji — Sedno</title>
+<style>.sd-logo-dark{display:none!important}:root[data-theme="dark"] .sd-logo-light{display:none!important}:root[data-theme="dark"] .sd-logo-dark{display:block!important}
+.lt{background:var(--paper);color:var(--ink)}
+.phone{width:390px;flex:none;border:8px solid var(--line-strong);border-radius:44px;overflow:hidden;background:var(--report-paper)}
+.phone__bar{height:28px}
+.eyebrowless{margin:0}
+h1,h2,h3{margin:0;text-wrap:balance}
+p{margin:0}
+.d-xl{font:700 64px/68px var(--font-display);letter-spacing:-.02em}
+.d-l{font:700 44px/48px var(--font-display);letter-spacing:-.015em}
+.h1{font:700 32px/38px var(--font-display);letter-spacing:-.01em}
+.h2{font:650 24px/30px var(--font-display)}
+.h3{font:650 19px/26px var(--font-display)}
+.bl{font-size:18px;line-height:28px}
+.cap{font-size:13px;line-height:18px;color:var(--ink-muted)}
+.container{max-width:var(--container-site);margin:0 auto;padding-inline:var(--space-7)}
+.note-ex{display:inline-block;font-size:12px;line-height:16px;color:var(--ink-muted);border:1px solid var(--line);border-radius:var(--radius-pill);padding:1px 8px}
+</style>
+</head>
+<body>
+<div style="padding:32px;display:grid;gap:32px">
+<div style="display:flex;gap:40px;flex-wrap:wrap;align-items:flex-end">
+ <div style="display:grid;gap:8px;justify-items:center"><svg style="width:180px;height:180px;display:block" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Sedno"><rect width="512" height="512" rx="112" fill="#2A3CD4"/><path d="M247.1 102.7 L242.5 102.6 L237.9 102.7 L233.2 103.0 L228.6 103.4 L224.1 104.0 L219.5 104.7 L215.0 105.7 L210.5 106.8 L206.0 108.1 L201.6 109.5 L197.2 111.1 L192.9 112.9 L188.7 114.9 L184.5 117.0 L180.3 119.3 L176.3 121.7 L172.3 124.3 L168.4 127.1 L164.6 130.0 L160.9 133.1 L157.3 136.3 L153.9 139.8 L150.7 143.5 L147.5 147.2 L144.5 151.1 L141.6 155.2 L138.9 159.3 L136.3 163.5 L133.8 167.9 L131.4 172.3 L129.2 176.8 L127.1 181.5 L125.2 186.2 L123.4 190.9 L121.8 195.8 L120.3 200.7 L118.9 205.7 L117.8 210.8 L116.7 215.8 L115.9 221.0 L115.1 226.2 L114.6 231.4 L114.2 236.6 L114.0 241.9 L113.9 247.1 L114.0 252.4 L114.2 257.7 L114.6 263.0 L115.2 268.3 L115.9 273.5 L116.8 278.8 L117.8 284.0 L119.0 289.2 L120.3 294.4 L121.8 299.5 L123.4 304.5 L125.2 309.5 L127.2 314.5 L129.2 319.4 L131.5 324.2 L133.8 328.9 L136.3 333.6 L138.9 338.1 L141.7 342.6 L144.6 347.0 L147.6 351.2 L150.8 355.4 L154.0 359.5 L157.4 363.4 L160.9 367.2 L164.4 370.9 L168.1 374.5 L171.9 377.9 L175.8 381.2 L179.8 384.4 L183.8 387.4 L188.0 390.2 L192.2 393.0 L196.5 395.5 L200.8 397.9 L205.2 400.2 L209.7 402.2 L214.2 404.2 L218.8 405.9 L223.4 407.5 L228.1 408.9 L232.8 410.2 L237.5 411.2 L242.2 412.1 L246.9 412.9 L251.7 413.4 L256.4 413.8 L261.2 414.0 L265.9 414.0 L270.7 413.8 L275.4 413.5 L280.1 413.0 L284.8 412.3 L289.4 411.4 L294.0 410.4 L298.6 409.2 L303.1 407.8 L307.6 406.2 L312.0 404.5 L316.3 402.6 L320.6 400.6 L324.8 398.4 L328.9 396.0 L333.0 393.5 L336.9 390.8 L340.8 387.9 L344.5 384.9 L348.2 381.8 L351.8 378.5 L355.2 375.1 L358.6 371.6 L361.8 367.9 L364.9 364.1 L367.9 360.2 L370.8 356.2 L373.5 352.0 L376.2 347.8 L378.6 343.4 L381.0 339.0 L383.2 334.4 L385.2 329.8 L387.1 325.1 L388.9 320.3 L390.5 315.4 L392.0 310.5 L393.3 305.5 L394.4 300.4 L395.4 295.3 L396.3 290.2 L397.0 285.0 L397.5 279.8 L397.9 274.5 L398.1 269.3 L398.1 264.0 L398.0 258.7 L397.7 253.4 L397.3 248.1 L396.7 242.9 L396.0 237.6 L395.1 232.4 L394.0 227.1 L392.8 222.0 L391.5 216.8 L390.0 211.7 L388.3 206.7 L386.5 201.7 L384.5 196.7 L382.4 191.9 L380.2 187.1 L377.8 182.3 L375.3 177.7 L372.6 173.2 L369.8 168.7 L366.9 164.3 L363.9 160.1 L360.7 155.9 L357.5 151.9 L354.1 148.0 L350.6 144.2 L347.0 140.5 L343.3 137.0 L339.5 133.5 L335.6 130.3 L331.6 127.1 L327.5 124.2 L323.3 121.3 L319.1 118.6 L314.8 116.1 L310.5 113.7 L306.0 111.5 L301.6 109.4 L297.0 107.5 L292.4 105.8 L287.8 104.2 L283.2 102.7 L278.5 101.3 L273.9 100.0 L269.1 98.8 L264.4 97.7 L259.6 96.8 L254.8 96.1 L249.9 95.4 L245.1 95.0 L240.2 94.6 L235.3 94.5 L230.4 94.4 L225.5 94.6 L220.5 94.9 L215.6 95.3 L210.7 96.0 L205.7 96.8 L200.8 97.7 L195.9 98.8 L191.0 100.2 L186.1 101.6 L181.3 103.3 L176.5 105.1 L171.7 107.1 L166.9 109.3 L162.2 111.7 L157.6 114.2 L153.0 116.9 L148.5 119.8 L144.0 122.9 L139.6 126.1 L135.2 129.6 L131.0 133.2 L126.8 137.0 L122.8 141.0 L118.8 145.1 L114.9 149.4 L111.2 153.9 L107.5 158.5 L104.0 163.4 L100.6 168.4" fill="none" stroke="#FFFFFF" stroke-width="58" stroke-linecap="round" stroke-linejoin="round"/><circle cx="256" cy="256" r="50" fill="#FFE14D"/></svg><span class="cap">Ikona aplikacji 180 px (apple-touch-icon)</span></div>
+ <div style="display:grid;gap:8px;justify-items:center"><svg style="width:64px;height:64px;display:block" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Sedno"><rect width="512" height="512" rx="112" fill="#2A3CD4"/><path d="M247.1 102.7 L242.5 102.6 L237.9 102.7 L233.2 103.0 L228.6 103.4 L224.1 104.0 L219.5 104.7 L215.0 105.7 L210.5 106.8 L206.0 108.1 L201.6 109.5 L197.2 111.1 L192.9 112.9 L188.7 114.9 L184.5 117.0 L180.3 119.3 L176.3 121.7 L172.3 124.3 L168.4 127.1 L164.6 130.0 L160.9 133.1 L157.3 136.3 L153.9 139.8 L150.7 143.5 L147.5 147.2 L144.5 151.1 L141.6 155.2 L138.9 159.3 L136.3 163.5 L133.8 167.9 L131.4 172.3 L129.2 176.8 L127.1 181.5 L125.2 186.2 L123.4 190.9 L121.8 195.8 L120.3 200.7 L118.9 205.7 L117.8 210.8 L116.7 215.8 L115.9 221.0 L115.1 226.2 L114.6 231.4 L114.2 236.6 L114.0 241.9 L113.9 247.1 L114.0 252.4 L114.2 257.7 L114.6 263.0 L115.2 268.3 L115.9 273.5 L116.8 278.8 L117.8 284.0 L119.0 289.2 L120.3 294.4 L121.8 299.5 L123.4 304.5 L125.2 309.5 L127.2 314.5 L129.2 319.4 L131.5 324.2 L133.8 328.9 L136.3 333.6 L138.9 338.1 L141.7 342.6 L144.6 347.0 L147.6 351.2 L150.8 355.4 L154.0 359.5 L157.4 363.4 L160.9 367.2 L164.4 370.9 L168.1 374.5 L171.9 377.9 L175.8 381.2 L179.8 384.4 L183.8 387.4 L188.0 390.2 L192.2 393.0 L196.5 395.5 L200.8 397.9 L205.2 400.2 L209.7 402.2 L214.2 404.2 L218.8 405.9 L223.4 407.5 L228.1 408.9 L232.8 410.2 L237.5 411.2 L242.2 412.1 L246.9 412.9 L251.7 413.4 L256.4 413.8 L261.2 414.0 L265.9 414.0 L270.7 413.8 L275.4 413.5 L280.1 413.0 L284.8 412.3 L289.4 411.4 L294.0 410.4 L298.6 409.2 L303.1 407.8 L307.6 406.2 L312.0 404.5 L316.3 402.6 L320.6 400.6 L324.8 398.4 L328.9 396.0 L333.0 393.5 L336.9 390.8 L340.8 387.9 L344.5 384.9 L348.2 381.8 L351.8 378.5 L355.2 375.1 L358.6 371.6 L361.8 367.9 L364.9 364.1 L367.9 360.2 L370.8 356.2 L373.5 352.0 L376.2 347.8 L378.6 343.4 L381.0 339.0 L383.2 334.4 L385.2 329.8 L387.1 325.1 L388.9 320.3 L390.5 315.4 L392.0 310.5 L393.3 305.5 L394.4 300.4 L395.4 295.3 L396.3 290.2 L397.0 285.0 L397.5 279.8 L397.9 274.5 L398.1 269.3 L398.1 264.0 L398.0 258.7 L397.7 253.4 L397.3 248.1 L396.7 242.9 L396.0 237.6 L395.1 232.4 L394.0 227.1 L392.8 222.0 L391.5 216.8 L390.0 211.7 L388.3 206.7 L386.5 201.7 L384.5 196.7 L382.4 191.9 L380.2 187.1 L377.8 182.3 L375.3 177.7 L372.6 173.2 L369.8 168.7 L366.9 164.3 L363.9 160.1 L360.7 155.9 L357.5 151.9 L354.1 148.0 L350.6 144.2 L347.0 140.5 L343.3 137.0 L339.5 133.5 L335.6 130.3 L331.6 127.1 L327.5 124.2 L323.3 121.3 L319.1 118.6 L314.8 116.1 L310.5 113.7 L306.0 111.5 L301.6 109.4 L297.0 107.5 L292.4 105.8 L287.8 104.2 L283.2 102.7 L278.5 101.3 L273.9 100.0 L269.1 98.8 L264.4 97.7 L259.6 96.8 L254.8 96.1 L249.9 95.4 L245.1 95.0 L240.2 94.6 L235.3 94.5 L230.4 94.4 L225.5 94.6 L220.5 94.9 L215.6 95.3 L210.7 96.0 L205.7 96.8 L200.8 97.7 L195.9 98.8 L191.0 100.2 L186.1 101.6 L181.3 103.3 L176.5 105.1 L171.7 107.1 L166.9 109.3 L162.2 111.7 L157.6 114.2 L153.0 116.9 L148.5 119.8 L144.0 122.9 L139.6 126.1 L135.2 129.6 L131.0 133.2 L126.8 137.0 L122.8 141.0 L118.8 145.1 L114.9 149.4 L111.2 153.9 L107.5 158.5 L104.0 163.4 L100.6 168.4" fill="none" stroke="#FFFFFF" stroke-width="58" stroke-linecap="round" stroke-linejoin="round"/><circle cx="256" cy="256" r="50" fill="#FFE14D"/></svg><span class="cap">64 px</span></div>
+ <div style="display:grid;gap:8px;justify-items:center"><svg style="width:32px;height:32px;display:block" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Sedno"><rect width="512" height="512" rx="96" fill="#2A3CD4"/><path d="M247.4 89.9 L243.0 89.9 L238.6 89.9 L234.2 90.1 L229.8 90.5 L225.4 91.0 L221.1 91.6 L216.7 92.3 L212.4 93.2 L208.1 94.2 L203.8 95.4 L199.5 96.7 L195.3 98.1 L191.2 99.7 L187.0 101.4 L182.9 103.2 L178.9 105.1 L174.9 107.2 L171.0 109.4 L167.1 111.8 L163.3 114.2 L159.6 116.8 L155.9 119.5 L152.3 122.3 L148.8 125.2 L145.5 128.4 L142.3 131.7 L139.1 135.1 L136.1 138.6 L133.2 142.2 L130.4 145.9 L127.6 149.7 L125.0 153.6 L122.5 157.6 L120.1 161.6 L117.8 165.7 L115.6 169.9 L113.6 174.2 L111.6 178.5 L109.8 182.9 L108.1 187.3 L106.5 191.8 L105.0 196.4 L103.6 201.0 L102.4 205.7 L101.3 210.4 L100.4 215.1 L99.5 219.8 L98.8 224.6 L98.2 229.5 L97.8 234.3 L97.4 239.2 L97.2 244.0 L97.1 248.9 L97.2 253.8 L97.4 258.7 L97.7 263.6 L98.2 268.5 L98.7 273.3 L99.4 278.2 L100.3 283.0 L101.2 287.8 L102.3 292.6 L103.5 297.4 L104.8 302.1 L106.3 306.8 L107.9 311.5 L109.6 316.1 L111.4 320.6 L113.3 325.1 L115.4 329.6 L117.6 333.9 L119.8 338.3 L122.2 342.5 L124.7 346.7 L127.3 350.8 L130.1 354.8 L132.9 358.8 L135.8 362.7 L138.8 366.4 L141.9 370.1 L145.1 373.7 L148.4 377.2 L151.8 380.6 L155.3 383.9 L158.8 387.1 L162.4 390.2 L166.1 393.2 L169.9 396.1 L173.8 398.8 L177.7 401.5 L181.7 404.0 L185.7 406.4 L189.8 408.7 L193.9 410.8 L198.1 412.8 L202.4 414.7 L206.7 416.5 L211.0 418.1 L215.4 419.6 L219.8 421.0 L224.2 422.3 L228.7 423.4 L233.2 424.3 L237.7 425.1 L242.2 425.8 L246.7 426.4 L251.2 426.8 L255.8 427.1 L260.3 427.2 L264.8 427.2 L269.4 427.0 L273.9 426.8 L278.4 426.3 L282.8 425.8 L287.3 425.1 L291.7 424.2 L296.1 423.2 L300.5 422.1 L304.9 420.9 L309.2 419.5 L313.4 418.0 L317.6 416.3 L321.8 414.6 L325.9 412.6 L329.9 410.6 L333.9 408.4 L337.8 406.2 L341.7 403.7 L345.5 401.2 L349.2 398.6 L352.8 395.8 L356.4 392.9 L359.8 389.9 L363.2 386.8 L366.5 383.6 L369.7 380.3 L372.9 376.9 L375.9 373.4 L378.8 369.8 L381.6 366.1 L384.4 362.3 L387.0 358.4 L389.5 354.4 L391.9 350.4 L394.2 346.3 L396.4 342.1 L398.4 337.8 L400.4 333.5 L402.2 329.1 L403.9 324.7 L405.5 320.2 L407.0 315.6 L408.4 311.0 L409.6 306.3 L410.7 301.6 L411.6 296.9 L412.5 292.2 L413.2 287.4 L413.8 282.5 L414.2 277.7 L414.6 272.8 L414.8 268.0 L414.9 263.1 L414.8 258.2 L414.6 253.3 L414.3 248.4 L413.8 243.5 L413.3 238.7 L412.6 233.8 L411.7 229.0 L410.8 224.2 L409.7 219.4 L408.5 214.6 L407.2 209.9 L405.7 205.2 L404.1 200.5 L402.4 195.9 L400.6 191.4 L398.7 186.9 L396.6 182.4 L394.4 178.1 L392.2 173.7 L389.8 169.5 L387.3 165.3 L384.7 161.2 L381.9 157.2 L379.1 153.2 L376.2 149.3 L373.2 145.6 L370.1 141.9 L366.9 138.3 L363.6 134.8 L360.2 131.4 L356.7 128.1 L353.2 124.9 L349.6 121.8 L345.9 118.8 L342.1 115.9 L338.2 113.2 L334.3 110.5 L330.3 108.0 L326.3 105.6 L322.2 103.3 L318.1 101.2 L313.9 99.2 L309.6 97.3 L305.3 95.5 L301.0 93.9 L296.6 92.4 L292.2 91.0 L287.8 89.7 L283.3 88.6 L278.8 87.7 L274.3 86.9 L269.8 86.2 L265.3 85.6 L260.8 85.2 L256.2 84.9 L251.7 84.8 L247.2 84.8" fill="none" stroke="#FFFFFF" stroke-width="84" stroke-linecap="round" stroke-linejoin="round"/><circle cx="256" cy="256" r="78" fill="#FFE14D"/></svg><span class="cap">Favicon 32 px</span></div>
+ <div style="display:grid;gap:8px;justify-items:center"><svg style="width:16px;height:16px;display:block" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Sedno"><rect width="512" height="512" rx="96" fill="#2A3CD4"/><path d="M247.4 89.9 L243.0 89.9 L238.6 89.9 L234.2 90.1 L229.8 90.5 L225.4 91.0 L221.1 91.6 L216.7 92.3 L212.4 93.2 L208.1 94.2 L203.8 95.4 L199.5 96.7 L195.3 98.1 L191.2 99.7 L187.0 101.4 L182.9 103.2 L178.9 105.1 L174.9 107.2 L171.0 109.4 L167.1 111.8 L163.3 114.2 L159.6 116.8 L155.9 119.5 L152.3 122.3 L148.8 125.2 L145.5 128.4 L142.3 131.7 L139.1 135.1 L136.1 138.6 L133.2 142.2 L130.4 145.9 L127.6 149.7 L125.0 153.6 L122.5 157.6 L120.1 161.6 L117.8 165.7 L115.6 169.9 L113.6 174.2 L111.6 178.5 L109.8 182.9 L108.1 187.3 L106.5 191.8 L105.0 196.4 L103.6 201.0 L102.4 205.7 L101.3 210.4 L100.4 215.1 L99.5 219.8 L98.8 224.6 L98.2 229.5 L97.8 234.3 L97.4 239.2 L97.2 244.0 L97.1 248.9 L97.2 253.8 L97.4 258.7 L97.7 263.6 L98.2 268.5 L98.7 273.3 L99.4 278.2 L100.3 283.0 L101.2 287.8 L102.3 292.6 L103.5 297.4 L104.8 302.1 L106.3 306.8 L107.9 311.5 L109.6 316.1 L111.4 320.6 L113.3 325.1 L115.4 329.6 L117.6 333.9 L119.8 338.3 L122.2 342.5 L124.7 346.7 L127.3 350.8 L130.1 354.8 L132.9 358.8 L135.8 362.7 L138.8 366.4 L141.9 370.1 L145.1 373.7 L148.4 377.2 L151.8 380.6 L155.3 383.9 L158.8 387.1 L162.4 390.2 L166.1 393.2 L169.9 396.1 L173.8 398.8 L177.7 401.5 L181.7 404.0 L185.7 406.4 L189.8 408.7 L193.9 410.8 L198.1 412.8 L202.4 414.7 L206.7 416.5 L211.0 418.1 L215.4 419.6 L219.8 421.0 L224.2 422.3 L228.7 423.4 L233.2 424.3 L237.7 425.1 L242.2 425.8 L246.7 426.4 L251.2 426.8 L255.8 427.1 L260.3 427.2 L264.8 427.2 L269.4 427.0 L273.9 426.8 L278.4 426.3 L282.8 425.8 L287.3 425.1 L291.7 424.2 L296.1 423.2 L300.5 422.1 L304.9 420.9 L309.2 419.5 L313.4 418.0 L317.6 416.3 L321.8 414.6 L325.9 412.6 L329.9 410.6 L333.9 408.4 L337.8 406.2 L341.7 403.7 L345.5 401.2 L349.2 398.6 L352.8 395.8 L356.4 392.9 L359.8 389.9 L363.2 386.8 L366.5 383.6 L369.7 380.3 L372.9 376.9 L375.9 373.4 L378.8 369.8 L381.6 366.1 L384.4 362.3 L387.0 358.4 L389.5 354.4 L391.9 350.4 L394.2 346.3 L396.4 342.1 L398.4 337.8 L400.4 333.5 L402.2 329.1 L403.9 324.7 L405.5 320.2 L407.0 315.6 L408.4 311.0 L409.6 306.3 L410.7 301.6 L411.6 296.9 L412.5 292.2 L413.2 287.4 L413.8 282.5 L414.2 277.7 L414.6 272.8 L414.8 268.0 L414.9 263.1 L414.8 258.2 L414.6 253.3 L414.3 248.4 L413.8 243.5 L413.3 238.7 L412.6 233.8 L411.7 229.0 L410.8 224.2 L409.7 219.4 L408.5 214.6 L407.2 209.9 L405.7 205.2 L404.1 200.5 L402.4 195.9 L400.6 191.4 L398.7 186.9 L396.6 182.4 L394.4 178.1 L392.2 173.7 L389.8 169.5 L387.3 165.3 L384.7 161.2 L381.9 157.2 L379.1 153.2 L376.2 149.3 L373.2 145.6 L370.1 141.9 L366.9 138.3 L363.6 134.8 L360.2 131.4 L356.7 128.1 L353.2 124.9 L349.6 121.8 L345.9 118.8 L342.1 115.9 L338.2 113.2 L334.3 110.5 L330.3 108.0 L326.3 105.6 L322.2 103.3 L318.1 101.2 L313.9 99.2 L309.6 97.3 L305.3 95.5 L301.0 93.9 L296.6 92.4 L292.2 91.0 L287.8 89.7 L283.3 88.6 L278.8 87.7 L274.3 86.9 L269.8 86.2 L265.3 85.6 L260.8 85.2 L256.2 84.9 L251.7 84.8 L247.2 84.8" fill="none" stroke="#FFFFFF" stroke-width="84" stroke-linecap="round" stroke-linejoin="round"/><circle cx="256" cy="256" r="78" fill="#FFE14D"/></svg><span class="cap">Favicon 16 px</span></div>
+ <div style="display:grid;gap:8px;justify-items:center"><div style="padding:12px;background:var(--secondary);border-radius:12px"><svg class="" style="height:48px;width:auto;display:block" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Sedno"><path d="M245.3 63.1 L239.4 63.0 L233.5 63.1 L227.7 63.4 L221.8 64.0 L215.9 64.7 L210.1 65.7 L204.3 66.9 L198.6 68.3 L192.9 70.0 L187.3 71.8 L181.7 73.9 L176.2 76.2 L170.7 78.6 L165.4 81.3 L160.1 84.2 L154.9 87.3 L149.8 90.6 L144.9 94.1 L140.0 97.8 L135.2 101.7 L130.6 105.7 L126.3 110.2 L122.2 114.8 L118.1 119.6 L114.3 124.5 L110.6 129.5 L107.0 134.8 L103.7 140.1 L100.5 145.6 L97.4 151.2 L94.6 156.9 L91.9 162.7 L89.4 168.7 L87.1 174.7 L85.0 180.8 L83.1 187.0 L81.4 193.3 L79.9 199.6 L78.5 206.1 L77.4 212.5 L76.5 219.0 L75.7 225.6 L75.2 232.2 L74.9 238.8 L74.8 245.5 L74.9 252.1 L75.1 258.8 L75.6 265.4 L76.3 272.1 L77.2 278.7 L78.3 285.3 L79.6 291.9 L81.1 298.4 L82.7 304.9 L84.6 311.3 L86.7 317.7 L89.0 324.0 L91.4 330.2 L94.0 336.3 L96.8 342.4 L99.8 348.3 L103.0 354.2 L106.3 359.9 L109.8 365.5 L113.5 371.0 L117.3 376.4 L121.3 381.6 L125.5 386.7 L129.7 391.6 L134.2 396.4 L138.7 401.1 L143.4 405.5 L148.2 409.8 L153.2 414.0 L158.2 417.9 L163.4 421.7 L168.6 425.3 L174.0 428.7 L179.5 431.9 L185.0 434.9 L190.6 437.7 L196.3 440.3 L202.1 442.7 L207.9 444.9 L213.8 446.9 L219.7 448.6 L225.7 450.2 L231.7 451.5 L237.7 452.6 L243.7 453.5 L249.8 454.2 L255.9 454.6 L261.9 454.9 L268.0 454.9 L274.0 454.6 L280.1 454.2 L286.1 453.5 L292.0 452.6 L298.0 451.5 L303.8 450.2 L309.7 448.7 L315.4 446.9 L321.1 444.9 L326.7 442.7 L332.3 440.3 L337.7 437.7 L343.1 434.9 L348.4 431.9 L353.6 428.7 L358.6 425.3 L363.6 421.7 L368.4 417.9 L373.1 414.0 L377.6 409.9 L382.1 405.6 L386.4 401.1 L390.5 396.4 L394.5 391.7 L398.3 386.7 L402.0 381.6 L405.5 376.4 L408.9 371.0 L412.0 365.5 L415.0 359.9 L417.8 354.2 L420.5 348.3 L422.9 342.4 L425.2 336.3 L427.3 330.2 L429.2 324.0 L430.9 317.7 L432.4 311.3 L433.7 304.9 L434.8 298.4 L435.7 291.9 L436.4 285.3 L436.8 278.7 L437.1 272.1 L437.2 265.5 L437.1 258.8 L436.8 252.1 L436.3 245.5 L435.6 238.8 L434.6 232.2 L433.5 225.6 L432.2 219.1 L430.7 212.5 L429.0 206.1 L427.1 199.7 L425.0 193.3 L422.7 187.0 L420.2 180.8 L417.5 174.7 L414.7 168.7 L411.7 162.7 L408.5 156.9 L405.1 151.2 L401.6 145.6 L397.9 140.1 L394.0 134.8 L390.0 129.6 L385.9 124.5 L381.6 119.6 L377.1 114.8 L372.5 110.2 L367.8 105.8 L363.0 101.5 L358.0 97.4 L353.0 93.4 L347.8 89.7 L342.5 86.1 L337.1 82.8 L331.6 79.6 L326.1 76.6 L320.5 73.8 L314.8 71.3 L309.0 68.9 L303.1 66.8 L297.3 64.8 L291.4 62.9 L285.4 61.1 L279.5 59.5 L273.4 58.0 L267.4 56.7 L261.3 55.6 L255.1 54.6 L249.0 53.9 L242.8 53.3 L236.6 52.9 L230.3 52.7 L224.0 52.7 L217.8 52.9 L211.5 53.3 L205.2 53.9 L198.9 54.7 L192.6 55.7 L186.3 57.0 L180.0 58.4 L173.8 60.1 L167.6 62.0 L161.4 64.1 L155.2 66.4 L149.1 68.9 L143.1 71.7 L137.0 74.7 L131.1 77.9 L125.2 81.4 L119.4 85.0 L113.7 88.9 L108.1 93.0 L102.5 97.4 L97.1 101.9 L91.8 106.7 L86.6 111.7 L81.5 117.0 L76.5 122.4 L71.7 128.1 L67.0 134.0 L62.5 140.0 L58.1 146.3" fill="none" stroke="#8D9BFF" stroke-width="64" stroke-linecap="round" stroke-linejoin="round"/><circle cx="256" cy="256" r="60" fill="#FFE14D"/></svg></div><span class="cap">Sygnet na ciemnym</span></div>
+</div>
+<div style="display:flex;gap:40px;flex-wrap:wrap;align-items:flex-start">
+ <div style="display:grid;gap:8px"><div style="display:flex;align-items:center;gap:8px;width:280px;height:40px;padding:0 12px;border-radius:10px 10px 0 0;background:var(--surface);border:1px solid var(--line);border-bottom:0"><svg style="width:16px;height:16px;display:block" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Sedno"><rect width="512" height="512" rx="96" fill="#2A3CD4"/><path d="M247.4 89.9 L243.0 89.9 L238.6 89.9 L234.2 90.1 L229.8 90.5 L225.4 91.0 L221.1 91.6 L216.7 92.3 L212.4 93.2 L208.1 94.2 L203.8 95.4 L199.5 96.7 L195.3 98.1 L191.2 99.7 L187.0 101.4 L182.9 103.2 L178.9 105.1 L174.9 107.2 L171.0 109.4 L167.1 111.8 L163.3 114.2 L159.6 116.8 L155.9 119.5 L152.3 122.3 L148.8 125.2 L145.5 128.4 L142.3 131.7 L139.1 135.1 L136.1 138.6 L133.2 142.2 L130.4 145.9 L127.6 149.7 L125.0 153.6 L122.5 157.6 L120.1 161.6 L117.8 165.7 L115.6 169.9 L113.6 174.2 L111.6 178.5 L109.8 182.9 L108.1 187.3 L106.5 191.8 L105.0 196.4 L103.6 201.0 L102.4 205.7 L101.3 210.4 L100.4 215.1 L99.5 219.8 L98.8 224.6 L98.2 229.5 L97.8 234.3 L97.4 239.2 L97.2 244.0 L97.1 248.9 L97.2 253.8 L97.4 258.7 L97.7 263.6 L98.2 268.5 L98.7 273.3 L99.4 278.2 L100.3 283.0 L101.2 287.8 L102.3 292.6 L103.5 297.4 L104.8 302.1 L106.3 306.8 L107.9 311.5 L109.6 316.1 L111.4 320.6 L113.3 325.1 L115.4 329.6 L117.6 333.9 L119.8 338.3 L122.2 342.5 L124.7 346.7 L127.3 350.8 L130.1 354.8 L132.9 358.8 L135.8 362.7 L138.8 366.4 L141.9 370.1 L145.1 373.7 L148.4 377.2 L151.8 380.6 L155.3 383.9 L158.8 387.1 L162.4 390.2 L166.1 393.2 L169.9 396.1 L173.8 398.8 L177.7 401.5 L181.7 404.0 L185.7 406.4 L189.8 408.7 L193.9 410.8 L198.1 412.8 L202.4 414.7 L206.7 416.5 L211.0 418.1 L215.4 419.6 L219.8 421.0 L224.2 422.3 L228.7 423.4 L233.2 424.3 L237.7 425.1 L242.2 425.8 L246.7 426.4 L251.2 426.8 L255.8 427.1 L260.3 427.2 L264.8 427.2 L269.4 427.0 L273.9 426.8 L278.4 426.3 L282.8 425.8 L287.3 425.1 L291.7 424.2 L296.1 423.2 L300.5 422.1 L304.9 420.9 L309.2 419.5 L313.4 418.0 L317.6 416.3 L321.8 414.6 L325.9 412.6 L329.9 410.6 L333.9 408.4 L337.8 406.2 L341.7 403.7 L345.5 401.2 L349.2 398.6 L352.8 395.8 L356.4 392.9 L359.8 389.9 L363.2 386.8 L366.5 383.6 L369.7 380.3 L372.9 376.9 L375.9 373.4 L378.8 369.8 L381.6 366.1 L384.4 362.3 L387.0 358.4 L389.5 354.4 L391.9 350.4 L394.2 346.3 L396.4 342.1 L398.4 337.8 L400.4 333.5 L402.2 329.1 L403.9 324.7 L405.5 320.2 L407.0 315.6 L408.4 311.0 L409.6 306.3 L410.7 301.6 L411.6 296.9 L412.5 292.2 L413.2 287.4 L413.8 282.5 L414.2 277.7 L414.6 272.8 L414.8 268.0 L414.9 263.1 L414.8 258.2 L414.6 253.3 L414.3 248.4 L413.8 243.5 L413.3 238.7 L412.6 233.8 L411.7 229.0 L410.8 224.2 L409.7 219.4 L408.5 214.6 L407.2 209.9 L405.7 205.2 L404.1 200.5 L402.4 195.9 L400.6 191.4 L398.7 186.9 L396.6 182.4 L394.4 178.1 L392.2 173.7 L389.8 169.5 L387.3 165.3 L384.7 161.2 L381.9 157.2 L379.1 153.2 L376.2 149.3 L373.2 145.6 L370.1 141.9 L366.9 138.3 L363.6 134.8 L360.2 131.4 L356.7 128.1 L353.2 124.9 L349.6 121.8 L345.9 118.8 L342.1 115.9 L338.2 113.2 L334.3 110.5 L330.3 108.0 L326.3 105.6 L322.2 103.3 L318.1 101.2 L313.9 99.2 L309.6 97.3 L305.3 95.5 L301.0 93.9 L296.6 92.4 L292.2 91.0 L287.8 89.7 L283.3 88.6 L278.8 87.7 L274.3 86.9 L269.8 86.2 L265.3 85.6 L260.8 85.2 L256.2 84.9 L251.7 84.8 L247.2 84.8" fill="none" stroke="#FFFFFF" stroke-width="84" stroke-linecap="round" stroke-linejoin="round"/><circle cx="256" cy="256" r="78" fill="#FFE14D"/></svg><span style="font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Raport: Studio Lumi, wrzesień · Sedno</span></div><span class="cap">Karta przeglądarki</span></div>
+ <div style="display:grid;gap:8px;justify-items:center"><div style="width:220px;padding:24px;border-radius:28px;background:#2B3046;display:grid;grid-template-columns:repeat(3,1fr);gap:18px;justify-items:center"><div style="display:grid;gap:6px;justify-items:center"><div style="width:52px;height:52px;border-radius:12px;background:rgba(255,255,255,.18)"></div><span style="font-size:11px;color:#fff">&nbsp;</span></div><div style="display:grid;gap:6px;justify-items:center"><div style="width:52px;height:52px;border-radius:12px;background:rgba(255,255,255,.18)"></div><span style="font-size:11px;color:#fff">&nbsp;</span></div><div style="display:grid;gap:6px;justify-items:center"><div style="width:52px;height:52px;border-radius:12px;background:rgba(255,255,255,.18)"></div><span style="font-size:11px;color:#fff">&nbsp;</span></div><div style="display:grid;gap:6px;justify-items:center"><div style="width:52px;height:52px;border-radius:12px;background:rgba(255,255,255,.18)"></div><span style="font-size:11px;color:#fff">&nbsp;</span></div><div style="display:grid;gap:6px;justify-items:center"><svg style="width:52px;height:52px;display:block" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Sedno"><rect width="512" height="512" rx="112" fill="#2A3CD4"/><path d="M247.1 102.7 L242.5 102.6 L237.9 102.7 L233.2 103.0 L228.6 103.4 L224.1 104.0 L219.5 104.7 L215.0 105.7 L210.5 106.8 L206.0 108.1 L201.6 109.5 L197.2 111.1 L192.9 112.9 L188.7 114.9 L184.5 117.0 L180.3 119.3 L176.3 121.7 L172.3 124.3 L168.4 127.1 L164.6 130.0 L160.9 133.1 L157.3 136.3 L153.9 139.8 L150.7 143.5 L147.5 147.2 L144.5 151.1 L141.6 155.2 L138.9 159.3 L136.3 163.5 L133.8 167.9 L131.4 172.3 L129.2 176.8 L127.1 181.5 L125.2 186.2 L123.4 190.9 L121.8 195.8 L120.3 200.7 L118.9 205.7 L117.8 210.8 L116.7 215.8 L115.9 221.0 L115.1 226.2 L114.6 231.4 L114.2 236.6 L114.0 241.9 L113.9 247.1 L114.0 252.4 L114.2 257.7 L114.6 263.0 L115.2 268.3 L115.9 273.5 L116.8 278.8 L117.8 284.0 L119.0 289.2 L120.3 294.4 L121.8 299.5 L123.4 304.5 L125.2 309.5 L127.2 314.5 L129.2 319.4 L131.5 324.2 L133.8 328.9 L136.3 333.6 L138.9 338.1 L141.7 342.6 L144.6 347.0 L147.6 351.2 L150.8 355.4 L154.0 359.5 L157.4 363.4 L160.9 367.2 L164.4 370.9 L168.1 374.5 L171.9 377.9 L175.8 381.2 L179.8 384.4 L183.8 387.4 L188.0 390.2 L192.2 393.0 L196.5 395.5 L200.8 397.9 L205.2 400.2 L209.7 402.2 L214.2 404.2 L218.8 405.9 L223.4 407.5 L228.1 408.9 L232.8 410.2 L237.5 411.2 L242.2 412.1 L246.9 412.9 L251.7 413.4 L256.4 413.8 L261.2 414.0 L265.9 414.0 L270.7 413.8 L275.4 413.5 L280.1 413.0 L284.8 412.3 L289.4 411.4 L294.0 410.4 L298.6 409.2 L303.1 407.8 L307.6 406.2 L312.0 404.5 L316.3 402.6 L320.6 400.6 L324.8 398.4 L328.9 396.0 L333.0 393.5 L336.9 390.8 L340.8 387.9 L344.5 384.9 L348.2 381.8 L351.8 378.5 L355.2 375.1 L358.6 371.6 L361.8 367.9 L364.9 364.1 L367.9 360.2 L370.8 356.2 L373.5 352.0 L376.2 347.8 L378.6 343.4 L381.0 339.0 L383.2 334.4 L385.2 329.8 L387.1 325.1 L388.9 320.3 L390.5 315.4 L392.0 310.5 L393.3 305.5 L394.4 300.4 L395.4 295.3 L396.3 290.2 L397.0 285.0 L397.5 279.8 L397.9 274.5 L398.1 269.3 L398.1 264.0 L398.0 258.7 L397.7 253.4 L397.3 248.1 L396.7 242.9 L396.0 237.6 L395.1 232.4 L394.0 227.1 L392.8 222.0 L391.5 216.8 L390.0 211.7 L388.3 206.7 L386.5 201.7 L384.5 196.7 L382.4 191.9 L380.2 187.1 L377.8 182.3 L375.3 177.7 L372.6 173.2 L369.8 168.7 L366.9 164.3 L363.9 160.1 L360.7 155.9 L357.5 151.9 L354.1 148.0 L350.6 144.2 L347.0 140.5 L343.3 137.0 L339.5 133.5 L335.6 130.3 L331.6 127.1 L327.5 124.2 L323.3 121.3 L319.1 118.6 L314.8 116.1 L310.5 113.7 L306.0 111.5 L301.6 109.4 L297.0 107.5 L292.4 105.8 L287.8 104.2 L283.2 102.7 L278.5 101.3 L273.9 100.0 L269.1 98.8 L264.4 97.7 L259.6 96.8 L254.8 96.1 L249.9 95.4 L245.1 95.0 L240.2 94.6 L235.3 94.5 L230.4 94.4 L225.5 94.6 L220.5 94.9 L215.6 95.3 L210.7 96.0 L205.7 96.8 L200.8 97.7 L195.9 98.8 L191.0 100.2 L186.1 101.6 L181.3 103.3 L176.5 105.1 L171.7 107.1 L166.9 109.3 L162.2 111.7 L157.6 114.2 L153.0 116.9 L148.5 119.8 L144.0 122.9 L139.6 126.1 L135.2 129.6 L131.0 133.2 L126.8 137.0 L122.8 141.0 L118.8 145.1 L114.9 149.4 L111.2 153.9 L107.5 158.5 L104.0 163.4 L100.6 168.4" fill="none" stroke="#FFFFFF" stroke-width="58" stroke-linecap="round" stroke-linejoin="round"/><circle cx="256" cy="256" r="50" fill="#FFE14D"/></svg><span style="font-size:11px;color:#fff">Sedno</span></div><div style="display:grid;gap:6px;justify-items:center"><div style="width:52px;height:52px;border-radius:12px;background:rgba(255,255,255,.18)"></div><span style="font-size:11px;color:#fff">&nbsp;</span></div></div><span class="cap">Ekran główny telefonu (aplikacja webowa dodana do ekranu)</span></div>
+</div></div>
+</body>
+</html>

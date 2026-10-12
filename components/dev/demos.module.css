@@ -1,0 +1,148 @@
+/* Układ stron demo jak w brand/reference/components/*.html (klasa .wrap). Tylko tokeny. */
+.wrap {
+  padding: var(--space-5);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  align-items: flex-start;
+}
+
+.pad {
+  padding: var(--space-5);
+}
+
+.center {
+  align-items: center;
+}
+
+.stretch {
+  align-items: stretch;
+}
+
+.grid {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.alerts {
+  display: grid;
+  gap: var(--space-3);
+  max-width: var(--container-text);
+}
+
+.fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--space-5);
+}
+
+.uploads {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-4);
+}
+
+.keyCard {
+  min-width: 260px;
+}
+
+.metricsCard {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(140px, 1fr));
+  gap: var(--space-5);
+  min-width: 300px;
+}
+
+.scrim {
+  min-height: 300px;
+}
+
+.note {
+  padding: var(--space-4) var(--space-5);
+}
+
+.caption {
+  margin: var(--space-2) 0 0;
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.circled {
+  align-items: center;
+  gap: 40px;
+}
+
+.circledHero {
+  font: 700 72px/1 var(--font-display);
+  font-variant-numeric: tabular-nums;
+}
+
+.circledSmall {
+  font: 650 32px/1 var(--font-display);
+}
+
+.circledText {
+  max-width: 360px;
+  margin: 0;
+  font-size: 18px;
+  line-height: 28px;
+}
+
+.skeleton {
+  padding: var(--space-5);
+  display: grid;
+  gap: var(--space-4);
+  max-width: 520px;
+}
+
+.skeletonCard {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.progress {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.extras {
+  display: grid;
+  gap: var(--space-6);
+  padding: var(--space-5);
+}
+
+.section {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.icons {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: var(--space-3);
+}
+
+.iconItem {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-m);
+}
+
+.onDark {
+  padding: var(--space-3);
+  background: var(--secondary);
+  border-radius: var(--radius-s);
+}
+
+.onPen {
+  padding: var(--space-3);
+  background: var(--pen);
+  border-radius: var(--radius-s);
+}

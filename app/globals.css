@@ -1,0 +1,15 @@
+/* Wygląd wyłącznie z brand/: najpierw tokeny (wygenerowane), potem komponenty sd-*. */
+@import '../styles/tokens.css';
+@import '../brand/components.css';
+
+/* Podstawa typograficzna jak na makietach w brand/reference/. */
+h1,
+h2,
+h3 {
+  margin: 0;
+  text-wrap: balance;
+}
+
+p {
+  margin: 0;
+}
