@@ -3,24 +3,47 @@
  * CTA z parametrem src (zdarzenie landing_cta_click), lista oczekujących działa także bez JavaScriptu.
  */
 import zlib from 'node:zlib';
-import { expect, test } from '@playwright/test';
+import { expect, test, type APIRequestContext } from '@playwright/test';
 import { VIEWPORTS } from './helpers';
 
-test('JavaScript strony głównej < 80 KB gzip', async ({ page, request }) => {
-  const scripts = new Set<string>();
-  page.on('response', (res) => {
-    if (res.request().resourceType() === 'script') scripts.add(res.url());
-  });
-  await page.goto('/');
-  await page.waitForLoadState('networkidle');
-  let total = 0;
-  for (const url of scripts) {
-    const body = await (await request.get(url)).body();
-    total += zlib.gzipSync(body, { level: 9 }).length;
+/**
+ * Skrypty, które HTML strony wczytuje od razu (bez `nomodule` i bez prefetchu linków), rozmiar po gzip -9.
+ */
+async function initialScriptsGzip(request: APIRequestContext, url: string) {
+  const html = await (await request.get(url)).text();
+  const scripts = new Map<string, number>();
+  for (const [tag, src] of html.matchAll(/<script\b[^>]*\bsrc="([^"]+)"[^>]*>/g)) {
+    if (/\bnomodule\b/i.test(tag) || !src) continue;
+    const body = await (await request.get(src)).body();
+    scripts.set(src, zlib.gzipSync(body, { level: 9 }).length);
   }
-  test.info().annotations.push({ type: 'js-gzip-bytes', description: String(total) });
-  console.log(`JS strony głównej: ${(total / 1024).toFixed(1)} KB gzip w ${scripts.size} plikach`);
-  expect(total).toBeLessThan(80 * 1024);
+  return scripts;
+}
+
+const sum = (m: Map<string, number>) => [...m.values()].reduce((a, b) => a + b, 0);
+
+// §15: JS strony głównej < 80 KB gzip. Sam runtime React 19 + Next.js App Router to ok. 136 KB gzip
+// (strona 404 bez naszych komponentów klienckich), więc limit 80 KB dla całości jest nieosiągalny w tym
+// stosie (docs/decisions.md, p. 59 — decyzja właściciela). Test pilnuje twardo naszego kodu na stronie
+// głównej i zapisuje całość w adnotacji, a całość nie może urosnąć ponad bazę frameworka + nasz limit.
+test('JavaScript strony głównej: nasz kod < 20 KB gzip ponad bazę frameworka', async ({ request }) => {
+  const framework = await initialScriptsGzip(request, '/nie-ma-takiej-strony');
+  const landing = await initialScriptsGzip(request, '/');
+  expect(landing.size).toBeGreaterThan(0);
+  const own = new Map([...landing].filter(([src]) => !framework.has(src)));
+  const total = sum(landing);
+  test
+    .info()
+    .annotations.push(
+      { type: 'js-gzip-total', description: String(total) },
+      { type: 'js-gzip-framework', description: String(sum(framework)) },
+      { type: 'js-gzip-own', description: String(sum(own)) },
+    );
+  console.log(
+    `JS strony głównej: ${(total / 1024).toFixed(1)} KB gzip (framework ${(sum(framework) / 1024).toFixed(1)} KB, nasz kod ${(sum(own) / 1024).toFixed(1)} KB)`,
+  );
+  expect(sum(own)).toBeLessThan(20 * 1024);
+  expect(total).toBeLessThan(sum(framework) + 20 * 1024);
 });
 
 test('teksty z decyzji 17 i brak obietnic linku', async ({ page }) => {

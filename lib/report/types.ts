@@ -3,7 +3,7 @@
  * i PDF. Zawiera wyłącznie liczby zagregowane, komentarz autora i krótką listę najlepszych publikacji
  * (data, typ, wyświetlenia, interakcje, permalink) — nigdy opisów postów ani surowych wierszy.
  */
-import { z } from 'zod';
+import { z } from '@/lib/zod';
 import { INSTAGRAM_PERMALINK_MAX, INSTAGRAM_PERMALINK_PATTERN, MAX_COUNT } from './limits';
 
 export type KeyMetric = 'book' | 'call' | 'directions' | 'views';

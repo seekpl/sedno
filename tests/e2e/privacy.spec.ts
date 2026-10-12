@@ -6,10 +6,10 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
-import { expect, test } from '@playwright/test';
+import { chromium, expect, test, type Browser } from '@playwright/test';
 import { E2E_STORE_DIR } from '../../playwright.config';
 import { goToMonth, uploadFixture } from './flow-helpers';
-import { recordRequests, type RecordedRequest } from './helpers';
+import { startRecordingProxy, type ProxiedRequest } from './recording-proxy';
 
 const CANARY = 'SEDNO-PRIVACY-CANARY-7f3a';
 const FILE = 'synthetic-privacy-canary.csv';
@@ -21,11 +21,35 @@ const FILE_FRAGMENTS = [
   'sedno_canary_7f3a',
 ];
 
-function leaks(records: RecordedRequest[]) {
+let proxy: Awaited<ReturnType<typeof startRecordingProxy>>;
+let browser: Browser;
+
+// Własna przeglądarka z proxy nagrywającym (bez wyjątku dla localhost), bo Playwright nie widzi ruchu workerów.
+test.beforeEach(async () => {
+  proxy = await startRecordingProxy();
+  browser = await chromium.launch({ proxy: { server: proxy.server, bypass: '<-loopback>' } });
+});
+
+test.afterEach(async () => {
+  await browser.close();
+  await proxy.close();
+});
+
+async function newPage(baseURL: string | undefined) {
+  const context = await browser.newContext({
+    baseURL,
+    locale: 'pl-PL',
+    timezoneId: 'Europe/Warsaw',
+    acceptDownloads: true,
+  });
+  return context.newPage();
+}
+
+function leaks(records: ProxiedRequest[]) {
   const found: string[] = [];
   for (const r of records) {
     const url = decodeURIComponent(r.url);
-    const body = r.body ? r.body.toString('utf8') + r.body.toString('latin1') : '';
+    const body = r.body.toString('utf8') + r.body.toString('latin1');
     for (const fragment of FILE_FRAGMENTS) {
       if (url.includes(fragment) || body.includes(fragment)) found.push(`${r.method} ${r.url}: ${fragment}`);
     }
@@ -34,14 +58,16 @@ function leaks(records: RecordedRequest[]) {
 }
 
 test('kontrola pozytywna: nagrywanie łapie znacznik wysłany ze strony i z Web Workera', async ({
-  page,
-  context,
+  baseURL,
 }) => {
-  const records = recordRequests(context);
+  const page = await newPage(baseURL);
+  const records = proxy.requests;
   await page.goto('/nowy');
   await page.evaluate(async (canary) => {
     await fetch('/__privacy-probe', { method: 'POST', body: canary }).catch(() => undefined);
-    const src = `fetch('/__privacy-probe-worker', { method: 'POST', body: '${canary}' }).finally(() => postMessage('ok'))`;
+    // Worker z blob: nie ma bazowego adresu strony, więc adres musi być bezwzględny.
+    const target = `${location.origin}/__privacy-probe-worker`;
+    const src = `fetch('${target}', { method: 'POST', body: '${canary}' }).finally(() => postMessage('ok'))`;
     const worker = new Worker(URL.createObjectURL(new Blob([src], { type: 'text/javascript' })));
     await new Promise((resolve) => (worker.onmessage = resolve));
   }, CANARY);
@@ -49,11 +75,9 @@ test('kontrola pozytywna: nagrywanie łapie znacznik wysłany ze strony i z Web 
   expect(leaks(records).some((l) => /\/__privacy-probe:/.test(l))).toBe(true);
 });
 
-test('plik nie opuszcza przeglądarki: cały przepływ /nowy, PDF i lista oczekujących', async ({
-  page,
-  context,
-}) => {
-  const records = recordRequests(context);
+test('plik nie opuszcza przeglądarki: cały przepływ /nowy, PDF i lista oczekujących', async ({ baseURL }) => {
+  const page = await newPage(baseURL);
+  const records = proxy.requests;
 
   // Wejście z CTA strony głównej (zdarzenie landing_cta_click) i wczytanie pliku ze znacznikiem.
   await page.goto('/nowy?src=hero');
@@ -93,10 +117,14 @@ test('plik nie opuszcza przeglądarki: cały przepływ /nowy, PDF i lista oczeku
   await page.getByRole('button', { name: 'Zapisz mnie na listę' }).first().click();
   await expect(page.getByText('Zapisano na listę').first()).toBeVisible();
 
-  // Żadne żądanie nie niosło pliku; największe ciało żądania jest małe (tylko liczby).
+  // Żadne żądanie nie niosło pliku; największe ciało żądania jest małe (tylko liczby); nic poza aplikacją.
   await page.waitForLoadState('networkidle');
+  expect(records.length).toBeGreaterThan(10);
   expect(leaks(records)).toEqual([]);
-  const largestPost = Math.max(0, ...records.filter((r) => r.body).map((r) => r.body!.length));
+  expect(proxy.tunnels).toEqual([]);
+  const origin = new URL(baseURL!).origin;
+  expect(records.filter((r) => !r.url.startsWith(origin)).map((r) => r.url)).toEqual([]);
+  const largestPost = Math.max(0, ...records.map((r) => r.body.length));
   expect(largestPost).toBeLessThan(4096);
 
   // Magazyn po stronie serwera: zdarzenia są, treści pliku nie ma.

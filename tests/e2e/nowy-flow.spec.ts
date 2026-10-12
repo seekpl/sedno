@@ -110,7 +110,7 @@ test('plik bez rozpoznanych kolumn → przypisanie ręczne → raport', async ({
   await page.goto('/nowy');
   await goToMonth(page, 'Wrzesień 2026');
   await uploadFixture(page, 'synthetic-unknown-headers.csv');
-  await expect(page.getByText('To nie jest eksport treści')).toBeVisible();
+  await expect(page.getByText('To nie jest eksport treści', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Przypisz kolumny ręcznie' }).click();
   await page.getByLabel('Czas publikacji').selectOption('Kiedy');
   await page.getByLabel('Wyświetlenia').selectOption('Ile razy obejrzano');
@@ -124,10 +124,14 @@ test('plik bez rozpoznanych kolumn → przypisanie ręczne → raport', async ({
 test('plik, który nie jest CSV → błąd z przyczyną i naprawą', async ({ page }) => {
   await page.goto('/nowy');
   await uploadFixture(page, 'synthetic-not-csv.txt');
-  await expect(page.getByText('To nie jest plik CSV')).toBeVisible();
+  await expect(page.getByText('To nie jest plik CSV', { exact: true })).toBeVisible();
   await expect(
-    page.getByText('Wgraj plik z rozszerzeniem .csv pobrany z Meta Business Suite.'),
+    page.getByText('Wgraj plik z rozszerzeniem .csv pobrany z Meta Business Suite.', { exact: true }),
   ).toBeVisible();
+  // Czytnik ekranu dostaje przyczynę i naprawę w jednym komunikacie.
+  await expect(page.getByRole('alert').filter({ hasText: 'To nie jest plik CSV' })).toContainText(
+    'To nie jest plik CSV. Wgraj plik z rozszerzeniem .csv pobrany z Meta Business Suite.',
+  );
   await expect(page.getByRole('button', { name: 'Wybierz inny plik' })).toBeVisible();
 });
 

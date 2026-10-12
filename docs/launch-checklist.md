@@ -17,6 +17,7 @@ Zadania właściciela i warunki, które muszą być spełnione przed publikacją
 ## Baza i konfiguracja
 
 - [ ] Migracja `supabase/migrations/20261012000000_waitlist_events.sql` uruchomiona w projekcie Supabase w UE.
+- [ ] `NEXT_PUBLIC_SITE_URL` ustawione na produkcyjną domenę (adres kanoniczny, Open Graph, sitemap i robots; bez niego wskazują `http://localhost:3000`).
 - [ ] `SEDNO_DEV_STORE_DIR` **nieustawione** na produkcji (inaczej przy braku zmiennych Supabase e-maile trafiłyby do pliku).
 - [ ] Limity zapytań zakładają, że hosting ustawia `X-Forwarded-For`/`X-Real-IP` na adres klienta (Vercel tak robi). Za proxy, które tylko dopisuje adres, trzeba brać ostatni zaufany adres.
 

@@ -2,7 +2,7 @@
  * Zdarzenia testu popytu (PROMPT.md §16). Każde zdarzenie ma ścisły schemat: tylko wymienione pola,
  * tylko liczby, krótkie wyliczenia i identyfikator sesji. Nie da się nim wysłać treści pliku ani raportu.
  */
-import { z } from 'zod';
+import { z } from '@/lib/zod';
 
 const small = (max: number) => z.number().int().min(0).max(max);
 

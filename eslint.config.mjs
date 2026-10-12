@@ -22,6 +22,12 @@ const config = [
       'no-restricted-imports': [
         'error',
         {
+          paths: [
+            {
+              name: 'zod',
+              message: "Importuj z '@/lib/zod' (tryb bez eval zgodny z CSP).",
+            },
+          ],
           patterns: [
             {
               group: ['tailwindcss', 'tailwindcss/*'],
@@ -43,6 +49,10 @@ const config = [
         },
       ],
     },
+  },
+  {
+    files: ['lib/zod.ts'],
+    rules: { 'no-restricted-imports': 'off' },
   },
 ];
 

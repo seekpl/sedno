@@ -54,21 +54,5 @@ export function isKnownPdfWasmViolation(v: CspViolation): boolean {
   return v.directive.startsWith('connect-src') && v.blocked === 'data';
 }
 
-export type RecordedRequest = { url: string; method: string; body: Buffer | null; type: string };
-
-/** Nagrywa wszystkie żądania kontekstu przeglądarki (strony i workery) z treścią. */
-export function recordRequests(context: import('@playwright/test').BrowserContext): RecordedRequest[] {
-  const records: RecordedRequest[] = [];
-  context.on('request', (req) => {
-    records.push({
-      url: req.url(),
-      method: req.method(),
-      body: req.postDataBuffer(),
-      type: req.resourceType(),
-    });
-  });
-  return records;
-}
-
 /** Plik testowy z tests/fixtures. */
 export const fixture = (name: string) => new URL(`../fixtures/${name}`, import.meta.url).pathname;

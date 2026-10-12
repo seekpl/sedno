@@ -11,7 +11,7 @@
  * - Akcja nigdy nie rzuca wyjątku: formularz zawsze dostaje stan z przyczyną i naprawą.
  * - Adresu e-mail nie logujemy.
  */
-import { z } from 'zod';
+import { z } from '@/lib/zod';
 import { anonIdSchema, EVENT_SCHEMAS } from '@/lib/analytics/events';
 import { waitlist as t } from '@/lib/copy/waitlist';
 import { clientRateLimitKey } from '@/lib/server/client-ip';
