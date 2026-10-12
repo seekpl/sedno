@@ -1,0 +1,231 @@
+/*
+ * Raport dla klienta: jeden markup, dwa wyglądy przez zapytania kontenera (szerokość raportu, nie okna).
+ * Wąski (< 560 px) = telefon z brand/reference/screens/EkranRaport.html, szeroki = arkusz A4 z tej samej makiety.
+ * Kolory wyłącznie z tokenów report-* (klasy sd-report, sd-r-* w brand/components.css). Rozmiary z makiety.
+ */
+
+.shell {
+  container: report / inline-size;
+}
+
+/* ---------- Wąski: telefon ---------- */
+
+.sheet {
+  display: grid;
+  gap: 20px; /* ref: brand/reference/screens/EkranRaport.html (telefon) */
+  align-content: start;
+  padding: 20px 20px var(--space-5); /* ref: brand/reference/screens/EkranRaport.html (telefon) */
+  font-size: 16px;
+  line-height: 24px;
+}
+
+.wideOnly {
+  display: none;
+}
+
+.author {
+  display: flex;
+  align-items: center;
+  gap: 10px; /* ref: brand/reference/screens/EkranRaport.html */
+  min-width: 0;
+}
+
+.author .avatar {
+  width: 36px;
+  height: 36px;
+  background: var(--report-ink);
+  color: var(--report-paper);
+}
+
+/* Długa nazwa autora lub klienta (do 80 znaków, także bez spacji) łamie się, zamiast wchodzić na miesiąc. */
+.authorText {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.logo {
+  display: block;
+  height: 36px;
+  width: auto;
+  max-width: 160px;
+  object-fit: contain;
+}
+
+.authorName {
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 18px;
+}
+
+.client {
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.period {
+  display: grid;
+  justify-items: end;
+  text-align: right;
+  font-size: 13px;
+  line-height: 18px;
+  flex: none;
+}
+
+.intro {
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.sheet .title {
+  margin-top: var(--space-1);
+}
+
+.numbers {
+  display: grid;
+  gap: 20px; /* ref: brand/reference/screens/EkranRaport.html (odstęp sekcji telefonu) */
+}
+
+/*
+ * Kluczowa liczba: 64 px na telefonie, 72 px na arkuszu, mniej dla długich liczb. --key-em (szerokość liczby
+ * w em) ustawia komponent; 0,66 em to wcięcia .sd-circled z obu stron i wysunięcie pętli w prawo.
+ */
+.keyBox {
+  container-type: inline-size;
+  min-width: 0;
+}
+
+.keyBox :global(.sd-key__value) {
+  font-size: min(64px, calc(100cqi / (var(--key-em, 2) + 0.66)));
+  line-height: 1;
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+.metric :global(.sd-metric__value) {
+  font-size: 28px;
+  line-height: 32px;
+}
+
+.change {
+  white-space: nowrap;
+}
+
+/*
+ * Wspólne kolumny wszystkich słupków (subgrid): etykiety min. 7,5 em jak w .sd-r-bar, ale bez łamania
+ * „Nowi obserwujący”, i jedna kolumna liczb. Dzięki temu słupki M i M−1 mają tę samą długość toru,
+ * nawet gdy przy wyświetleniach stoi zmiana m/m — inaczej 100% bywałoby krótsze niż 92%.
+ */
+.bars {
+  grid-template-columns: minmax(7.5em, max-content) 1fr auto;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.bars > :global(.sd-r-bar) {
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+}
+
+.section {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.heading {
+  font: 650 17px/24px var(--font-display);
+}
+
+.text {
+  font-size: 15px;
+  line-height: 23px;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.foot {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  gap: 6px; /* ref: brand/reference/screens/EkranRaport.html */
+}
+
+/* ---------- Szeroki: arkusz A4 ---------- */
+
+@container report (min-width: 560px) {
+  .sheet {
+    gap: 22px; /* ref: brand/reference/screens/EkranRaport.html (PDF A4) */
+    padding: 40px 44px; /* ref: brand/reference/screens/EkranRaport.html (PDF A4) */
+  }
+
+  .wideOnly {
+    display: revert;
+  }
+
+  .narrowOnly {
+    display: none;
+  }
+
+  .author .avatar {
+    width: 40px;
+    height: 40px;
+  }
+
+  .logo {
+    height: 40px;
+  }
+
+  .authorName {
+    font-size: 16px;
+    line-height: 24px;
+  }
+
+  .client {
+    font-size: 13px;
+    line-height: 24px;
+  }
+
+  .period {
+    line-height: 24px;
+  }
+
+  .numbers {
+    grid-template-columns: 1.2fr 1fr;
+    gap: var(--space-5);
+    align-items: end;
+  }
+
+  .keyBox :global(.sd-key__value) {
+    font-size: min(72px, calc(100cqi / (var(--key-em, 2) + 0.66)));
+  }
+
+  .metrics {
+    grid-template-columns: 1fr;
+    gap: 14px; /* ref: brand/reference/screens/EkranRaport.html (PDF A4) */
+  }
+
+  .metric :global(.sd-metric__value) {
+    font-size: 26px;
+    line-height: 30px;
+  }
+
+  .prose {
+    gap: 6px; /* ref: brand/reference/screens/EkranRaport.html (PDF A4) */
+  }
+
+  .text {
+    font-size: 14px;
+    line-height: 21px;
+  }
+
+  .foot :global(.sd-r-foot) {
+    margin-top: var(--space-2);
+  }
+}

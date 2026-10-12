@@ -20,10 +20,11 @@ export const PDF_ROUTE_PREFIXES = ['/nowy', '/app', '/r'] as const;
 export const SELF_ONLY_CONNECT_PREFIXES = ['/nowy'] as const;
 
 /**
- * Czy @react-pdf/renderer wymaga 'wasm-unsafe-eval'? Ustalane testem e2e (brak zdarzeń
- * securitypolicyviolation przy pobieraniu PDF) — wynik w docs/decisions.md.
+ * @react-pdf/renderer 4.9 układa strony silnikiem yoga-layout 3.2.1, który kompiluje WebAssembly
+ * (WebAssembly.instantiate). Bez 'wasm-unsafe-eval' PDF nie powstanie. Dopuszczone tylko na trasach z PDF
+ * (docs/decisions.md, p. 16 i 21). 'wasm-unsafe-eval' nie pozwala na eval() ani new Function().
  */
-export const PDF_NEEDS_WASM_EVAL = false;
+export const PDF_NEEDS_WASM_EVAL = true;
 
 function matches(pathname: string, prefixes: readonly string[]): boolean {
   return prefixes.some((p) => pathname === p || pathname.startsWith(`${p}/`));

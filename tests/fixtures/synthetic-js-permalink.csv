@@ -1,0 +1,11 @@
+Publish time,Post type,Permalink,Views,Reach,Likes
+09/01/2026 12:00,IG image,https://www.instagram.com/p/SYNTH0901/,100,80,0
+09/02/2026 12:00,IG image,javascript:alert(1),101,81,1
+09/03/2026 12:00,IG image,http://www.instagram.com/p/SYNTH0903/,102,82,2
+09/04/2026 12:00,IG image,https://evil.example/p/SYNTH0904/,103,83,3
+09/05/2026 12:00,IG image,https://instagram.com/p/SYNTH0905/,104,84,4
+09/06/2026 12:00,IG image,"  https://www.instagram.com/reel/SYNTH0906/?igsh=abc  ",105,85,5
+09/07/2026 12:00,IG image,https://www.instagram.com.evil.example/p/SYNTH0907/,106,86,6
+09/08/2026 12:00,IG image,JavaScript:https://www.instagram.com/p/x/,107,87,7
+09/09/2026 12:00,IG image,"https://www.instagram.com/p/SYNTH0909/""onmouseover=""alert(1)",108,88,8
+09/10/2026 12:00,IG image,"data:text/html,<script>alert(1)</script>",109,89,9

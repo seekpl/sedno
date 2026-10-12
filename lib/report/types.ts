@@ -4,20 +4,18 @@
  * (data, typ, wyświetlenia, interakcje, permalink) — nigdy opisów postów ani surowych wierszy.
  */
 import { z } from 'zod';
+import { INSTAGRAM_PERMALINK_MAX, INSTAGRAM_PERMALINK_PATTERN, MAX_COUNT } from './limits';
 
 export type KeyMetric = 'book' | 'call' | 'directions' | 'views';
 export type ActionKey = Exclude<KeyMetric, 'views'>;
 export type Actions = { book: number | null; call: number | null; directions: number | null };
 export type Branding = 'sedno-footer' | 'author';
 
-const count = z.number().int().min(0).max(1_000_000_000);
+const count = z.number().int().min(0).max(MAX_COUNT);
 const nullableCount = count.nullable();
 const monthKey = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/);
 const isoDate = z.string().datetime({ offset: true });
-const instagramUrl = z
-  .string()
-  .max(300)
-  .regex(/^https:\/\/www\.instagram\.com\/[A-Za-z0-9._\-/?=&%]*$/);
+const instagramUrl = z.string().max(INSTAGRAM_PERMALINK_MAX).regex(INSTAGRAM_PERMALINK_PATTERN);
 
 export const topPostSchema = z
   .object({
@@ -50,7 +48,16 @@ export const reportDataSchema = z
   .object({
     period: monthKey,
     client: z.object({ name: text(80).min(1) }).strict(),
-    author: z.object({ name: text(80), logoUrl: z.string().url().max(2000).optional() }).strict(),
+    // Logo autora tylko z https (PNG/JPEG/WebP z magazynu; bez javascript:, data: i http:).
+    author: z
+      .object({
+        name: text(80),
+        logoUrl: z
+          .url({ protocol: /^https$/ })
+          .max(2000)
+          .optional(),
+      })
+      .strict(),
     branding: z.enum(['sedno-footer', 'author']),
     summary: summarySchema,
     actions: actionsSchema,

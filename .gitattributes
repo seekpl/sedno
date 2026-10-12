@@ -1,0 +1,7 @@
+# Fixtures CSV muszą zachować bajty (BOM, CRLF, windows-1250) — test porównuje je z generatorem.
+tests/fixtures/** -text
+*.pdf binary
+*.woff2 binary
+*.ttf binary
+*.png binary
+*.zip binary

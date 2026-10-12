@@ -31,8 +31,8 @@ export const EVENT_SCHEMAS = {
 export type EventName = keyof typeof EVENT_SCHEMAS;
 export type EventProps<N extends EventName> = z.infer<(typeof EVENT_SCHEMAS)[N]>;
 
-/** Losowy identyfikator sesji (sessionStorage, bez cookies): 22 znaki base64url. */
-export const anonIdSchema = z.string().regex(/^[A-Za-z0-9_-]{16,32}$/);
+/** Losowy identyfikator sesji (sessionStorage, bez cookies): 16 bajtów → dokładnie 22 znaki base64url. */
+export const anonIdSchema = z.string().regex(/^[A-Za-z0-9_-]{22}$/);
 
 export const eventInputSchema = z
   .object({

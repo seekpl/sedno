@@ -14,7 +14,16 @@ Zadania właściciela i warunki, które muszą być spełnione przed publikacją
 - [ ] Limity zapisu (lista oczekujących, zdarzenia) przeniesione z pamięci procesu do trwałego magazynu, jeśli hosting uruchamia wiele instancji.
 - [ ] Przegląd nagłówków na produkcyjnej domenie (CSP bez naruszeń w konsoli, HSTS).
 
+## Baza i konfiguracja
+
+- [ ] Migracja `supabase/migrations/20261012000000_waitlist_events.sql` uruchomiona w projekcie Supabase w UE.
+- [ ] `SEDNO_DEV_STORE_DIR` **nieustawione** na produkcji (inaczej przy braku zmiennych Supabase e-maile trafiłyby do pliku).
+- [ ] Limity zapytań zakładają, że hosting ustawia `X-Forwarded-For`/`X-Real-IP` na adres klienta (Vercel tak robi). Za proxy, które tylko dopisuje adres, trzeba brać ostatni zaufany adres.
+
 ## RODO i umowy
+
+- [ ] Okres przechowywania wpisów listy oczekujących i zdarzeń (decyzja z prawnikiem; ewentualnie zadanie czyszczące).
+- [ ] Lista oczekujących bez podwójnego potwierdzenia (double opt-in): ktoś może zapisać cudzy adres. Decyzja właściciela i prawnika, np. link potwierdzający przed wysyłką o starcie.
 
 - [ ] Umowy powierzenia przetwarzania (DPA) z dostawcami: Supabase, hosting (np. Vercel), Stripe.
 - [ ] Projekt Supabase w regionie UE; hosting w UE (np. `fra1`).

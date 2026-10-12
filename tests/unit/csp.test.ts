@@ -37,7 +37,7 @@ describe('CSP według tras (docs/decisions.md, p. 16)', () => {
       dev: false,
       supabaseUrl: 'https://x.supabase.co',
     });
-    expect(directive(csp, 'script-src')).toBe("'nonce-abc' 'strict-dynamic'");
+    expect(directive(csp, 'script-src')).toBe("'nonce-abc' 'strict-dynamic' 'wasm-unsafe-eval'");
     expect(directive(csp, 'connect-src')).toBe("'self'");
   });
 
@@ -76,5 +76,22 @@ describe('CSP według tras (docs/decisions.md, p. 16)', () => {
     const b = createNonce();
     expect(atob(a)).toHaveLength(16);
     expect(a).not.toBe(b);
+  });
+});
+
+describe('PDF (yoga-layout w @react-pdf/renderer kompiluje WebAssembly)', () => {
+  it("'wasm-unsafe-eval' tylko na trasach z PDF, nigdy 'unsafe-eval' w produkcji", () => {
+    const nowy = buildCsp({ pathname: '/nowy', nonce: 'n', dev: false });
+    expect(directive(nowy, 'script-src')).toBe("'nonce-n' 'strict-dynamic' 'wasm-unsafe-eval'");
+    expect(directive(buildCsp({ pathname: '/r/abc', nonce: 'n', dev: false }), 'script-src')).toContain(
+      "'wasm-unsafe-eval'",
+    );
+    expect(
+      directive(buildCsp({ pathname: '/logowanie', nonce: 'n', dev: false }), 'script-src'),
+    ).not.toContain('wasm');
+    expect(directive(buildCsp({ pathname: '/', dev: false }), 'script-src')).not.toContain('wasm');
+    for (const path of ['/', '/nowy', '/app/klienci', '/r/x']) {
+      expect(buildCsp({ pathname: path, nonce: 'n', dev: false })).not.toContain("'unsafe-eval'");
+    }
   });
 });

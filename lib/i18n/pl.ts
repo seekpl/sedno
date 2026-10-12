@@ -112,13 +112,17 @@ export function formatFileSize(bytes: number): string {
 export const TIME_ZONE = 'Europe/Warsaw';
 
 /** Dzień, miesiąc i rok daty w strefie Europe/Warsaw. */
+const warsawDateFormat = new Intl.DateTimeFormat('en-CA', {
+  timeZone: TIME_ZONE,
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+});
+
 export function warsawParts(date: Date): { year: number; month: number; day: number } {
-  const parts = new Intl.DateTimeFormat('en-CA', {
-    timeZone: TIME_ZONE,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).formatToParts(date);
+  // Jeden formatter na moduł: tworzenie Intl.DateTimeFormat przy każdym wywołaniu kosztuje ~0,1 ms
+  // (20 000 wierszy → ~2 s).
+  const parts = warsawDateFormat.formatToParts(date);
   const get = (type: string) => Number(parts.find((p) => p.type === type)?.value);
   return { year: get('year'), month: get('month'), day: get('day') };
 }
