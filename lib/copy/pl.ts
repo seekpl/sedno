@@ -3,6 +3,7 @@
  * Do SMM-owca na „Ty”, raport bezosobowo, zdaniowa wielkość liter, bez emoji i wykrzykników,
  * cudzysłowy „ ” i » «. Każdy obszar ma własny plik w lib/copy/.
  */
+import { app } from './app';
 import { common } from './common';
 import { csv } from './csv';
 import { landing } from './landing';
@@ -11,4 +12,4 @@ import { report } from './report';
 import { tool } from './tool';
 import { waitlist } from './waitlist';
 
-export const copy = { ...common, csv, landing, legalPages, report, tool, waitlist } as const;
+export const copy = { ...common, app, csv, landing, legalPages, report, tool, waitlist } as const;

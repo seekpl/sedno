@@ -85,7 +85,13 @@ const VALID: { [N in EventName]: Record<string, unknown> } = {
 };
 const NAMES = Object.keys(VALID) as EventName[];
 /** Zapisuje je wyłącznie serwer (joinWaitlist, auth, webhook Stripe) — przeglądarka nie może ich podrobić. */
-const SERVER_ONLY: EventName[] = ['waitlist_joined', 'signup_completed', 'purchase_completed'];
+const SERVER_ONLY: EventName[] = [
+  'waitlist_joined',
+  'signup_completed',
+  'purchase_completed',
+  'link_created',
+  'link_opened',
+];
 const CLIENT_NAMES = NAMES.filter((name) => !SERVER_ONLY.includes(name));
 
 describe('recordEvent — prawidłowe zdarzenia', () => {
@@ -155,12 +161,16 @@ describe('recordEvent — odrzucenia (nic nie trafia do magazynu)', () => {
     for (const attempt of attempts) {
       expect(await recordEvent({ ...attempt, anonId: ANON })).toEqual({ ok: false });
     }
-    expect(await recordEvent({ name: 'link_opened', anonId: ANON, props: {}, caption: CANARY })).toEqual({
+    expect(
+      await recordEvent({ name: 'report_previewed', anonId: ANON, props: { mode: 'anon' }, caption: CANARY }),
+    ).toEqual({
       ok: false,
     });
     // Identyfikator sesji ma dokładnie 22 znaki — znacznik (25 znaków) nie zmieści się także tam.
     for (const anonId of [CANARY, `${CANARY} ${CANARY}`, CANARY.slice(0, 16)]) {
-      expect(await recordEvent({ name: 'link_opened', anonId, props: {} })).toEqual({ ok: false });
+      expect(await recordEvent({ name: 'report_previewed', anonId, props: { mode: 'anon' } })).toEqual({
+        ok: false,
+      });
     }
     expect(store.events).toEqual([]);
     expect(JSON.stringify(store.events)).not.toContain(CANARY);
@@ -199,7 +209,9 @@ describe('recordEvent — odrzucenia (nic nie trafia do magazynu)', () => {
       42,
     ];
     for (const anonId of wrong) {
-      expect(await recordEvent({ name: 'link_opened', anonId, props: {} })).toEqual({ ok: false });
+      expect(await recordEvent({ name: 'report_previewed', anonId, props: { mode: 'anon' } })).toEqual({
+        ok: false,
+      });
     }
     expect(store.events).toEqual([]);
   });
@@ -218,7 +230,7 @@ describe('recordEvent — limit zapytań', () => {
     for (let i = 0; i < 121; i++) {
       // Różne identyfikatory sesji: działa limit na IP.
       const anonId = `sesja${String(i).padStart(17, '0')}`;
-      results.push((await recordEvent({ name: 'link_opened', anonId, props: {} })).ok);
+      results.push((await recordEvent({ name: 'report_previewed', anonId, props: { mode: 'anon' } })).ok);
     }
     expect(results.filter(Boolean)).toHaveLength(120);
     expect(results.at(-1)).toBe(false);
@@ -226,14 +238,18 @@ describe('recordEvent — limit zapytań', () => {
 
     // Inny adres ma własny limit.
     h.headers = new Map([['x-forwarded-for', '198.51.100.1, 10.0.0.1']]);
-    expect(await recordEvent({ name: 'link_opened', anonId: ANON, props: {} })).toEqual({ ok: true });
+    expect(await recordEvent({ name: 'report_previewed', anonId: ANON, props: { mode: 'anon' } })).toEqual({
+      ok: true,
+    });
   });
 
   it('120 na minutę na identyfikator sesji, także z różnych adresów', async () => {
     const results = [];
     for (let i = 0; i < 121; i++) {
       h.headers = new Map([['x-real-ip', `192.0.2.${i}`]]);
-      results.push((await recordEvent({ name: 'link_opened', anonId: ANON, props: {} })).ok);
+      results.push(
+        (await recordEvent({ name: 'report_previewed', anonId: ANON, props: { mode: 'anon' } })).ok,
+      );
     }
     expect(results.filter(Boolean)).toHaveLength(120);
     expect(results.at(-1)).toBe(false);
@@ -241,7 +257,9 @@ describe('recordEvent — limit zapytań', () => {
 
   it('nieprawidłowe próby też zużywają limit adresu IP', async () => {
     for (let i = 0; i < 120; i++) await recordEvent({ name: 'nieznane', anonId: ANON, props: {} });
-    expect(await recordEvent({ name: 'link_opened', anonId: ANON, props: {} })).toEqual({ ok: false });
+    expect(await recordEvent({ name: 'report_previewed', anonId: ANON, props: { mode: 'anon' } })).toEqual({
+      ok: false,
+    });
     expect(store.events).toEqual([]);
   });
 });
@@ -260,7 +278,9 @@ describe('recordEvent — nigdy nie rzuca', () => {
 
   it('brak magazynu → { ok: false }', async () => {
     storeMock.getStore.mockImplementation(() => null);
-    expect(await recordEvent({ name: 'link_opened', anonId: ANON, props: {} })).toEqual({ ok: false });
+    expect(await recordEvent({ name: 'report_previewed', anonId: ANON, props: { mode: 'anon' } })).toEqual({
+      ok: false,
+    });
   });
 
   it('wyjątek przy odczycie wejścia → { ok: false }', async () => {
@@ -275,7 +295,9 @@ describe('recordEvent — nigdy nie rzuca', () => {
 
   it('brak nagłówków żądania → wspólny klucz „unknown”, zapis działa', async () => {
     h.headersThrow = true;
-    expect(await recordEvent({ name: 'link_opened', anonId: ANON, props: {} })).toEqual({ ok: true });
+    expect(await recordEvent({ name: 'report_previewed', anonId: ANON, props: { mode: 'anon' } })).toEqual({
+      ok: true,
+    });
   });
 });
 
@@ -393,13 +415,13 @@ describe('lib/analytics/client — track() i identyfikator sesji (przeglądarka)
     vi.spyOn(console, 'error').mockImplementation(() => {});
     store.failEvents = true;
     const { track } = await loadClient(fakeSessionStorage({}, true));
-    expect(() => track('link_opened', {})).not.toThrow();
+    expect(() => track('report_previewed', { mode: 'anon' })).not.toThrow();
     await new Promise((r) => setTimeout(r, 20));
     expect(store.events).toEqual([]);
 
     vi.unstubAllGlobals();
     store.failEvents = false;
-    expect(() => track('link_opened', {})).not.toThrow();
+    expect(() => track('report_previewed', { mode: 'anon' })).not.toThrow();
     await new Promise((r) => setTimeout(r, 20));
     // Bez window (serwer) nic nie jest wysyłane.
     expect(store.events).toEqual([]);

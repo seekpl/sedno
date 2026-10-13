@@ -321,7 +321,8 @@ function Reach({ view }: { view: ReportView }) {
   );
 }
 
-export function ReportPdf({ data }: { data: ReportData }) {
+/** logoSrc: logo autora z tej samej domeny (konta, Faza 2) — kontrakt fali 2, renderowanie w module edytora. */
+export function ReportPdf({ data }: { data: ReportData; logoSrc?: string }) {
   const view = reportView(data);
   const threeMetrics = view.metrics.length === 3;
   return (

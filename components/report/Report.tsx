@@ -14,6 +14,11 @@ type ReportProps = {
   /** 1 na stronie raportu (/r/[token]), 2 tam, gdzie raport jest częścią innej strony (podgląd, przykład). */
   headingLevel?: 1 | 2;
   className?: string;
+  /**
+   * Adres logo autora z tej samej domeny (/app/logo, /r/[token]/logo) — konta, Faza 2. Bez logo nagłówek
+   * pokazuje nazwę i inicjały autora. (Kontrakt fali 2; renderowanie dodaje moduł edytora.)
+   */
+  logoSrc?: string;
 };
 
 /**

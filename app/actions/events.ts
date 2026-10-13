@@ -29,6 +29,9 @@ const SERVER_ONLY_EVENTS = [
   'waitlist_joined',
   'signup_completed',
   'purchase_completed',
+  // Faza 2: link tworzy i otwiera serwer (Server Action, strona /r/[token]) — lib/server/server-events.ts.
+  'link_created',
+  'link_opened',
 ] as const satisfies readonly EventName[];
 
 export type ServerOnlyEventName = (typeof SERVER_ONLY_EVENTS)[number];

@@ -27,13 +27,6 @@ export const common = {
       fileError: 'Błąd pliku',
     },
   },
-  app: {
-    sections: [
-      { href: '/app/klienci', label: 'Klienci' },
-      { href: '/app/raporty', label: 'Raporty' },
-      { href: '/app/ustawienia', label: 'Ustawienia' },
-    ],
-  },
   nav: {
     home: 'Sedno, strona główna',
     menu: 'Menu',

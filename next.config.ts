@@ -15,6 +15,10 @@ const nextConfig: NextConfig = {
   devIndicators: false,
   reactStrictMode: true,
   pageExtensions: ['ts', 'tsx', 'md', 'mdx'],
+  experimental: {
+    // Logo w Ustawieniach do 2 MB (PROMPT.md §15) + narzut formularza; domyślny limit akcji to 1 MB.
+    serverActions: { bodySizeLimit: '3mb' },
+  },
   async headers() {
     return [
       { source: '/:path*', headers: SECURITY_HEADERS },
