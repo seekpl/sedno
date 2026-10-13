@@ -27,3 +27,6 @@ sedno-brand-kit.zip
 
 .DS_Store
 .vercel
+
+# lokalny stos Supabase (scripts/local-supabase)
+.supabase-local/

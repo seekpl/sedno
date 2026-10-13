@@ -3,8 +3,14 @@
  * Teksty i przyciski zależne od tych flag zmieniają się same, gdy funkcja zacznie działać.
  */
 export const features = {
-  /** Konta, linki do raportów, historia, logo (Faza 2). */
-  accounts: false,
+  /**
+   * Konta, linki do raportów, historia, logo (Faza 2). Włączane flagą NEXT_PUBLIC_ACCOUNTS_ENABLED=true
+   * (i tylko z konfiguracją Supabase): publicznie wyłączone, dopóki właściciel nie zdecyduje
+   * (docs/decisions.md, p. 94). Wartość zapada przy budowaniu.
+   */
+  accounts:
+    process.env.NEXT_PUBLIC_ACCOUNTS_ENABLED === 'true' &&
+    Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY),
   /** Płatności: Solo i pojedynczy raport (Faza 3). */
   payments: false,
 } as const;

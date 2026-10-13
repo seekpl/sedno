@@ -1,9 +1,20 @@
 import { defineConfig, devices } from '@playwright/test';
+import { appEnv } from './scripts/local-supabase/config';
 
 const PROD_PORT = 3100;
-/** Katalog magazynu plikowego serwera e2e (w .gitignore). */
-export const E2E_STORE_DIR = '.data/e2e';
 const DEV_PORT = 3101;
+
+/**
+ * Serwer produkcyjny e2e działa na lokalnym stosie Supabase (scripts/local-supabase): konta włączone,
+ * lista oczekujących i zdarzenia w bazie, e-maile z linkiem logowania w Mailpit. Klucze to publiczne
+ * wartości deweloperskie lokalnego stosu.
+ */
+const local = appEnv();
+const supabaseEnv = {
+  NEXT_PUBLIC_SUPABASE_URL: local.NEXT_PUBLIC_SUPABASE_URL!,
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: local.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  SUPABASE_SERVICE_ROLE_KEY: local.SUPABASE_SERVICE_ROLE_KEY!,
+};
 
 /**
  * Dwa serwery: produkcyjny (next build + start) dla tras publicznych i testu prywatności
@@ -36,12 +47,16 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: `pnpm build && pnpm start --port ${PROD_PORT}`,
+      command: `pnpm supabase:local start && pnpm build && pnpm start --port ${PROD_PORT}`,
       url: `http://localhost:${PROD_PORT}`,
       reuseExistingServer: !process.env.CI,
-      timeout: 240_000,
-      // Plikowy magazyn listy oczekujących i zdarzeń — test prywatności czyta te pliki (tests/e2e/privacy.spec.ts).
-      env: { SEDNO_DEV_STORE_DIR: E2E_STORE_DIR, NEXT_TELEMETRY_DISABLED: '1' },
+      timeout: 300_000,
+      env: {
+        ...supabaseEnv,
+        NEXT_PUBLIC_ACCOUNTS_ENABLED: 'true',
+        NEXT_PUBLIC_SITE_URL: `http://localhost:${PROD_PORT}`,
+        NEXT_TELEMETRY_DISABLED: '1',
+      },
     },
     {
       command: `pnpm dev --port ${DEV_PORT}`,

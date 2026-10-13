@@ -41,6 +41,21 @@ jobs:
       - name: Testy jednostkowe
         run: pnpm test
 
+      - name: Binaria lokalnego Supabase (cache)
+        uses: actions/cache@v4
+        with:
+          path: .supabase-local/bin
+          key: supabase-local-${{ hashFiles('scripts/local-supabase/config.ts') }}
+
+      - name: Postgres z systemu
+        run: ls /usr/lib/postgresql/*/bin/postgres || (sudo apt-get update && sudo apt-get install -y postgresql)
+
+      - name: Lokalny Supabase (Postgres, Auth, PostgREST, Mailpit)
+        run: pnpm supabase:local start
+
+      - name: Testy bazy (RLS, funkcje, typy)
+        run: pnpm test:db
+
       - name: Build
         run: pnpm build
 
@@ -55,5 +70,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: playwright-results
-          path: test-results/
+          path: |
+            test-results/
+            .supabase-local/logs/
           retention-days: 7

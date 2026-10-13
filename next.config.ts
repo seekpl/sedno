@@ -23,7 +23,7 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: 'Content-Security-Policy',
-            value: buildCsp({ pathname: '/', dev, supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL }),
+            value: buildCsp({ pathname: '/', dev }),
           },
         ],
       },

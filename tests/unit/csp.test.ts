@@ -31,24 +31,29 @@ describe('CSP według tras (docs/decisions.md, p. 16)', () => {
   });
 
   it('/nowy: nonce + strict-dynamic, bez unsafe-inline w script-src, connect-src tylko self', () => {
-    const csp = buildCsp({
-      pathname: '/nowy',
-      nonce: 'abc',
-      dev: false,
-      supabaseUrl: 'https://x.supabase.co',
-    });
+    const csp = buildCsp({ pathname: '/nowy', nonce: 'abc', dev: false });
     expect(directive(csp, 'script-src')).toBe("'nonce-abc' 'strict-dynamic' 'wasm-unsafe-eval'");
     expect(directive(csp, 'connect-src')).toBe("'self'");
   });
 
-  it('/app: Supabase w connect-src', () => {
-    const csp = buildCsp({
-      pathname: '/app/klienci',
-      nonce: 'abc',
-      dev: false,
-      supabaseUrl: 'https://x.supabase.co/rest',
-    });
-    expect(directive(csp, 'connect-src')).toBe("'self' https://x.supabase.co");
+  it('/app i /r: przeglądarka nie łączy się z Supabase, connect-src tylko self (decyzja 93)', () => {
+    for (const pathname of ['/app/klienci', '/r/abc', '/logowanie']) {
+      const csp = buildCsp({ pathname, nonce: 'abc', dev: false });
+      expect(directive(csp, 'connect-src')).toBe("'self'");
+      expect(directive(csp, 'img-src')).toBe("'self' data: blob:");
+    }
+  });
+
+  it('Stripe w connect-src tylko na życzenie (Faza 3) i nigdy na /nowy', () => {
+    expect(
+      directive(
+        buildCsp({ pathname: '/app/ustawienia', nonce: 'n', dev: false, stripe: true }),
+        'connect-src',
+      ),
+    ).toBe("'self' https://api.stripe.com");
+    expect(
+      directive(buildCsp({ pathname: '/nowy', nonce: 'n', dev: false, stripe: true }), 'connect-src'),
+    ).toBe("'self'");
   });
 
   it('wspólne dyrektywy na każdej trasie', () => {

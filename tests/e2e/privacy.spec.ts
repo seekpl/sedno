@@ -4,10 +4,8 @@
  * ani workera) nie zawiera znacznika SEDNO-PRIVACY-CANARY-7f3a ani bajtów pliku. To samo dla localStorage,
  * sessionStorage i magazynu zdarzeń po stronie serwera. Kontrola pozytywna dowodzi, że nagrywanie działa.
  */
-import fs from 'node:fs';
-import path from 'node:path';
 import { chromium, expect, test, type Browser } from '@playwright/test';
-import { E2E_STORE_DIR } from '../../playwright.config';
+import { dumpPublicTables, eventNamesSince } from './db';
 import { goToMonth, uploadFixture } from './flow-helpers';
 import { startRecordingProxy, type ProxiedRequest } from './recording-proxy';
 
@@ -78,6 +76,7 @@ test('kontrola pozytywna: nagrywanie łapie znacznik wysłany ze strony i z Web 
 test('plik nie opuszcza przeglądarki: cały przepływ /nowy, PDF i lista oczekujących', async ({ baseURL }) => {
   const page = await newPage(baseURL);
   const records = proxy.requests;
+  const startedAt = new Date(Date.now() - 1000);
 
   // Wejście z CTA strony głównej (zdarzenie landing_cta_click) i wczytanie pliku ze znacznikiem.
   await page.goto('/nowy?src=hero');
@@ -127,9 +126,8 @@ test('plik nie opuszcza przeglądarki: cały przepływ /nowy, PDF i lista oczeku
   const largestPost = Math.max(0, ...records.map((r) => r.body.length));
   expect(largestPost).toBeLessThan(4096);
 
-  // Magazyn po stronie serwera: zdarzenia są, treści pliku nie ma.
-  const dir = path.resolve(E2E_STORE_DIR);
-  const events = fs.readFileSync(path.join(dir, 'events.jsonl'), 'utf8');
+  // Baza (Supabase) po stronie serwera: zdarzenia są, treści pliku nie ma w żadnej tabeli.
+  const names = await eventNamesSince(startedAt);
   for (const name of [
     'landing_cta_click',
     'csv_parsed',
@@ -137,11 +135,8 @@ test('plik nie opuszcza przeglądarki: cały przepływ /nowy, PDF i lista oczeku
     'pdf_downloaded',
     'waitlist_joined',
   ]) {
-    expect(events, name).toContain(`"${name}"`);
+    expect(names, name).toContain(name);
   }
-  const waitlist = fs.readFileSync(path.join(dir, 'waitlist.jsonl'), 'utf8');
-  for (const fragment of FILE_FRAGMENTS) {
-    expect(events).not.toContain(fragment);
-    expect(waitlist).not.toContain(fragment);
-  }
+  const dump = await dumpPublicTables();
+  for (const fragment of FILE_FRAGMENTS) expect(dump).not.toContain(fragment);
 });

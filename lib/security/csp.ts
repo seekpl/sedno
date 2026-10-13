@@ -34,26 +34,15 @@ export function cspModeFor(pathname: string): CspMode {
   return matches(pathname, NONCE_ROUTE_PREFIXES) ? 'nonce' : 'static';
 }
 
-function originOf(url: string | undefined): string | null {
-  if (!url) return null;
-  try {
-    return new URL(url).origin;
-  } catch {
-    return null;
-  }
-}
-
 export type CspOptions = {
   pathname: string;
   nonce?: string;
   dev: boolean;
-  /** Np. NEXT_PUBLIC_SUPABASE_URL — dopuszczony w connect-src poza trasami „tylko self”. */
-  supabaseUrl?: string;
   /** Hosty Stripe w connect-src (od Fazy 3). */
   stripe?: boolean;
 };
 
-export function buildCsp({ pathname, nonce, dev, supabaseUrl, stripe = false }: CspOptions): string {
+export function buildCsp({ pathname, nonce, dev, stripe = false }: CspOptions): string {
   const mode = cspModeFor(pathname);
   if (mode === 'nonce' && !nonce) throw new Error(`Trasa ${pathname} wymaga nonce`);
   const pdf = matches(pathname, PDF_ROUTE_PREFIXES) && PDF_NEEDS_WASM_EVAL;
@@ -63,12 +52,10 @@ export function buildCsp({ pathname, nonce, dev, supabaseUrl, stripe = false }: 
   // React w trybie deweloperskim odtwarza stosy błędów przez eval (dokumentacja Next.js). Nigdy w produkcji.
   if (dev) script.push("'unsafe-eval'");
 
+  // Przeglądarka nie łączy się z Supabase: logowanie, dane i logo idą przez serwer aplikacji
+  // (docs/decisions.md, p. 93), więc poza Stripe (Faza 3) connect-src to tylko 'self'.
   const connect = ["'self'"];
-  if (!matches(pathname, SELF_ONLY_CONNECT_PREFIXES)) {
-    const supabase = originOf(supabaseUrl);
-    if (supabase) connect.push(supabase);
-    if (stripe) connect.push('https://api.stripe.com');
-  }
+  if (!matches(pathname, SELF_ONLY_CONNECT_PREFIXES) && stripe) connect.push('https://api.stripe.com');
   // Odświeżanie modułów w trybie deweloperskim (WebSocket do własnego serwera).
   if (dev) connect.push('ws:', 'wss:');
 
