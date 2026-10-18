@@ -225,9 +225,15 @@ describe('exportAccount', () => {
   });
 });
 
+/** Żądanie z przeglądarki: kliknięcie linku na stronie (same-origin) albo inny nagłówek Sec-Fetch-Site. */
+const req = (site: string | null = 'same-origin') =>
+  new Request('http://localhost:3000/app/ustawienia/eksport', {
+    headers: site ? { 'sec-fetch-site': site } : {},
+  });
+
 describe('GET /app/ustawienia/eksport', () => {
   it('plik JSON do pobrania, bez zapisu w pamięci podręcznej', async () => {
-    const response = await GET();
+    const response = await GET(req());
     expect(response.status).toBe(200);
     expect(response.headers.get('content-type')).toMatch(/^application\/json/);
     expect(response.headers.get('content-disposition')).toMatch(
@@ -235,21 +241,36 @@ describe('GET /app/ustawienia/eksport', () => {
     );
     expect(response.headers.get('cache-control')).toBe('no-store');
     expect(response.headers.get('x-content-type-options')).toBe('nosniff');
+    expect(response.headers.get('cross-origin-resource-policy')).toBe('same-origin');
     const body = (await response.json()) as { profile: { email: string }; reports: unknown[] };
     expect(body.profile.email).toBe('anna@example.com');
     expect(body.reports).toHaveLength(1);
   });
 
+  it('żądanie z innej witryny: 403 bez danych, bez sprawdzania sesji i bez zużycia limitu', async () => {
+    for (const site of ['cross-site', 'same-site']) {
+      const response = await GET(req(site));
+      expect(response.status).toBe(403);
+      expect(await response.text()).toBe('');
+    }
+    expect(mocks.getCurrentUser).not.toHaveBeenCalled();
+  });
+
+  it('adres wpisany ręcznie albo przeglądarka bez Sec-Fetch-Site: plik', async () => {
+    expect((await GET(req('none'))).status).toBe(200);
+    expect((await GET(req(null))).status).toBe(200);
+  });
+
   it('bez sesji: 401 bez danych', async () => {
     mocks.getCurrentUser.mockResolvedValue(null);
-    const response = await GET();
+    const response = await GET(req());
     expect(response.status).toBe(401);
     expect(await response.text()).toBe('');
   });
 
   it('bez flagi kont: 404', async () => {
     mocks.features.accounts = false;
-    expect((await GET()).status).toBe(404);
+    expect((await GET(req())).status).toBe(404);
   });
 
   it('błąd bazy: 503 bez treści', async () => {
@@ -258,14 +279,14 @@ describe('GET /app/ustawienia/eksport', () => {
         throw new Error('secret');
       },
     };
-    const response = await GET();
+    const response = await GET(req());
     expect(response.status).toBe(503);
     expect(await response.text()).toBe('');
   });
 
   it('limit 10 eksportów na minutę na konto', async () => {
-    for (let i = 0; i < 10; i++) expect((await GET()).status).toBe(200);
-    const limited = await GET();
+    for (let i = 0; i < 10; i++) expect((await GET(req())).status).toBe(200);
+    const limited = await GET(req());
     expect(limited.status).toBe(429);
     expect(limited.headers.get('retry-after')).toBe('60');
   });

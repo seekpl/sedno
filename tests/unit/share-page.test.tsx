@@ -135,6 +135,17 @@ describe('/r/[token] — strona', () => {
     expect(afterMock.callbacks).toHaveLength(0);
   });
 
+  it('robot podglądu linku → ogólna strona bez raportu, bez danych i bez zdarzenia', async () => {
+    data.getSharedReport.mockResolvedValue({ status: 'preview' });
+    const { root } = mount(await SharedReportPage({ params }));
+    expect(root.firstElementChild?.getAttribute('data-theme')).toBe('light');
+    expect(root.querySelector('h1')?.textContent).toBe(`${t.preview.heading} ${t.preview.detail}`);
+    expect(root.querySelector('.sd-report')).toBeNull();
+    expect(root.textContent).not.toContain(EXAMPLE_REPORT.client.name);
+    expect(root.textContent).not.toMatch(/\d/);
+    expect(afterMock.callbacks).toHaveLength(0);
+  });
+
   it('limit otwarć → osobny komunikat (nie „wygasł”), bez raportu i bez zdarzenia', async () => {
     data.getSharedReport.mockResolvedValue({ status: 'rate-limited' });
     const { root } = mount(await SharedReportPage({ params }));
@@ -157,6 +168,15 @@ describe('/r/[token] — metadane (layout.tsx)', () => {
     expect(metadata.openGraph).toMatchObject({ title: t.meta.ogTitle, description: t.meta.description });
     expect(JSON.stringify(metadata)).not.toContain(TOKEN);
     expect(metadata.description ?? '').not.toMatch(/\d/);
+  });
+
+  it('robot podglądu linku: ogólny tytuł i Open Graph (bez klienta i liczb), noindex', async () => {
+    data.getSharedReport.mockResolvedValue({ status: 'preview' });
+    const metadata = await generateMetadata({ params });
+    expect(metadata.title).toEqual({ absolute: t.meta.ogTitle });
+    expect(metadata.robots).toEqual({ index: false, follow: false });
+    expect(metadata.openGraph).toMatchObject({ title: t.meta.ogTitle, description: t.meta.description });
+    expect(JSON.stringify(metadata)).not.toMatch(/\d/);
   });
 
   it.each([

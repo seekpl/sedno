@@ -164,7 +164,8 @@ function decode(value: string): string | null {
 
 /**
  * Bezpieczny klucz obiektu: zdekodowany raz, bez ukośnika na początku, segmenty bez „.”, „..”, pustych,
- * znaków sterujących i ukośnika wstecznego, bez nazw zarezerwowanych dla metadanych. Null, gdy zły.
+ * znaków sterujących i ukośnika wstecznego, bez nazw zarezerwowanych dla metadanych (w żadnym segmencie).
+ * Null, gdy zły.
  */
 export function cleanKey(raw: string): string | null {
   const decoded = decode(raw);
@@ -174,7 +175,8 @@ export function cleanKey(raw: string): string | null {
   if (/[\u0000-\u001f\u007f\\]/.test(key)) return null;
   const parts = key.split('/');
   if (parts.some((part) => part === '' || part === '.' || part === '..')) return null;
-  if (parts[parts.length - 1]!.endsWith(META_SUFFIX)) return null;
+  // Żaden segment (także katalog) nie może zająć nazwy pliku metadanych innego obiektu.
+  if (parts.some((part) => part.endsWith(META_SUFFIX))) return null;
   return key;
 }
 

@@ -6,7 +6,7 @@
  * są podmienione (vi.mock).
  */
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import type { ReactNode } from 'react';
+import { startTransition, useEffect, useState, type ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AddClientState } from '@/app/app/klienci/actions';
 import { ToastProvider } from '@/components/ui/Toast';
@@ -22,7 +22,12 @@ vi.mock('next/link', () => ({
   ),
 }));
 const router = vi.hoisted(() => ({ push: vi.fn() }));
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
+vi.mock('next/navigation', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('next/navigation')>()),
+  useRouter: () => router,
+}));
+const session = vi.hoisted(() => ({ requireUser: vi.fn() }));
+vi.mock('@/lib/auth/session', () => ({ requireUser: session.requireUser }));
 
 const action = vi.hoisted(() => ({
   createClient: vi.fn<(prev: AddClientState, data: FormData) => Promise<AddClientState>>(),
@@ -85,6 +90,7 @@ beforeEach(() => {
   data.monthOverview.mockReset();
   data.currentPlan.mockReset();
   router.push.mockReset();
+  session.requireUser.mockReset().mockResolvedValue({ id: '11111111-1111-4111-8111-111111111111' });
 });
 
 afterEach(() => {
@@ -346,6 +352,133 @@ describe('okno „Dodaj klienta”', () => {
   });
 });
 
+describe('okno „Dodaj klienta” — wynik razem z odświeżoną listą i błędy połączenia', () => {
+  const ONE: MonthOverview = {
+    rows: [{ id: ID(6), name: 'Kadr', status: 'no-export', book: null, call: null, views: null }],
+    sentCount: 0,
+    total: 1,
+    bookSum: null,
+    bookSumPrevious: null,
+  };
+
+  /** Panel z listą w stanie Reacta — jak drzewo z serwera, które Next.js podmienia po revalidatePath. */
+  const list: { set: (overview: MonthOverview) => void } = { set: () => {} };
+  const setOverview = (overview: MonthOverview) => list.set(overview);
+  function Harness({ initial }: { initial: MonthOverview }) {
+    const [overview, set] = useState(initial);
+    useEffect(() => {
+      list.set = set;
+    }, [set]);
+    return (
+      <ToastProvider>
+        <PanelView month="2026-09" now={NOW} overview={overview} />
+      </ToastProvider>
+    );
+  }
+
+  function open() {
+    const opener = screen.getByRole('button', { name: 'Dodaj klienta' });
+    opener.focus();
+    act(() => opener.click());
+    const dialog = screen.getByRole('dialog', { name: 'Dodaj klienta' });
+    fireEvent.change(within(dialog).getByLabelText('Nazwa klienta'), { target: { value: 'Kadr' } });
+    return dialog;
+  }
+
+  it('pierwszy klient, gdy nowa lista przychodzi w tym samym przejściu co wynik: toast i fokus na h1', async () => {
+    render(<Harness initial={EMPTY} />);
+    const dialog = open();
+    // Next.js odświeża drzewo w przejściu, które React łączy z trwającą akcją (jedno zatwierdzenie).
+    action.createClient.mockImplementationOnce(async () => {
+      startTransition(() => setOverview(ONE));
+      return { status: 'success', id: ID(6), name: 'Kadr' };
+    });
+    await act(async () => {
+      fireEvent.submit(dialog.querySelector('form')!);
+    });
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(screen.getByText('Klient dodany')).toBeTruthy();
+    expect(screen.getByRole('table', { name: t.table.caption('2026-09') })).toBeTruthy();
+    const heading = screen.getByRole('heading', { level: 1, name: 'Klienci we wrześniu' });
+    await waitFor(() => expect(document.activeElement).toBe(heading));
+  });
+
+  it('kolejny klient: lista się odświeża, toast, fokus wraca na „Dodaj klienta”', async () => {
+    render(<Harness initial={ONE} />);
+    const dialog = open();
+    action.createClient.mockImplementationOnce(async () => {
+      startTransition(() =>
+        setOverview({
+          ...ONE,
+          rows: [...ONE.rows, { ...ONE.rows[0]!, id: ID(7), name: 'Fizjo Ruch' }],
+          total: 2,
+        }),
+      );
+      return { status: 'success', id: ID(7), name: 'Fizjo Ruch' };
+    });
+    await act(async () => {
+      fireEvent.submit(dialog.querySelector('form')!);
+    });
+    expect(screen.getByText('Klient dodany')).toBeTruthy();
+    expect(within(table()).getAllByRole('row')).toHaveLength(3);
+    await waitFor(() =>
+      expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Dodaj klienta' })),
+    );
+  });
+
+  it('brak połączenia (akcja odrzucona): Alert z przyczyną i naprawą, okno i wpis zostają', async () => {
+    render(<Harness initial={ONE} />);
+    const dialog = open();
+    action.createClient.mockRejectedValueOnce(new TypeError('Failed to fetch'));
+    await act(async () => {
+      fireEvent.submit(dialog.querySelector('form')!);
+    });
+    const alert = within(screen.getByRole('dialog', { name: 'Dodaj klienta' })).getByRole('alert');
+    expect(alert.textContent).toContain(t.add.errors.failed);
+    expect((screen.getByLabelText('Nazwa klienta') as HTMLInputElement).value).toBe('Kadr');
+    expect(screen.queryByText('Klient dodany')).toBeNull();
+  });
+
+  it('błąd branży: komunikat pod polem przez aria-describedby i fokus na liście', async () => {
+    render(<Harness initial={ONE} />);
+    const dialog = open();
+    action.createClient.mockResolvedValueOnce({
+      status: 'error',
+      fieldErrors: { industry: t.add.errors.industryInvalid },
+    });
+    await act(async () => {
+      fireEvent.submit(dialog.querySelector('form')!);
+    });
+    const industry = within(dialog).getByLabelText('Branża') as HTMLSelectElement;
+    expect(industry.getAttribute('aria-invalid')).toBe('true');
+    expect(industry.getAttribute('aria-describedby')).toBe(`${industry.id}-error`);
+    expect(document.getElementById(`${industry.id}-error`)?.textContent).toBe(t.add.errors.industryInvalid);
+    expect(document.activeElement).toBe(industry);
+  });
+
+  it('podwójne wysłanie w trakcie zapisu nie dodaje klienta dwa razy', async () => {
+    render(<Harness initial={ONE} />);
+    const dialog = open();
+    let finish: (state: AddClientState) => void = () => {};
+    action.createClient.mockImplementationOnce(
+      () => new Promise<AddClientState>((resolve) => (finish = resolve)),
+    );
+    const form = dialog.querySelector('form')!;
+    await act(async () => {
+      fireEvent.submit(form);
+    });
+    await act(async () => {
+      fireEvent.submit(form);
+    });
+    expect(action.createClient).toHaveBeenCalledTimes(1);
+    expect(within(dialog).getByRole('button', { name: 'Dodaj klienta' }).getAttribute('aria-busy')).toBe(
+      'true',
+    );
+    await act(async () => finish({ status: 'success', id: ID(7), name: 'Kadr' }));
+    expect(screen.getByText('Klient dodany')).toBeTruthy();
+  });
+});
+
 describe('strona /app/klienci', () => {
   beforeEach(() => {
     vi.useFakeTimers({ toFake: ['Date'] });
@@ -361,6 +494,7 @@ describe('strona /app/klienci', () => {
     data.monthOverview.mockResolvedValue(OVERVIEW);
     data.currentPlan.mockResolvedValue('free');
     await renderPage();
+    expect(session.requireUser).toHaveBeenCalledWith('/app/klienci?m=2026-09');
     expect(data.monthOverview).toHaveBeenCalledWith(data.db, '2026-09');
     expect(screen.getByRole('heading', { level: 1, name: 'Klienci we wrześniu' })).toBeTruthy();
     expect(screen.getByText('Na start').className).toContain('sd-badge--plan');
@@ -382,6 +516,30 @@ describe('strona /app/klienci', () => {
     cleanup();
     await renderPage('2026-1');
     expect(data.monthOverview).toHaveBeenLastCalledWith(data.db, '2026-09');
+  });
+
+  it('bez sesji: przekierowanie na logowanie, zanim strona sięgnie po dane', async () => {
+    const { redirect } = await import('next/navigation');
+    session.requireUser.mockImplementation(async (next: string) =>
+      redirect(`/logowanie?next=${encodeURIComponent(next)}`),
+    );
+    const error = await ClientsPage({ searchParams: Promise.resolve({ m: '2026-08' }) }).catch(
+      (e: unknown) => e,
+    );
+    expect(String((error as { digest?: string }).digest)).toContain(
+      '/logowanie?next=%2Fapp%2Fklienci%3Fm%3D2026-08',
+    );
+    expect(data.monthOverview).not.toHaveBeenCalled();
+  });
+
+  it('wewnętrzne wyjątki Next.js z odczytu danych idą dalej (nie są „błędem wczytywania”)', async () => {
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const { redirect } = await import('next/navigation');
+    data.monthOverview.mockImplementation(async () => redirect('/logowanie'));
+    data.currentPlan.mockResolvedValue('free');
+    const error = await ClientsPage({ searchParams: Promise.resolve({}) }).catch((e: unknown) => e);
+    expect(String((error as { digest?: string }).digest)).toContain('NEXT_REDIRECT');
+    expect(log).not.toHaveBeenCalled();
   });
 
   it('tytuł strony z miesiącem', async () => {

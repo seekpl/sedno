@@ -24,6 +24,11 @@
   outline-offset: 4px;
 }
 
+/* Stały region role="status" dla wyniku „Wyślij ponownie”: pusty nie dodaje odstępu siatki. */
+.live:empty {
+  margin-top: calc(-1 * var(--space-4));
+}
+
 .form {
   display: grid;
   gap: var(--space-4);

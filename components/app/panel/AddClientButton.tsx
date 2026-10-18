@@ -24,6 +24,14 @@ import s from './Panel.module.css';
 const t = panel.add;
 const INITIAL_STATE: AddClientState = { status: 'idle' };
 
+/** Fokus spadł na <body> (element, który go miał, zniknął z dokumentu) → nagłówek panelu. */
+function focusHeadingIfLost() {
+  const active = document.activeElement;
+  if (!active || active === document.body || !active.isConnected) {
+    document.getElementById(PANEL_HEADING_ID)?.focus();
+  }
+}
+
 /**
  * „Dodaj klienta”: przycisk i okno z formularzem (nazwa, branża). Po zapisie okno się zamyka, toast mówi
  * „Klient dodany”, a lista odświeża się z serwera (revalidatePath w akcji). Fokus wraca na przycisk;
@@ -50,18 +58,22 @@ export function AddClientButton({
   // Pusty stan znika razem z tym przyciskiem po dodaniu pierwszego klienta, a fokus spadłby na <body>.
   useLayoutEffect(
     () => () => {
-      if (!added.current) return;
-      window.setTimeout(() => {
-        if (document.activeElement === document.body || document.activeElement === null)
-          document.getElementById(PANEL_HEADING_ID)?.focus();
-      }, 0);
+      if (added.current) window.setTimeout(focusHeadingIfLost, 0);
     },
     [],
   );
 
   return (
     <>
-      <Button variant={variant} icon="plus" className={className} onClick={() => setOpen(true)}>
+      <Button
+        variant={variant}
+        icon="plus"
+        className={className}
+        onClick={() => {
+          added.current = false;
+          setOpen(true);
+        }}
+      >
         {panel.actions.addClient}
       </Button>
       <Modal
@@ -82,7 +94,30 @@ export function AddClientButton({
  * i wybrana branża zostają. Błędy pod polami (aria-describedby), fokus na pierwsze złe pole.
  */
 function AddClientForm({ onCreated, onCancel }: { onCreated: () => void; onCancel: () => void }) {
-  const [state, formAction, pending] = useActionState(createClient, INITIAL_STATE);
+  const onCreatedRef = useRef(onCreated);
+  useEffect(() => {
+    onCreatedRef.current = onCreated;
+  });
+  // Drugie wysłanie przed ponownym renderem (dwa szybkie stuknięcia) nie wywoła akcji drugi raz.
+  const inFlight = useRef(false);
+
+  const [state, formAction, pending] = useActionState(
+    async (previous: AddClientState, data: FormData): Promise<AddClientState> => {
+      try {
+        const result = await createClient(previous, data);
+        // Od razu, nie w efekcie po renderze: odświeżona lista (revalidatePath) przychodzi w tym samym
+        // zatwierdzeniu co wynik akcji i w pustym stanie odmontowuje ten formularz — toast by przepadł.
+        if (result.status === 'success') onCreatedRef.current();
+        return result;
+      } catch {
+        // Zerwane połączenie albo odpowiedź spoza akcji: komunikat w oknie zamiast strony błędu.
+        return { status: 'error', message: t.errors.failed };
+      } finally {
+        inFlight.current = false;
+      }
+    },
+    INITIAL_STATE,
+  );
   const [name, setName] = useState('');
   const [industry, setIndustry] = useState<keyof typeof panel.industries>('inne');
   const id = useId();
@@ -93,17 +128,17 @@ function AddClientForm({ onCreated, onCancel }: { onCreated: () => void; onCance
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (pending) return;
+    if (pending || inFlight.current) return;
+    inFlight.current = true;
     const data = new FormData(event.currentTarget);
     startTransition(() => formAction(data));
   };
 
   useEffect(() => {
-    if (state.status === 'success') onCreated();
-    else if (state.status === 'error' && state.fieldErrors?.name) document.getElementById(nameId)?.focus();
-    else if (state.status === 'error' && state.fieldErrors?.industry)
-      document.getElementById(industryId)?.focus();
-  }, [state, onCreated, nameId, industryId]);
+    if (state.status !== 'error') return;
+    if (state.fieldErrors?.name) document.getElementById(nameId)?.focus();
+    else if (state.fieldErrors?.industry) document.getElementById(industryId)?.focus();
+  }, [state, nameId, industryId]);
 
   return (
     <form onSubmit={submit} className={s.addForm} noValidate>

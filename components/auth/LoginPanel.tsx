@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useEffect, useId, useRef } from 'react';
+import { useActionState, useEffect, useId, useRef, useState } from 'react';
 import { requestMagicLink, type LoginState } from '@/app/logowanie/actions';
 import { Alert } from '@/components/ui/Alert';
 import { Button } from '@/components/ui/Button';
@@ -10,6 +10,8 @@ import { cx } from '@/lib/cx';
 import s from './LoginPanel.module.css';
 
 const INITIAL_STATE: LoginState = { status: 'idle' };
+
+type Intent = 'resend' | 'change';
 
 type LoginPanelProps = {
   /** Ścieżka powrotu po zalogowaniu, już po safeNextPath (tylko /app). */
@@ -29,6 +31,8 @@ export function LoginPanel({ next, linkError }: LoginPanelProps) {
   const emailId = `${id}-email`;
   const headingRef = useRef<HTMLHeadingElement>(null);
   const previous = useRef<LoginState>(INITIAL_STATE);
+  /** Który przycisk „Sprawdź skrzynkę” wysłał formularz — tylko on pokazuje, że trwa działanie. */
+  const [intent, setIntent] = useState<Intent>('resend');
 
   useEffect(() => {
     const before = previous.current;
@@ -39,6 +43,12 @@ export function LoginPanel({ next, linkError }: LoginPanelProps) {
       document.getElementById(emailId)?.focus();
     }
   }, [state, emailId]);
+
+  // Komunikat o niedziałającym linku dotyczy tylko wejścia na stronę: po pierwszym działaniu znika.
+  const showLinkError = linkError && state === INITIAL_STATE;
+  // W trakcie wysyłki poprzedni wynik znika; nowy to nowy węzeł, więc czytnik ekranu ogłasza go także wtedy,
+  // gdy tekst jest taki sam jak poprzednio (np. drugie „Wyślij ponownie”).
+  const message = pending ? undefined : state.message;
 
   // Supabase Auth dopisuje opis błędu (po angielsku) w części „#” adresu; przeglądarka przenosi ją przez
   // przekierowanie na /logowanie?blad=link. Usuwamy ją z paska adresu bez przeładowania.
@@ -57,22 +67,38 @@ export function LoginPanel({ next, linkError }: LoginPanelProps) {
         <p className="body-l">{t.checkInbox.body(state.email)}</p>
         <p className="sd-secondary">{t.checkInbox.spam}</p>
 
-        {state.resent && !state.message && (
-          <Alert variant="success" role="status" title={t.checkInbox.resent} />
-        )}
-        {state.message && (
+        {/* Region stały w widoku, żeby wynik „Wyślij ponownie” był ogłaszany także w VoiceOver. */}
+        <div role="status" className={s.live}>
+          {!pending && state.resent && !state.message && (
+            <Alert variant="success" title={t.checkInbox.resent} />
+          )}
+        </div>
+        {message && (
           <Alert variant="error" title={t.error.title}>
-            {state.message}
+            {message}
           </Alert>
         )}
 
         <form action={formAction} className={s.actions}>
           <input type="hidden" name="email" value={state.email} />
           <input type="hidden" name="next" value={next} />
-          <Button type="submit" name="intent" value="resend" busy={pending}>
+          <Button
+            type="submit"
+            name="intent"
+            value="resend"
+            busy={pending && intent === 'resend'}
+            onClick={() => setIntent('resend')}
+          >
             {t.checkInbox.resend}
           </Button>
-          <Button type="submit" name="intent" value="change" variant="ghost">
+          <Button
+            type="submit"
+            name="intent"
+            value="change"
+            variant="ghost"
+            busy={pending && intent === 'change'}
+            onClick={() => setIntent('change')}
+          >
             {t.checkInbox.change}
           </Button>
         </form>
@@ -85,7 +111,7 @@ export function LoginPanel({ next, linkError }: LoginPanelProps) {
       <h1 className={cx('heading-1', s.title)}>{t.form.title}</h1>
       <p className="body-l sd-secondary">{t.form.lead}</p>
 
-      {linkError && !state.message && !state.fieldError && (
+      {showLinkError && (
         <Alert variant="error" title={t.linkError.title}>
           {t.linkError.body}
         </Alert>
@@ -108,9 +134,9 @@ export function LoginPanel({ next, linkError }: LoginPanelProps) {
           error={state.fieldError}
         />
 
-        {state.message && (
+        {message && (
           <Alert variant="error" title={t.error.title}>
-            {state.message}
+            {message}
           </Alert>
         )}
 

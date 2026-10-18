@@ -125,7 +125,7 @@ describe('teksty z odmianą', () => {
     expect(t.workingDaysLeft(12)).toBe('Do końca miesiąca zostało 12 dni roboczych.');
     expect(t.workingDaysLeft(14)).toBe('Do końca miesiąca zostało 14 dni roboczych.');
     expect(t.workingDaysLeft(22)).toBe('Do końca miesiąca zostały 22 dni robocze.');
-    expect(t.workingDaysLeft(0)).toBe('Do końca miesiąca zostało 0 dni roboczych.');
+    expect(t.workingDaysLeft(0)).toBe('Do końca miesiąca nie ma już dni roboczych.');
   });
 
   it('nagłówek w miejscowniku, porównanie z M−1 w mianowniku, brak danych to „—”', () => {

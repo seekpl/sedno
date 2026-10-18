@@ -41,13 +41,25 @@ export type MonthOverview = {
 export type Industry = Enums<'industry_t'>;
 export type Plan = Enums<'plan_t'>;
 
-/** Błąd odczytu lub zapisu bez treści błędu bazy (ta nie trafia do interfejsu ani logów). */
+/**
+ * Błąd odczytu lub zapisu bez treści błędu bazy (ta nie trafia do interfejsu ani logów). `limit` — baza
+ * odrzuciła nowego klienta, bo konto ma już CLIENTS_PER_ACCOUNT_MAX klientów.
+ */
 export class PanelDataError extends Error {
-  constructor(readonly step: 'clients' | 'reports' | 'profile' | 'insert') {
+  constructor(readonly step: 'clients' | 'reports' | 'profile' | 'insert' | 'limit') {
     super(`Panel klientów: operacja „${step}” nie powiodła się.`);
     this.name = 'PanelDataError';
   }
 }
+
+/**
+ * Górna granica klientów na konto (trigger clients_enforce_quota w
+ * supabase/migrations/20261013000100_accounts_hardening.sql; ochrona przed zalewem wierszy, nie limit planu).
+ */
+export const CLIENTS_PER_ACCOUNT_MAX = 500;
+
+/** Kod Postgresa check_violation — tak trigger limitu odrzuca wstawienie. */
+const CHECK_VIOLATION = '23514';
 
 const INDUSTRIES = [
   'salon',
@@ -60,14 +72,20 @@ const INDUSTRIES = [
 /** Pierwszy dzień miesiąca w formacie kolumny `reports.period`. */
 export const periodOf = (month: MonthKey) => `${month}-01`;
 
+/** Surowe wejście dłuższe niż to odrzucamy przed czyszczeniem (bez pracy wyrażeń na megabajtach). */
+const CLIENT_NAME_RAW_MAX = 2000;
+
 /**
  * Nazwa klienta: NFC, bez emoji (kroje marki ich nie mają, raport i tak je usuwa — docs/decisions.md, p. 42),
+ * bez niewidocznych znaków formatujących (\p{Cf}: zero-width, sterowanie kierunkiem tekstu, miękki dywiz),
  * bez znaków sterujących, białe znaki zwinięte do jednej spacji. Po oczyszczeniu 1–80 znaków.
  */
 const clientName = z
   .string({ error: t.add.errors.nameRequired })
+  .max(CLIENT_NAME_RAW_MAX, { error: t.add.errors.nameTooLong })
   .transform((value) =>
     stripEmoji(value.normalize('NFC'))
+      .replace(/\p{Cf}/gu, '')
       .replace(/[\u0000-\u001f\u007f-\u009f]/g, ' ')
       .replace(/\s+/g, ' ')
       .trim(),
@@ -85,10 +103,15 @@ export const clientInputSchema = z.object({
 
 export type ClientInput = z.input<typeof clientInputSchema>;
 
-/** Dodaje klienta zalogowanemu użytkownikowi. Rzuca ZodError przy złych danych, PanelDataError przy błędzie bazy. */
+/**
+ * Dodaje klienta zalogowanemu użytkownikowi. Rzuca ZodError przy złych danych, PanelDataError('limit'), gdy
+ * konto ma już CLIENTS_PER_ACCOUNT_MAX klientów, i PanelDataError('insert') przy innym błędzie bazy.
+ */
 export async function createClient(db: Db, input: ClientInput): Promise<{ id: string; name: string }> {
   const { name, industry } = clientInputSchema.parse(input);
   const { data, error } = await db.from('clients').insert({ name, industry }).select('id, name').single();
+  // Nazwę i branżę sprawdził już zod, więc naruszenie warunku przy wstawieniu to limit klientów na konto.
+  if (error?.code === CHECK_VIOLATION) throw new PanelDataError('limit');
   if (error || !data) throw new PanelDataError('insert');
   return data;
 }

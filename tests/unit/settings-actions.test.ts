@@ -49,6 +49,7 @@ vi.mock('@/lib/logo/store', () => ({ saveLogo: mocks.saveLogo, removeLogo: mocks
 vi.mock('@/lib/data/account', () => ({ deleteAccount: mocks.deleteAccount }));
 
 const { updateProfile, uploadLogo, removeLogo, deleteAccount } = await import('@/app/app/ustawienia/actions');
+const { profileInputSchema } = await import('@/lib/data/profile');
 const { resetRateLimits } = await import('@/lib/server/rate-limit');
 const { LOGO_MAX_BYTES } = await import('@/lib/logo/validate');
 
@@ -322,6 +323,14 @@ describe('Usuń konto — deleteAccount', () => {
     expect(mocks.cookieDelete).toHaveBeenCalledTimes(3);
   });
 
+  it('błąd przy kończeniu sesji po usunięciu konta: przekierowanie, bez komunikatu „konto nadal działa”', async () => {
+    mocks.cookieDelete.mockImplementation(() => {
+      throw new Error('cookies');
+    });
+    await expect(deleteAccount(IDLE, form({ confirm: 'usuń' }))).rejects.toEqual(new RedirectError('/'));
+    expect(mocks.deleteAccount).toHaveBeenCalledTimes(1);
+  });
+
   it('limit prób usunięcia', async () => {
     for (let i = 0; i < 5; i++) {
       mocks.deleteAccount.mockRejectedValueOnce(new Error('x'));
@@ -331,5 +340,34 @@ describe('Usuń konto — deleteAccount', () => {
       status: 'error',
       message: t.deleteAccount.errors.rateLimited,
     });
+  });
+});
+
+describe('profileInputSchema — czyszczenie jak nazwa klienta', () => {
+  it('usuwa znaki zerowej szerokości i sterowanie kierunkiem tekstu, zwija spacje, puste → null', () => {
+    expect(
+      profileInputSchema.parse({ displayName: ' An\u200Bna\u202E ', brandName: 'Kadr\u2066\t\nSocial\uFEFF' }),
+    ).toEqual({ displayName: 'Anna', brandName: 'Kadr Social' });
+    expect(profileInputSchema.parse({ displayName: '\u200B\u200E', brandName: ' \u0007 ' })).toEqual({
+      displayName: null,
+      brandName: null,
+    });
+  });
+
+  it('nazwa na raporcie bez emoji; imię zachowuje emoji, także złożone (łącznik U+200D zostaje)', () => {
+    const coder = '\u{1F469}\u200D\u{1F4BB}';
+    expect(profileInputSchema.parse({ displayName: `Anna ${coder}`, brandName: `Kadr ${coder} ✨` })).toEqual({
+      displayName: `Anna ${coder}`,
+      brandName: 'Kadr',
+    });
+  });
+
+  it('brak pola: null (to samo czyszczenie co pusty tekst)', () => {
+    expect(profileInputSchema.parse({})).toEqual({ displayName: null, brandName: null });
+  });
+
+  it('limit 80 znaków po oczyszczeniu (znaki formatujące się nie liczą)', () => {
+    expect(profileInputSchema.parse({ brandName: `${'a'.repeat(80)}\u200B\u200B` }).brandName).toHaveLength(80);
+    expect(profileInputSchema.safeParse({ brandName: 'a'.repeat(81) }).success).toBe(false);
   });
 });

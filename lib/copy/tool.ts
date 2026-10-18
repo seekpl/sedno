@@ -178,10 +178,16 @@ export const tool = {
       title: 'Nie udało się utworzyć PDF',
       body: 'Odśwież stronę i spróbuj ponownie.',
     },
-    /** Uczciwa informacja o funkcjach kont (PROMPT.md §2.5). */
+    /** Uczciwa informacja o funkcjach kont (PROMPT.md §2.5), gdy konta są wyłączone. */
     soon: {
       badge: 'Wkrótce',
       text: 'Link do raportu i historia raportów będą w planie Solo.',
+    },
+    /** To samo, gdy konta działają (features.accounts): link i historia są w koncie, /nowy nic nie zapisuje. */
+    account: {
+      text: 'Link do raportu i historia raportów są w koncie. Ten raport się nie zapisze, więc najpierw pobierz PDF.',
+      login: 'Zaloguj się',
+      loginHref: '/logowanie',
     },
   },
 } as const;

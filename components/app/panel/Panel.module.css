@@ -89,11 +89,12 @@
     gap: var(--space-3);
   }
 
-  /* Cele dotyku 48 px na telefonie (PROMPT.md §15). */
+  /* Cele dotyku 48 px na telefonie (PROMPT.md §15): przyciski oraz pole i lista w oknie „Dodaj klienta”. */
   .actions :global(.sd-btn),
   .touch:global(.sd-btn),
   .addButtons :global(.sd-btn),
-  .rowAction :global(.sd-btn) {
+  .rowAction :global(.sd-btn),
+  .addForm :global(.sd-input) {
     height: var(--control-l);
   }
 

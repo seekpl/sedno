@@ -81,6 +81,28 @@ describe('klient i autor', () => {
     expect(await getReportAuthor(bob.db)).toEqual({ name: 'Bob B.', hasLogo: true });
     await sql('update public.profiles set display_name = null, logo_path = null where id = $1', [bob.id]);
   });
+
+  it('nazwa z emoji na granicy 80 znaków: bez emoji, bez połówek par i zapis raportu działa', async () => {
+    // Imię w profilu może mieć emoji (80 znaków = do 160 jednostek UTF-16); raport ich nie pokazuje.
+    const clientId = await addClient(bob, 'Salon Bob');
+    for (const name of [`${'a'.repeat(71)}${'🌸'.repeat(5)}`, `Ala 🌸 ${'b'.repeat(74)}`, '🌸🌸🌸']) {
+      await sql('update public.profiles set display_name = $2 where id = $1', [bob.id, name]);
+      const author = await getReportAuthor(bob.db);
+      expect(author.name).not.toMatch(/[\uD800-\uDFFF]/);
+      expect(author.name.length).toBeLessThanOrEqual(80);
+      const saved = await saveReport(bob.db, {
+        clientId,
+        period: '2026-09',
+        intent: 'draft',
+        data: data('2026-09'),
+      });
+      expect(saved.data.author.name).toBe(author.name);
+    }
+    expect((await getReportAuthor(bob.db)).name).toBe('');
+    await sql('update public.profiles set display_name = $2 where id = $1', [bob.id, `${'a'.repeat(71)}🌸`]);
+    expect((await getReportAuthor(bob.db)).name).toBe('a'.repeat(71));
+    await sql('update public.profiles set display_name = null where id = $1', [bob.id]);
+  });
 });
 
 describe('zapis raportu', () => {

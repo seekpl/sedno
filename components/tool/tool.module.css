@@ -338,6 +338,15 @@
   color: var(--ink-secondary);
 }
 
+/* „Zaloguj się” przy informacji o koncie: cel dotyku 48 px na telefonie bez zmiany wyglądu. */
+@media (pointer: coarse), (max-width: 767px) {
+  .soonLink {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--control-l);
+  }
+}
+
 /* Arkusz jak w brand/reference/screens/EkranRaport.html (PDF A4) i na /przyklad. */
 .sheet {
   border: 1px solid var(--report-line);

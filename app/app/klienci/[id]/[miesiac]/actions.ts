@@ -14,13 +14,20 @@
  */
 import { revalidatePath } from 'next/cache';
 import { after } from 'next/server';
+import { MIN_EDITOR_MONTH } from '@/components/editor/model';
 import type { LinkResult, RevokeResult, SaveResult, StatusResult } from '@/components/editor/types';
 import { siteUrl } from '@/components/site/seo';
 import { features } from '@/config/features';
 import { getCurrentUser } from '@/lib/auth/session';
 import { editor as t } from '@/lib/copy/editor';
 import { compareMonths, currentMonth } from '@/lib/dates';
-import { createLink, LinkReportNotFoundError, revokeLink } from '@/lib/data/links';
+import {
+  createLink,
+  LINKS_PER_REPORT_MAX,
+  LinkQuotaError,
+  LinkReportNotFoundError,
+  revokeLink,
+} from '@/lib/data/links';
 import {
   getReport,
   markSent,
@@ -40,10 +47,16 @@ import { z } from '@/lib/zod';
 const LINK_LIMIT = 20;
 const LINK_WINDOW_MS = 10 * 60_000;
 
-/** Miesiąc raportu: 'YYYY-MM', nie później niż bieżący (raportu z przyszłości nie ma). */
+/**
+ * Miesiąc raportu: 'YYYY-MM' od MIN_EDITOR_MONTH (jak adres edytora i zakres kolumny `period` w bazie)
+ * do bieżącego (raportu z przyszłości nie ma).
+ */
 const reportMonth = monthSchema.refine(
   // Zod sprawdza refine także po nieudanym wzorcu: compareMonths tylko dla poprawnego 'YYYY-MM'.
-  (month) => MONTH_PATTERN.test(month) && compareMonths(month, currentMonth(new Date())) <= 0,
+  (month) =>
+    MONTH_PATTERN.test(month) &&
+    compareMonths(month, MIN_EDITOR_MONTH) >= 0 &&
+    compareMonths(month, currentMonth(new Date())) <= 0,
 );
 
 const refSchema = z.object({ clientId: z.uuid(), month: reportMonth }).strict();
@@ -118,6 +131,7 @@ export async function createLinkAction(input: unknown): Promise<LinkResult> {
     };
   } catch (error) {
     if (error instanceof LinkReportNotFoundError) return fail(t.errors.notFound);
+    if (error instanceof LinkQuotaError) return fail(t.errors.linkQuota(LINKS_PER_REPORT_MAX));
     console.error('[sedno] Utworzenie linku nie powiodło się.');
     return fail(t.errors.failed);
   }

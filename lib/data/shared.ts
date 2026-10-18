@@ -1,5 +1,6 @@
 import 'server-only';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { headers } from 'next/headers';
 import { cache } from 'react';
 import { features } from '@/config/features';
 import { readLogo } from '@/lib/logo/store';
@@ -18,9 +19,13 @@ import { z } from '@/lib/zod';
  *   { data, branding, hasLogo } tylko dla linku nieodwołanego i nieprzeterminowanego, bez identyfikatorów,
  *   i zwiększa licznik wyświetleń. Dane sprawdza jeszcze raz ścisły schemat raportu (obrona w głąb).
  * - Limit: 60 otwarć na minutę z jednego adresu IP (IPv6: sieć /64), logo 120 na minutę.
+ * - Podgląd linku w komunikatorze (WhatsApp, Messenger, Slack, Teams…) pobiera stronę robotem: robot dostaje
+ *   ogólną stronę bez zapytania do bazy — bez treści raportu u zewnętrznych serwisów i bez wyświetlenia
+ *   („Link otwarto N razy” w edytorze liczy otwarcia ludzi, nie wklejenie linku do rozmowy).
  * - getSharedReport jest opakowane w React cache(): generateMetadata i strona dzielą jedno wywołanie,
  *   więc jedno wczytanie strony to jedno wyświetlenie.
- * - Logo: klucz serwisowy, ale tylko przez aktywny link (właściciel linku → profiles.logo_path).
+ * - Logo: klucz serwisowy, ale tylko przez aktywny link (właściciel linku → profiles.logo_path). Adres logo
+ *   zapisany w danych raportu (author.logoUrl) pomijamy.
  */
 
 export const SHARE_TOKEN_PATTERN = /^[0-9A-Za-z]{22}$/;
@@ -38,9 +43,23 @@ export type SharedReportResult =
   /** Link nieprawidłowy, wygasły albo odwołany — strona pokazuje share.expired. */
   | { status: 'not-found' }
   /** Za dużo otwarć z jednego połączenia. */
-  | { status: 'rate-limited' };
+  | { status: 'rate-limited' }
+  /** Robot podglądu linku: ogólna strona, bez bazy, bez wyświetlenia i bez treści raportu. */
+  | { status: 'preview' };
 
 export type SharedLogo = { bytes: Uint8Array; contentType: string };
+
+/**
+ * Roboty podglądu linków i wyszukiwarek (po nagłówku User-Agent). Tylko nazwy robotów — przeglądarki
+ * wbudowane w aplikacje (Facebook „FBAN”, Instagram, LinkedInApp, Telegram) mają inne User-Agent i widzą
+ * raport. Robot WhatsApp (i Signal, który się pod niego podszywa) zaczyna się od „WhatsApp/”.
+ */
+const PREVIEW_BOT =
+  /^(?:WhatsApp|Mastodon)\/|facebookexternalhit|facebot|meta-external(?:agent|fetcher)|telegrambot|slackbot|slack-imgproxy|twitterbot|discordbot|linkedinbot|skypeuripreview|microsoftpreview|pinterestbot|redditbot|embedly|iframely|googlebot|bingbot|applebot|duckduckbot|yandexbot|baiduspider|bluesky cardyb/i;
+
+export function isLinkPreviewBot(userAgent: string | null | undefined): boolean {
+  return Boolean(userAgent && PREVIEW_BOT.test(userAgent));
+}
 
 export function isShareToken(value: unknown): value is string {
   return typeof value === 'string' && SHARE_TOKEN_PATTERN.test(value);
@@ -79,7 +98,10 @@ export async function readSharedReport(
     console.error('[sedno] Raport z linku nie pasuje do schematu ReportData.');
     return null;
   }
-  return parsed.data;
+  // Logo na raporcie publicznym pokazuje wyłącznie trasa /r/{token}/logo (hasLogo). Adres https zapisany
+  // w danych pomijamy: strona nie pobiera obrazków z obcych hostów (CSP), a taki adres mógłby śledzić czytelnika.
+  const author = { name: parsed.data.data.author.name };
+  return { ...parsed.data, data: { ...parsed.data.data, author } };
 }
 
 /**
@@ -115,9 +137,19 @@ export async function readSharedLogo(
   return path ? readLogo(path) : null;
 }
 
+/** User-Agent bieżącego żądania (poza żądaniem — null). */
+async function requestUserAgent(): Promise<string | null> {
+  try {
+    return (await headers()).get('user-agent');
+  } catch {
+    return null;
+  }
+}
+
 /** Wynik dla strony /r/[token] (bez kontekstu React: każde wywołanie to osobne wyświetlenie). */
 export async function loadSharedReport(token: string): Promise<SharedReportResult> {
   if (!features.accounts || !isShareToken(token)) return { status: 'not-found' };
+  if (isLinkPreviewBot(await requestUserAgent())) return { status: 'preview' };
   const ip = await clientRateLimitKey();
   if (!rateLimit(`share:ip:${ip}`, SHARE_RATE_LIMIT.limit, SHARE_RATE_LIMIT.windowMs)) {
     return { status: 'rate-limited' };

@@ -262,6 +262,31 @@ describe('zapis', () => {
     expect(steps().current).toBe(2);
   });
 
+  it('gotowy albo wysłany raport to nie szkic: „Zapisz zmiany” → „Zmiany zapisane”, status bez zmian', async () => {
+    for (const status of ['ready', 'sent'] as const) {
+      const actions = mockActions();
+      actions.save.mockImplementation(async ({ data }: { data: ReportData }) => ({
+        ok: true as const,
+        report: { data, status, sentAt: status === 'sent' ? '2026-10-02T09:30:00Z' : null },
+      }));
+      renderEditor({ saved: snapshot(savedReport(), status), initialStep: 'effects', actions });
+      expect(screen.queryByRole('button', { name: 'Zapisz szkic' })).toBeNull();
+      clickButton('Zapisz zmiany');
+      expect(await screen.findByText('Zmiany zapisane')).toBeTruthy();
+      expect(screen.queryByText('Szkic zapisany')).toBeNull();
+      expect(actions.save.mock.calls[0]![0]).toMatchObject({ intent: 'draft' });
+      expect(screen.getByRole('button', { name: 'Zapisz zmiany' })).toBeTruthy();
+      cleanup();
+    }
+  });
+
+  it('szkic zapisany drugi raz nadal jest szkicem: „Zapisz szkic” → „Szkic zapisany”', async () => {
+    renderEditor({ saved: snapshot(savedReport(), 'draft'), initialStep: 'effects' });
+    clickButton('Zapisz szkic');
+    expect(await screen.findByText('Szkic zapisany')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Zapisz szkic' })).toBeTruthy();
+  });
+
   it('błąd zapisu: przyczyna i naprawa, bez toastu', async () => {
     const actions = mockActions();
     actions.save.mockResolvedValueOnce({
@@ -415,7 +440,8 @@ describe('krok 3 — wysyłka', () => {
   it('„Wróć do edycji”: krok 2 z informacją, że klient ma link', async () => {
     renderSend({ link: linkView() });
     clickButton('Wróć do edycji');
-    expect(await screen.findByRole('button', { name: 'Zapisz szkic' })).toBeTruthy();
+    expect(await screen.findByRole('button', { name: 'Zapisz zmiany' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Zapisz szkic' })).toBeNull();
     expect(steps().current).toBe(2);
     expect(
       screen.getByText('Klient ma link do tego raportu. Po zapisaniu zobaczy zmiany pod tym samym adresem.'),

@@ -7,7 +7,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { tokens } from '@/lib/brand/tokens.generated';
-import { auth as t } from '@/lib/copy/auth';
+import { auth as t, LINK_VALID_FOR } from '@/lib/copy/auth';
 import { common } from '@/lib/copy/common';
 import {
   CONFIRMATION_URL,
@@ -16,6 +16,7 @@ import {
   renderSubjects,
   TEMPLATES_DIR,
 } from '@/scripts/build-email-templates';
+import { OTP_EXPIRY_SECONDS } from '@/scripts/local-supabase/config';
 
 const html = renderLoginEmail();
 /** Tekst bez znaczników (encje, które generator koduje, zamienione z powrotem). */
@@ -94,5 +95,48 @@ describe('szablony e-maili logowania', () => {
     expect(plain).not.toMatch(/!/);
     expect(plain).not.toMatch(/\p{Extended_Pictographic}/u);
     expect(plain).not.toMatch(/\binsta\b|\bgram\b/i);
+  });
+});
+
+/** Wartość klucza z sekcji supabase/config.toml (prosty odczyt: klucz = wartość, bez zagnieżdżeń). */
+function tomlValue(toml: string, section: string, key: string): string | undefined {
+  const start = toml.indexOf(`\n[${section}]\n`);
+  if (start === -1) return undefined;
+  const body = toml.slice(start + section.length + 4).split(/\n\[/)[0] ?? '';
+  const line = body.split('\n').find((l) => l.startsWith(`${key} =`));
+  return line
+    ?.slice(key.length + 3)
+    .trim()
+    .replace(/^"(.*)"$/, '$1');
+}
+
+describe('obietnice tekstów a konfiguracja Supabase Auth', () => {
+  const toml = fs.readFileSync(path.join(TEMPLATES_DIR, '..', 'config.toml'), 'utf8');
+
+  it('„Link działa przez godzinę”: ważność linku 3600 s lokalnie i w konfiguracji projektu', () => {
+    expect(LINK_VALID_FOR).toBe('przez godzinę');
+    expect(OTP_EXPIRY_SECONDS).toBe(3600);
+    expect(tomlValue(toml, 'auth.email', 'otp_expiry')).toBe('3600');
+  });
+
+  it('tematy i szablony w config.toml wskazują wygenerowane pliki i auth.email.subject', () => {
+    for (const [section, file] of [
+      ['auth.email.template.magic_link', 'magic-link.html'],
+      ['auth.email.template.confirmation', 'confirmation.html'],
+    ] as const) {
+      expect(tomlValue(toml, section, 'subject')).toBe(t.email.subject);
+      expect(tomlValue(toml, section, 'content_path')).toBe(`./supabase/templates/${file}`);
+      expect(fs.existsSync(path.join(TEMPLATES_DIR, file))).toBe(true);
+    }
+  });
+
+  it('powrót z linku tylko na /auth/potwierdz, logowanie wyłącznie e-mailem', () => {
+    const redirects = /additional_redirect_urls = \[([^\]]*)\]/.exec(toml)?.[1] ?? '';
+    const urls = [...redirects.matchAll(/"([^"]+)"/g)].map((m) => m[1]);
+    expect(urls.length).toBeGreaterThan(0);
+    for (const url of urls) expect(url).toMatch(/\/auth\/potwierdz\*\*$/);
+    expect(tomlValue(toml, 'auth', 'enable_anonymous_sign_ins')).toBe('false');
+    expect(tomlValue(toml, 'auth.sms', 'enable_signup')).toBe('false');
+    expect(toml).not.toMatch(/\[auth\.external\.[a-z]+\][^[]*enabled = true/);
   });
 });

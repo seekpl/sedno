@@ -18,13 +18,18 @@ export const panel = {
   /** „2 z 5 raportów wysłane.”, „1 z 1 raportu wysłane.” (po „z” dopełniacz). */
   sentLine: (sent: number, total: number) =>
     `${formatNumber(sent)} z ${formatNumber(total)} ${plural(total, ['raportu', 'raportów', 'raportów'])} wysłane.`,
-  /** „Do końca miesiąca został 1 dzień roboczy.”, „… zostały 3 dni robocze.”, „… zostało 5 dni roboczych.” */
+  /**
+   * „Do końca miesiąca został 1 dzień roboczy.”, „… zostały 3 dni robocze.”, „… zostało 5 dni roboczych.”;
+   * w ostatni weekend miesiąca: „Do końca miesiąca nie ma już dni roboczych.”
+   */
   workingDaysLeft: (n: number) =>
-    `Do końca miesiąca ${plural(n, ['został', 'zostały', 'zostało'])} ${formatNumber(n)} ${plural(n, [
-      'dzień roboczy',
-      'dni robocze',
-      'dni roboczych',
-    ])}.`,
+    n === 0
+      ? 'Do końca miesiąca nie ma już dni roboczych.'
+      : `Do końca miesiąca ${plural(n, ['został', 'zostały', 'zostało'])} ${formatNumber(n)} ${plural(n, [
+          'dzień roboczy',
+          'dni robocze',
+          'dni roboczych',
+        ])}.`,
   actions: {
     addClient: 'Dodaj klienta',
     upload: 'Wgraj eksport',
@@ -97,6 +102,9 @@ export const panel = {
       industryInvalid: 'Tej branży nie ma na liście. Wybierz jedną z listy.',
       session: 'Sesja wygasła. Zaloguj się ponownie, a potem dodaj klienta.',
       rateLimited: 'Dodajesz klientów zbyt szybko. Odczekaj kilka minut i spróbuj ponownie.',
+      /** Górna granica klientów na konto (baza), nie limit planu. */
+      accountLimit: (max: number) =>
+        `Konto ma już ${formatNumber(max)} ${plural(max, ['klienta', 'klientów', 'klientów'])}, czyli najwięcej, ile mieści jedno konto.`,
       failed: 'Nie udało się zapisać klienta. Sprawdź połączenie i spróbuj ponownie.',
     },
   },

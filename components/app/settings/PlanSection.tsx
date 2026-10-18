@@ -1,4 +1,5 @@
 import { Badge } from '@/components/ui/Badge';
+import { Icon } from '@/components/ui/Icon';
 import { formatPrice, PLANS } from '@/config/pricing';
 import { settings } from '@/lib/copy/settings';
 import { cx } from '@/lib/cx';
@@ -9,8 +10,8 @@ const t = settings.plan;
 
 /**
  * „Plan” (karta „Twój plan” i karta Solo jak w EkranCennik.html). Faza 2: bez płatności i bez ograniczeń
- * planu (docs/decisions.md, p. 94), więc Solo ma tylko cenę z config/pricing.ts i plakietkę „Wkrótce” —
- * bez przycisku zakupu. Ceny wyłącznie z config/pricing.ts.
+ * planu (docs/decisions.md, p. 94), więc Solo ma cenę i limit klientów z config/pricing.ts, listę zalet
+ * i plakietkę „Wkrótce” — bez przycisku zakupu i bez plakietki „Najczęściej wybierany”.
  */
 export function PlanSection({ plan, headingId }: { plan: Plan; headingId: string }) {
   const current = PLANS[plan];
@@ -42,6 +43,14 @@ export function PlanSection({ plan, headingId }: { plan: Plan; headingId: string
               {t.clients(solo.clients)}
             </p>
           </div>
+          <ul className={s.features}>
+            {t.soloFeatures(solo.clients).map((feature) => (
+              <li key={feature}>
+                <Icon name="check" size="s" />
+                <span>{feature}</span>
+              </li>
+            ))}
+          </ul>
           <p className="sd-secondary">{t.soloBody}</p>
         </div>
       )}

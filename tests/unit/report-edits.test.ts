@@ -302,13 +302,35 @@ describe('applyEdits', () => {
     expect(tooBig.report.actions.book).toBeNull();
   });
 
-  it('ostrzeżenie „miesiąc jeszcze trwa” tylko w trakcie miesiąca; przypis „dane do” zostaje', () => {
+  it('ostrzeżenie „miesiąc jeszcze trwa” i przypis „dane do” tylko w trakcie miesiąca', () => {
     const october = compute({ parsed: between('2026-10-01', '2026-10-12'), month: '2026-10' }).report;
     const during = applyEdits(october, editsFromReport(october), { now: NOW });
     expect(during.warnings.map((w) => w.code)).toContain('W_MONTH_IN_PROGRESS');
-    const later = applyEdits(october, editsFromReport(october), { now: new Date('2026-11-20T10:00:00Z') });
-    expect(later.warnings.map((w) => w.code)).not.toContain('W_MONTH_IN_PROGRESS');
-    expect(later.report.flags.inProgress).toBe(true);
+    expect(during.report.flags).toEqual({ inProgress: true });
+  });
+
+  it('raport zapisany w trakcie miesiąca, który minął: niepełny miesiąc jak w computeReport', () => {
+    const parsed = between('2026-10-01', '2026-10-12');
+    const later = new Date('2026-11-20T10:00:00Z');
+    const october = compute({ parsed, month: '2026-10' }).report;
+    const result = applyEdits(october, editsFromReport(october), { now: later });
+    const expected = compute({ parsed, month: '2026-10', now: later });
+    expect(result.warnings).toEqual(expected.warnings);
+    expect(result.warnings.map((w) => w.code)).toContain('W_INCOMPLETE_MONTH');
+    expect(result.report.flags).toEqual(expected.report.flags);
+    expect(result.report.flags).toEqual({ incompleteDays: 11 });
+    expect(reportDataSchema.safeParse(result.report).success).toBe(true);
+  });
+
+  it('raport zapisany ostatniego dnia miesiąca: po jego końcu bez przypisu', () => {
+    const parsed = between('2026-10-01', '2026-10-31', 1);
+    const lastDay = new Date('2026-10-31T12:00:00Z');
+    const october = compute({ parsed, month: '2026-10', now: lastDay }).report;
+    expect(october.flags).toEqual({ inProgress: true });
+    const later = new Date('2026-11-20T10:00:00Z');
+    const result = applyEdits(october, editsFromReport(october), { now: later });
+    expect(result.warnings).toEqual(compute({ parsed, month: '2026-10', now: later }).warnings);
+    expect(result.report.flags).toEqual({});
   });
 
   it('niepełny miesiąc: ostrzeżenie z datą końca eksportu i liczbą dni z zapisu', () => {

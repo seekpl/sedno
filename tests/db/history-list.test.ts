@@ -24,17 +24,26 @@ beforeAll(async () => {
     if (created.error) throw created.error;
     clients[name] = created.data.id;
   }
-  // 23 raporty: 8 miesięcy × 3 klientów bez jednego (Zeta w najstarszym miesiącu).
-  const rows = [];
+  // 23 raporty: 8 miesięcy × 3 klientów bez jednego (Zeta w najstarszym miesiącu). Wstawianie wielu wierszy
+  // naraz: PostgREST wpisuje NULL w kolumny, których brakuje w części wierszy, więc każdy wiersz ma komplet.
+  const rows: {
+    client_id: string;
+    period: string;
+    data: ReturnType<typeof sampleReportData>;
+    status: 'draft' | 'sent';
+    sent_at: string | null;
+  }[] = [];
   for (let i = 0; i < 8; i++) {
     const month = addMonths('2026-09', -i);
     for (const name of ['Zeta', 'Alfa', 'Beta']) {
       if (i === 7 && name === 'Zeta') continue;
+      const sent = name === 'Alfa' && i === 0;
       rows.push({
         client_id: clients[name]!,
         period: `${month}-01`,
         data: sampleReportData(month, name),
-        ...(name === 'Alfa' && i === 0 ? { status: 'sent' as const, sent_at: '2026-09-27T10:00:00Z' } : {}),
+        status: sent ? 'sent' : 'draft',
+        sent_at: sent ? '2026-09-27T10:00:00Z' : null,
       });
     }
   }

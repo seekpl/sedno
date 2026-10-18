@@ -175,8 +175,9 @@ export function ReportEditor({
       }
       dispatch({ type: 'SAVED', data: response.report.data });
       setRecord({ status: response.report.status, sentAt: response.report.sentAt });
-      if (intent === 'draft') toast({ message: editor.save.saved });
-      else dispatch({ type: 'GO_TO', step: 'send' });
+      if (intent === 'ready') dispatch({ type: 'GO_TO', step: 'send' });
+      else if (response.report.status === 'draft') toast({ message: editor.save.saved });
+      else toast({ message: editor.save.changesSaved });
     } catch {
       setSaveError(editor.errors.failed);
     } finally {
@@ -317,7 +318,7 @@ export function ReportEditor({
                 busy={saving === 'draft'}
                 onClick={() => void save('draft')}
               >
-                {editor.save.draft}
+                {record && record.status !== 'draft' ? editor.save.changes : editor.save.draft}
               </Button>
               <Button
                 variant="primary"

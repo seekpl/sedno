@@ -12,8 +12,8 @@
  * Bez importu zod: moduł trafia do paczki edytora w przeglądarce.
  */
 import type { Warning } from '@/lib/csv/types';
-import { compareMonths, daysInMonth, isMonthInProgress } from '@/lib/dates';
-import { addMonths, type MonthKey } from '@/lib/i18n/pl';
+import { compareMonths, daysInMonth, isMonthInProgress, isMonthOver, lastDayStart } from '@/lib/dates';
+import { addMonths, warsawParts, type MonthKey } from '@/lib/i18n/pl';
 import {
   headlineFor,
   pickDefaultKeyMetric,
@@ -165,8 +165,8 @@ export function applyEdits(
   );
   const headline = cleanText(edits.headline) ?? generatedHeadline;
 
-  // Przypisy: niepełny miesiąc i dane do dnia zapisu pochodzą z pliku (zostają), zmiana metryki zależy
-  // od tego, czy po edycji jest porównanie z M−1.
+  // Przypisy: niepełny miesiąc pochodzi z pliku (zostaje), „dane do” — tylko póki miesiąc trwa; zmiana
+  // metryki zależy od tego, czy po edycji jest porównanie z M−1.
   const warnings: Warning[] = [];
   const flags: ReportData['flags'] = {};
   const incompleteDays = base.flags.incompleteDays;
@@ -178,10 +178,21 @@ export function applyEdits(
     if (edits.incompleteNote) flags.incompleteDays = incompleteDays;
   }
   if (base.flags.inProgress) {
+    const to = new Date(base.dataRange.to);
     if (isMonthInProgress(month, now)) {
       warnings.push({ code: 'W_MONTH_IN_PROGRESS', params: { date: base.dataRange.to } });
+      flags.inProgress = true;
+    } else if (isMonthOver(month, now) && to.getTime() < lastDayStart(month).getTime()) {
+      // Raport zapisany w trakcie miesiąca, który już minął: jak computeReport z tym samym plikiem —
+      // niepełny miesiąc (ostrzeżenie z „Wgraj pełny plik” i przypis o liczbie dni), nie „dane do …”.
+      const days = warsawParts(to).day - warsawParts(new Date(base.dataRange.from)).day + 1;
+      warnings.push({
+        code: 'W_INCOMPLETE_MONTH',
+        params: { date: base.dataRange.to, days, monthDays: daysInMonth(month) },
+      });
+      if (edits.incompleteNote) flags.incompleteDays = days;
     }
-    flags.inProgress = true;
+    // Dane sięgają ostatniego dnia minionego miesiąca: miesiąc jest pełny, bez przypisu.
   }
   if (
     compareMonths(month, LAST_OLD_METRIC_MONTH) <= 0 ||

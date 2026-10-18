@@ -9,8 +9,16 @@
   gap: var(--space-5);
 }
 
-.title:focus {
+.title:focus,
+.heading:focus {
   outline: none;
+}
+
+/* Fokus ustawiany skryptem (np. po „Usuń logo”) widać przy obsłudze klawiaturą. */
+.title:focus-visible,
+.heading:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
 }
 
 @media (min-width: 768px) {
@@ -42,10 +50,10 @@
   }
 }
 
-/* Karta sekcji (sd-card): nagłówek, treść, działania jedno pod drugim. */
+/* Karta sekcji (sd-card): nagłówek, treść, działania jedno pod drugim (odstęp 12 px jak w makiecie). */
 .card {
   display: grid;
-  gap: var(--space-4);
+  gap: var(--space-3);
   align-content: start;
   min-width: 0;
 }
@@ -56,10 +64,6 @@
   align-items: center;
   gap: var(--space-3);
   flex-wrap: wrap;
-}
-
-.heading:focus {
-  outline: none;
 }
 
 .form {
@@ -107,6 +111,29 @@
   font-weight: 700;
 }
 
+/* Zalety planu: ikona i tekst jak lista w karcie Solo w makiecie cennika. */
+.features {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: var(--space-2);
+  font-size: 15px; /* ref: brand/reference/screens/EkranCennik.html (lista zalet planu) */
+  line-height: 22px; /* ref: brand/reference/screens/EkranCennik.html (lista zalet planu) */
+  color: var(--ink-secondary);
+}
+
+.features li {
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-start;
+}
+
+.features li :global(.sd-icon) {
+  flex: none;
+  margin-top: 3px; /* ref: brand/reference/screens/EkranCennik.html (ikona w linii 22 px) */
+}
+
 /* Okno „Usuń konto”: formularz zajmuje cały wiersz działań okna (sd-modal__actions). */
 .modalForm {
   flex: 1 1 100%;
@@ -121,7 +148,8 @@
 @media (max-width: 767px) {
   /* Cele dotyku 48 px na telefonie (PROMPT.md §15). */
   .card :global(.sd-btn),
-  .modalButtons :global(.sd-btn) {
+  .modalButtons :global(.sd-btn),
+  .touch:global(.sd-btn) {
     height: var(--control-l);
   }
 

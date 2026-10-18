@@ -26,11 +26,13 @@ export const settings = {
     email: (email: string) => `Logujesz się adresem ${email}.`,
     displayName: {
       label: 'Twoje imię',
-      hint: 'Nieobowiązkowe.',
+      // Edytor bierze imię, gdy nazwa na raporcie jest pusta (lib/data/reports.ts, getReportAuthor).
+      hint: 'Nieobowiązkowe. Raport pokaże je na górze, gdy pole „Nazwa na raporcie” jest puste.',
     },
     brandName: {
       label: 'Nazwa na raporcie',
-      hint: 'Pojawia się na górze raportu dla klienta, na przykład nazwa Twojej marki. Gdy dodasz logo, raport pokaże logo.',
+      // Nazwę autora zapisuje edytor przy każdym zapisie raportu (lib/data/reports.ts, saveReport).
+      hint: 'Pojawia się na górze raportu dla klienta, na przykład nazwa Twojej marki. Zapisane raporty dostaną nową nazwę przy następnym zapisie w edytorze.',
     },
     submit: 'Zapisz',
     /** Wynik przycisku „Zapisz” (komunikat obok przycisku). */
@@ -98,7 +100,13 @@ export const settings = {
     /** „do 10 klientów” (po „do” dopełniacz: „do 1 klienta”, „do 10 klientów”). */
     clients: (n: number) => `do ${n} ${plural(n, ['klienta', 'klientów', 'klientów'])}`,
     separator: ' · ',
-    soloBody: 'Twoje logo zamiast stopki „Przygotowano w Sedno”. Plan uruchomimy razem z płatnościami.',
+    /** Lista zalet Solo jak w EkranCennik.html (bez „Najczęściej wybierany” — to byłaby zmyślona statystyka). */
+    soloFeatures: (clients: number) => [
+      'Twoje logo zamiast naszej stopki',
+      'Historia i porównanie miesięcy',
+      `Bez limitu raportów dla ${clients} ${plural(clients, ['klienta', 'klientów', 'klientów'])}`,
+    ],
+    soloBody: 'Plan uruchomimy razem z płatnościami.',
   },
   data: {
     title: 'Twoje dane',
@@ -115,6 +123,8 @@ export const settings = {
       confirmLabel: `Wpisz „${DELETE_CONFIRM_WORD}”, żeby potwierdzić`,
       cancel: 'Zostaw konto',
       submit: 'Usuń konto i dane',
+      /** W trakcie usuwania (region statusu; wyjaśnia też, czemu „Zostaw konto” jest niedostępne). */
+      pending: 'Usuwam konto i dane…',
     },
     errorTitle: 'Konto nie zostało usunięte.',
     errors: {

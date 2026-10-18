@@ -26,6 +26,7 @@ vi.mock('@/lib/data/panel', async (importOriginal) => ({
 }));
 
 const { createClient } = await import('@/app/app/klienci/actions');
+const { PanelDataError } = await import('@/lib/data/panel');
 const { resetRateLimits } = await import('@/lib/server/rate-limit');
 
 const USER = { id: '11111111-1111-4111-8111-111111111111' };
@@ -75,6 +76,24 @@ describe('Dodaj klienta — akcja', () => {
   it('emoji usuwa z nazwy (raport i PDF ich nie pokażą)', async () => {
     await createClient(IDLE, form({ name: 'Studio 💇 Lumi ✨', industry: 'salon' }));
     expect(mocks.insert).toHaveBeenCalledWith(mocks.db, { name: 'Studio Lumi', industry: 'salon' });
+  });
+
+  it('usuwa niewidoczne znaki formatujące i sterujące, składa do NFC', async () => {
+    // Zero-width space, odwrócenie kierunku tekstu (RLO/PDF), miękki dywiz, BOM, tabulator, „e” + akcent.
+    await createClient(IDLE, form({ name: '\u200bKa\u202edr\u202c\u00ad\ufeff\tCafe\u0301' }));
+    expect(mocks.insert).toHaveBeenCalledWith(mocks.db, { name: 'Kadr Café', industry: 'inne' });
+  });
+
+  it('nazwa z samych niewidocznych znaków → błąd pola, bez zapisu', async () => {
+    const result = await createClient(IDLE, form({ name: '\u200b\u2060\u202e\u00ad' }));
+    expect(result).toEqual({ status: 'error', fieldErrors: { name: t.add.errors.nameRequired } });
+    expect(mocks.insert).not.toHaveBeenCalled();
+  });
+
+  it('bardzo długie surowe wejście → błąd długości bez czyszczenia', async () => {
+    const result = await createClient(IDLE, form({ name: ' '.repeat(1990) + 'Kadr' + ' '.repeat(10) }));
+    expect(result).toEqual({ status: 'error', fieldErrors: { name: t.add.errors.nameTooLong } });
+    expect(mocks.insert).not.toHaveBeenCalled();
   });
 
   it.each([
@@ -128,6 +147,18 @@ describe('Dodaj klienta — akcja', () => {
     expect(JSON.stringify(result)).not.toContain('duplicate');
     expect(log).toHaveBeenCalledWith('[sedno] Dodanie klienta nie powiodło się.');
     expect(JSON.stringify(log.mock.calls)).not.toContain('Tajny Klient');
+    expect(mocks.revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it('górna granica klientów na konto (baza): komunikat z przyczyną, bez logu i odświeżenia', async () => {
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+    mocks.insert.mockRejectedValue(new PanelDataError('limit'));
+    const result = await createClient(IDLE, form({ name: 'Kadr' }));
+    expect(result).toEqual({ status: 'error', message: t.add.errors.accountLimit(500) });
+    expect(t.add.errors.accountLimit(500)).toBe(
+      'Konto ma już 500 klientów, czyli najwięcej, ile mieści jedno konto.',
+    );
+    expect(log).not.toHaveBeenCalled();
     expect(mocks.revalidatePath).not.toHaveBeenCalled();
   });
 

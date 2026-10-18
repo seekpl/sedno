@@ -103,14 +103,39 @@ export async function getClient(db: Db, clientId: string): Promise<EditorClient 
   return data ? { id: data.id, name: data.name, archived: data.archived_at !== null } : null;
 }
 
-/** Autor raportu z profilu (bez profilu: pusta nazwa — raport zaczyna się wtedy od „dla: {klient}”). */
+/** Najdłuższa nazwa autora w ReportData (reportDataSchema: author.name ≤ 80 jednostek UTF-16). */
+const AUTHOR_NAME_MAX = 80;
+
+/**
+ * Tekst przycięty do `max` jednostek UTF-16 bez rozcinania par zastępczych. Baza liczy znaki (punkty
+ * kodowe), schemat raportu — jednostki UTF-16, więc nazwa z 80 znaków spoza BMP bywa dłuższa niż 80.
+ * Samotna połówka pary nie przeszłaby do kolumny jsonb i każdy zapis raportu kończyłby się błędem.
+ */
+export function truncateUnits(text: string, max: number): string {
+  if (text.length <= max) return text;
+  let out = '';
+  for (const char of text) {
+    if (out.length + char.length > max) break;
+    out += char;
+  }
+  return out.trimEnd();
+}
+
+/** Nazwa z profilu tak, jak trafi do raportu: bez emoji (kroje marki ich nie mają), najwyżej 80 jednostek. */
+const authorText = (value: string | null | undefined) =>
+  truncateUnits(stripEmoji(value ?? '').trim(), AUTHOR_NAME_MAX);
+
+/**
+ * Autor raportu z profilu: marka, a bez niej imię i nazwisko (pierwsza niepusta po usunięciu emoji). Bez
+ * profilu albo nazwy: pusta nazwa — raport zaczyna się wtedy od „dla: {klient}”.
+ */
 export async function getReportAuthor(db: Db): Promise<ReportAuthor> {
   const { data, error } = await db
     .from('profiles')
     .select('display_name, brand_name, logo_path')
     .maybeSingle();
   if (error) throw new ReportsDataError('profile');
-  const name = (data?.brand_name?.trim() || data?.display_name?.trim() || '').slice(0, 80);
+  const name = authorText(data?.brand_name) || authorText(data?.display_name);
   return { name, hasLogo: data?.logo_path != null };
 }
 
@@ -155,6 +180,9 @@ export const saveReportInputSchema = z
 
 export type SaveReportInput = z.input<typeof saveReportInputSchema>;
 
+/** Najdłuższa nazwa klienta w ReportData (reportDataSchema: client.name ≤ 80 jednostek UTF-16). */
+const CLIENT_NAME_MAX = 80;
+
 /** Tekst bez emoji jak w raporcie; gdyby zostało puste, zostaje oryginał (nazwy z bazy mają ≥ 1 znak). */
 function clean(name: string): string {
   return stripEmoji(name).trim() || name.trim();
@@ -182,8 +210,8 @@ export async function saveReport(db: Db, input: SaveReportInput): Promise<SavedR
 
   const normalized = reportDataSchema.parse({
     ...data,
-    client: { name: clean(client.name) },
-    author: { name: clean(author.name) },
+    client: { name: truncateUnits(clean(client.name), CLIENT_NAME_MAX) },
+    author: { name: author.name },
     branding: 'sedno-footer',
   });
   const json = normalized as unknown as Json;

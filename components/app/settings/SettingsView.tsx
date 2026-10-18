@@ -115,7 +115,7 @@ export function SettingsLoadError() {
         variant="error"
         title={t.loadError.title}
         actions={
-          <a className={buttonClass({ size: 's' })} href="/app/ustawienia">
+          <a className={buttonClass({ size: 's', className: s.touch })} href="/app/ustawienia">
             {t.loadError.retry}
           </a>
         }

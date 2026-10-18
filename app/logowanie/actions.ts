@@ -11,10 +11,12 @@
  * - Supabase Auth w trybie PKCE: weryfikator kodu trafia do ciasteczka httpOnly przez klienta serwera,
  *   więc link działa tylko w tej przeglądarce. Nowy adres zakłada konto przy pierwszym kliknięciu w link.
  * - Odpowiedź nie zdradza, czy konto z tym adresem istnieje. Adresu e-mail nie logujemy.
+ * - Bez flagi kont akcja niczego nie wysyła (identyfikator akcji jest w paczce, a strona daje 404).
  * - Akcja nigdy nie rzuca wyjątku: formularz zawsze dostaje stan z przyczyną i naprawą.
  */
 import { createHash } from 'node:crypto';
 import { siteUrl } from '@/components/site/seo';
+import { features } from '@/config/features';
 import { safeNextPath } from '@/lib/auth/next-path';
 import { auth as t } from '@/lib/copy/auth';
 import { clientRateLimitKey } from '@/lib/server/client-ip';
@@ -76,6 +78,7 @@ export async function requestMagicLink(_prev: LoginState, formData: FormData): P
 }
 
 async function request(formData: FormData): Promise<LoginState> {
+  if (!features.accounts) return { status: 'idle', message: t.errors.failed };
   const intent = intentSchema.parse(field(formData, 'intent'));
   if (intent === 'change') return { status: 'idle' };
 

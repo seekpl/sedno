@@ -34,10 +34,16 @@ export class ProfileDataError extends Error {
 
 export { PROFILE_NAME_MAX };
 
+/** Znaki formatujące (\p{Cf}: m.in. znaki zerowej szerokości i sterowanie kierunkiem tekstu). */
+const FORMAT_CHARS = /\p{Cf}/gu;
+/** To samo bez łącznika U+200D, który skleja emoji złożone (np. 👩‍💻) — dla pola, które zachowuje emoji. */
+const FORMAT_CHARS_EXCEPT_ZWJ = /(?!\u200d)\p{Cf}/gu;
+
 /**
- * Pole tekstowe profilu: NFC, bez znaków sterujących, białe znaki zwinięte do jednej spacji, przycięte.
- * Puste po oczyszczeniu → null (pole nieobowiązkowe). Bez `keepEmoji` usuwa emoji (nazwa na raporcie: kroje
- * marki ich nie mają, raport i PDF i tak je usuwają — docs/decisions.md, p. 42).
+ * Pole tekstowe profilu, czyszczone jak nazwa klienta (lib/data/panel.ts): NFC, bez znaków formatujących
+ * i sterujących, białe znaki zwinięte do jednej spacji, przycięte. Puste po oczyszczeniu → null (pole
+ * nieobowiązkowe). Bez `keepEmoji` usuwa emoji (nazwa na raporcie: kroje marki ich nie mają, raport i PDF
+ * i tak je usuwają — docs/decisions.md, p. 42).
  */
 function nameField(tooLong: string, { keepEmoji }: { keepEmoji: boolean }) {
   return z
@@ -46,6 +52,7 @@ function nameField(tooLong: string, { keepEmoji }: { keepEmoji: boolean }) {
     .transform((value) => {
       const text = keepEmoji ? value.normalize('NFC') : stripEmoji(value.normalize('NFC'));
       return text
+        .replace(keepEmoji ? FORMAT_CHARS_EXCEPT_ZWJ : FORMAT_CHARS, '')
         .replace(/[\u0000-\u001f\u007f-\u009f]/g, ' ')
         .replace(/\s+/g, ' ')
         .trim();
@@ -56,8 +63,9 @@ function nameField(tooLong: string, { keepEmoji }: { keepEmoji: boolean }) {
 
 /** Dane formularza „Profil i marka”. Tylko te dwa pola — reszta profilu nie jest do zmiany przez użytkownika. */
 export const profileInputSchema = z.object({
-  displayName: nameField(t.profile.errors.displayNameTooLong, { keepEmoji: true }).default(''),
-  brandName: nameField(t.profile.errors.brandNameTooLong, { keepEmoji: false }).default(''),
+  // prefault: brak pola to pusty tekst, który przechodzi to samo czyszczenie (wynik null).
+  displayName: nameField(t.profile.errors.displayNameTooLong, { keepEmoji: true }).prefault(''),
+  brandName: nameField(t.profile.errors.brandNameTooLong, { keepEmoji: false }).prefault(''),
 });
 
 export type ProfileInput = z.input<typeof profileInputSchema>;

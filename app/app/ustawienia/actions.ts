@@ -218,7 +218,12 @@ async function deleteAccountFor(formData: FormData): Promise<DeleteAccountState 
   }
 
   await deleteAccountData(createSupabaseAdminClient(), user.id);
-  await endSession();
+  // Konto już nie istnieje: błąd przy kończeniu sesji nie może zgłosić, że „konto nadal działa”.
+  try {
+    await endSession();
+  } catch {
+    console.error('[sedno] Po usunięciu konta nie udało się usunąć ciasteczek sesji.');
+  }
   return null;
 }
 

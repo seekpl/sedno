@@ -1,7 +1,8 @@
 import 'server-only';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { siteUrl } from '@/components/site/seo';
-import { readLogo, removeLogo } from '@/lib/logo/store';
+import { logoPath, readLogo } from '@/lib/logo/store';
+import type { LogoKind } from '@/lib/logo/validate';
 import { warsawParts } from '@/lib/i18n/pl';
 import type { Database, Enums, Json } from '@/lib/supabase/database.types';
 
@@ -173,19 +174,28 @@ export function exportFileName(now: Date = new Date()): string {
   return `sedno-dane-${year}-${pad(month)}-${pad(day)}.json`;
 }
 
+/** Prywatny zasobnik logo i wszystkie możliwe pliki właściciela (lib/logo/store.ts). */
+const LOGO_BUCKET = 'logos';
+const LOGO_EXTENSIONS: readonly LogoKind['ext'][] = ['png', 'jpg', 'webp'];
+
 /**
- * Usuwa konto: najpierw plik logo (sprawdzamy, że go nie ma — inaczej przerywamy, żeby nie zostawić pliku
- * bez właściciela), potem użytkownika Supabase Auth. Kaskada w bazie usuwa profil, klientów, raporty
- * i linki; zdarzenia zostają anonimowe (events.owner_id → null). `admin` to klient z kluczem serwisowym,
- * `userId` — zalogowany użytkownik sprawdzony przez wywołującego.
+ * Usuwa konto: najpierw pliki logo (wszystkie formaty; błąd magazynu przerywa usuwanie, żeby nie zostawić
+ * pliku bez właściciela — po usunięciu konta nikt już by go nie usunął), potem użytkownika Supabase Auth.
+ * Kaskada w bazie usuwa profil, klientów, raporty i linki; zdarzenia zostają anonimowe
+ * (events.owner_id → null). `admin` to klient z kluczem serwisowym, `userId` — zalogowany użytkownik
+ * sprawdzony przez wywołującego.
  */
 export async function deleteAccount(admin: Db, userId: string): Promise<void> {
   const profile = await admin.from('profiles').select('logo_path').eq('id', userId).maybeSingle();
   if (profile.error) throw new AccountDataError('profile');
-  const logoPath = profile.data?.logo_path ?? null;
+  const current = profile.data?.logo_path ?? null;
 
-  await removeLogo(userId);
-  if (logoPath && (await readLogo(logoPath))) throw new AccountDataError('logo');
+  // Usunięcie nieistniejących ścieżek nie jest błędem; błąd oznacza, że magazyn nie odpowiedział.
+  const removed = await admin.storage
+    .from(LOGO_BUCKET)
+    .remove(LOGO_EXTENSIONS.map((ext) => logoPath(userId, ext)));
+  if (removed.error) throw new AccountDataError('logo');
+  if (current && (await readLogo(current))) throw new AccountDataError('logo');
 
   const { error } = await admin.auth.admin.deleteUser(userId);
   if (error) throw new AccountDataError('delete');

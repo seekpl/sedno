@@ -5,6 +5,7 @@ import { Report } from '@/components/report/Report';
 import { Alert } from '@/components/ui/Alert';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
+import { features } from '@/config/features';
 import { tool } from '@/lib/copy/tool';
 import { cx } from '@/lib/cx';
 import type { ReportData } from '@/lib/report/types';
@@ -83,10 +84,20 @@ export function PreviewStep({
         </Alert>
       )}
 
-      <p className={cx('body-s', s.soon)}>
-        <Badge>{t.soon.badge}</Badge>
-        <span>{t.soon.text}</span>
-      </p>
+      {features.accounts ? (
+        <p className={cx('body-s', s.soon)}>
+          <span>{t.account.text}</span>
+          {/* Zwykły <a>: /logowanie ma własną CSP z nonce z odpowiedzi na wczytanie dokumentu (p. 64). */}
+          <a className={cx('sd-link', s.soonLink)} href={t.account.loginHref}>
+            {t.account.login}
+          </a>
+        </p>
+      ) : (
+        <p className={cx('body-s', s.soon)}>
+          <Badge>{t.soon.badge}</Badge>
+          <span>{t.soon.text}</span>
+        </p>
+      )}
 
       <div className={s.sheet}>
         <Report data={report} headingLevel={2} />

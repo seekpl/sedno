@@ -16,6 +16,7 @@ type Props = { params: Promise<{ token: string }> };
  * arkusz A4 jak /przyklad, na telefonie raport na całą szerokość. „Pobierz PDF” tworzy PDF w przeglądarce.
  * Link wygasły, odwołany albo nieprawidłowy → not-found.tsx z share.expired (bez żadnych danych).
  * Każde udane otwarcie zapisuje zdarzenie link_opened bez tokenu i bez właściciela (po wysłaniu strony).
+ * Robot podglądu linku w komunikatorze dostaje ogólną stronę (lib/data/shared.ts, status „preview”).
  * Metadane są w layout.tsx (obejmują też not-found.tsx); odczyt jest wspólny przez React cache.
  */
 export default async function SharedReportPage({ params }: Props) {
@@ -24,6 +25,10 @@ export default async function SharedReportPage({ params }: Props) {
   if (result.status === 'not-found') notFound();
   if (result.status === 'rate-limited') {
     return <SharedMessage heading={t.rateLimited.heading} detail={t.rateLimited.detail} />;
+  }
+  // Robot podglądu linku (komunikator): ogólna strona, bez treści raportu i bez wyświetlenia.
+  if (result.status === 'preview') {
+    return <SharedMessage heading={t.preview.heading} detail={t.preview.detail} />;
   }
 
   after(() => recordServerEvent('link_opened', {}));

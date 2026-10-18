@@ -12,6 +12,15 @@ vi.mock('next/headers', () => ({
   headers: async () => new Headers(Object.fromEntries(h.headers)),
 }));
 
+const flags = vi.hoisted(() => ({ accounts: true }));
+vi.mock('@/config/features', () => ({
+  features: {
+    get accounts() {
+      return flags.accounts;
+    },
+  },
+}));
+
 const supabase = vi.hoisted(() => ({
   signInWithOtp: vi.fn(),
   create: vi.fn(),
@@ -49,6 +58,7 @@ const send = (email: string | undefined, extra: Record<string, string | undefine
 let errorLog: ReturnType<typeof vi.spyOn>;
 
 beforeEach(() => {
+  flags.accounts = true;
   resetRateLimits();
   keys.seen = [];
   h.headers = new Map([['x-forwarded-for', '203.0.113.7']]);
@@ -96,6 +106,13 @@ describe('requestMagicLink — walidacja', () => {
   it('adres dłuższy niż 254 znaki → błąd długości', async () => {
     const state = await send(`${'a'.repeat(250)}@firma.pl`);
     expect(state).toMatchObject({ status: 'idle', fieldError: t.errors.emailTooLong });
+  });
+
+  it('bez flagi kont nic nie wysyła (strona daje 404, a identyfikator akcji jest w paczce)', async () => {
+    flags.accounts = false;
+    expect(await send('ala@firma.pl')).toEqual({ status: 'idle', message: t.errors.failed });
+    expect(supabase.create).not.toHaveBeenCalled();
+    expect(keys.seen).toEqual([]);
   });
 
   it('nieprawidłowe wejście nie zużywa limitu', async () => {

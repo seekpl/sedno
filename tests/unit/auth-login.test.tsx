@@ -84,11 +84,26 @@ describe('LoginPanel — formularz', () => {
     within(alert).getByText(t.linkError.body);
   });
 
-  it('?blad=link: opis błędu z Supabase w części „#” adresu znika z paska adresu', () => {
+  it('?blad=link: opis błędu z Supabase w części „#” adresu znika z paska adresu, komunikat zostaje', () => {
     window.history.replaceState(null, '', '/logowanie?blad=link#error=access_denied&error_code=otp_expired');
     render(<LoginPanel next="/app/klienci" linkError />);
     expect(window.location.hash).toBe('');
     expect(`${window.location.pathname}${window.location.search}`).toBe('/logowanie?blad=link');
+    within(screen.getByRole('alert')).getByText(t.linkError.title);
+  });
+
+  it('?blad=link: komunikat znika po pierwszym działaniu i nie wraca po „Użyj innego adresu”', async () => {
+    action.requestMagicLink.mockResolvedValueOnce({ status: 'sent', email: 'ala@firma.pl' });
+    render(<LoginPanel next="/app/klienci" linkError />);
+    await submitEmail('ala@firma.pl');
+    await screen.findByRole('heading', { name: t.checkInbox.title });
+    action.requestMagicLink.mockResolvedValueOnce({ status: 'idle' });
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: t.checkInbox.change }));
+    });
+    await screen.findByRole('heading', { name: t.form.title });
+    expect(screen.queryByText(t.linkError.title)).toBeNull();
+    expect(screen.queryByRole('alert')).toBeNull();
   });
 
   it('wysłanie → „Sprawdź skrzynkę” z adresem, fokus na nagłówku', async () => {
@@ -149,16 +164,53 @@ describe('LoginPanel — „Sprawdź skrzynkę”', () => {
     await screen.findByRole('heading', { name: t.checkInbox.title });
   }
 
-  it('„Wyślij ponownie” wysyła ten sam adres i pokazuje wynik słowem i ikoną', async () => {
+  it('„Wyślij ponownie” wysyła ten sam adres i pokazuje wynik słowem i ikoną w stałym regionie status', async () => {
     await renderSent();
+    // Region istnieje, zanim pojawi się wynik (czytniki ekranu ogłaszają zmiany w istniejącym regionie).
+    const status = screen.getByRole('status');
+    expect(status.textContent).toBe('');
     action.requestMagicLink.mockResolvedValueOnce({ status: 'sent', email: 'ala@firma.pl', resent: true });
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: t.checkInbox.resend }));
     });
     expect(lastFormData()).toMatchObject({ email: 'ala@firma.pl', intent: 'resend', next: '/app/klienci' });
-    const status = await screen.findByRole('status');
-    within(status).getByText(t.checkInbox.resent);
+    await within(status).findByText(t.checkInbox.resent);
     expect(status.querySelector('svg')).not.toBeNull();
+  });
+
+  it('drugie „Wyślij ponownie”: w trakcie wynik znika, potem wraca jako nowy węzeł (ponowne ogłoszenie)', async () => {
+    await renderSent();
+    action.requestMagicLink.mockResolvedValueOnce({ status: 'sent', email: 'ala@firma.pl', resent: true });
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: t.checkInbox.resend }));
+    });
+    const status = screen.getByRole('status');
+    const first = await within(status).findByText(t.checkInbox.resent);
+
+    let finish: (state: LoginState) => void = () => {};
+    action.requestMagicLink.mockReturnValueOnce(new Promise<LoginState>((resolve) => (finish = resolve)));
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: t.checkInbox.resend }));
+    });
+    expect(status.textContent).toBe('');
+    expect(screen.getByRole('button', { name: t.checkInbox.resend }).getAttribute('aria-busy')).toBe('true');
+    expect(screen.getByRole('button', { name: t.checkInbox.change }).getAttribute('aria-busy')).toBeNull();
+    await act(async () => finish({ status: 'sent', email: 'ala@firma.pl', resent: true }));
+    const second = await within(status).findByText(t.checkInbox.resent);
+    expect(second).not.toBe(first);
+  });
+
+  it('„Użyj innego adresu” w trakcie pokazuje zajętość tylko na sobie', async () => {
+    await renderSent();
+    let finish: (state: LoginState) => void = () => {};
+    action.requestMagicLink.mockReturnValueOnce(new Promise<LoginState>((resolve) => (finish = resolve)));
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: t.checkInbox.change }));
+    });
+    expect(screen.getByRole('button', { name: t.checkInbox.change }).getAttribute('aria-busy')).toBe('true');
+    expect(screen.getByRole('button', { name: t.checkInbox.resend }).getAttribute('aria-busy')).toBeNull();
+    await act(async () => finish({ status: 'idle' }));
+    await screen.findByRole('heading', { name: t.form.title });
   });
 
   it('błąd przy ponownym wysłaniu zostaje na tym ekranie', async () => {

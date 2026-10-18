@@ -46,7 +46,7 @@ vi.mock('@/lib/data/links', async (importOriginal) => ({
 
 const actions = await import('@/app/app/klienci/[id]/[miesiac]/actions');
 const { ReportNotFoundError } = await import('@/lib/data/reports');
-const { LinkReportNotFoundError } = await import('@/lib/data/links');
+const { LinkQuotaError, LinkReportNotFoundError } = await import('@/lib/data/links');
 const { resetRateLimits } = await import('@/lib/server/rate-limit');
 
 const USER = { id: '11111111-1111-4111-8111-111111111111' };
@@ -122,6 +122,10 @@ describe('saveReportAction', () => {
     [
       'miesiąc z przyszłości',
       { ...REF, month: '2026-11', data: { ...EXAMPLE_REPORT, period: '2026-11' }, intent: 'draft' },
+    ],
+    [
+      'miesiąc sprzed zakresu edytora i bazy',
+      { ...REF, month: '1999-12', data: { ...EXAMPLE_REPORT, period: '1999-12' }, intent: 'draft' },
     ],
     ['miesiąc niezgodny z danymi', { ...REF, month: '2026-08', data: EXAMPLE_REPORT, intent: 'draft' }],
     ['nieznany zamiar', { ...REF, data: EXAMPLE_REPORT, intent: 'sent' }],
@@ -207,6 +211,16 @@ describe('createLinkAction', () => {
     expect(mocks.after).not.toHaveBeenCalled();
   });
 
+  it('limit linków do raportu w bazie: przyczyna i naprawa zamiast „serwer nie odpowiedział”', async () => {
+    mocks.createLink.mockRejectedValueOnce(new LinkQuotaError());
+    const result = await actions.createLinkAction(REF);
+    expect(result).toEqual({ ok: false, error: t.errors.linkQuota(100) });
+    expect(t.errors.linkQuota(100)).toBe(
+      'Ten raport ma już 100 linków, a to limit dla jednego raportu. Wyślij klientowi raport jako PDF.',
+    );
+    expect(mocks.after).not.toHaveBeenCalled();
+  });
+
   it('limit: 20 nowych linków na 10 minut na konto', async () => {
     for (let i = 0; i < 20; i++) expect((await actions.createLinkAction(REF)).ok).toBe(true);
     expect(await actions.createLinkAction(REF)).toEqual({ ok: false, error: t.errors.rateLimited });
@@ -271,6 +285,14 @@ describe('markSentAction i undoSentAction', () => {
       error: t.errors.invalid,
     });
     expect(await actions.undoSentAction({ ...REF, month: '2026-13' })).toEqual({
+      ok: false,
+      error: t.errors.invalid,
+    });
+    expect(await actions.markSentAction({ ...REF, month: '1999-12' })).toEqual({
+      ok: false,
+      error: t.errors.invalid,
+    });
+    expect(await actions.createLinkAction({ ...REF, month: '2026-11' })).toEqual({
       ok: false,
       error: t.errors.invalid,
     });

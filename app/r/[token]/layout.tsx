@@ -12,6 +12,23 @@ const NO_INDEX = { index: false, follow: false } as const;
 
 const UNAVAILABLE: Metadata = { title: { absolute: t.unavailableTitle }, robots: NO_INDEX };
 
+/** Podgląd linku w komunikatorze: ogólny, bez liczb i bez nazwy klienta (PROMPT.md §11). */
+const OPEN_GRAPH: Metadata['openGraph'] = {
+  type: 'website',
+  locale: 'pl_PL',
+  siteName: PRODUCT_NAME,
+  title: t.meta.ogTitle,
+  description: t.meta.description,
+};
+
+/** Robot podglądu linku: bez odczytu raportu, więc i bez nazwy klienta w tytule. */
+const PREVIEW: Metadata = {
+  title: { absolute: t.meta.ogTitle },
+  description: t.meta.description,
+  robots: NO_INDEX,
+  openGraph: OPEN_GRAPH,
+};
+
 /**
  * Metadane raportu publicznego w układzie segmentu, żeby obejmowały też not-found.tsx: tytuł „Raport za
  * {miesiąc} — {klient}”, noindex,nofollow, Open Graph ogólny (bez liczb i bez nazwy klienta). Odczyt jest ten
@@ -25,18 +42,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   } catch {
     return UNAVAILABLE;
   }
+  if (result.status === 'preview') return PREVIEW;
   if (result.status !== 'ok') return UNAVAILABLE;
   return {
     title: { absolute: reportView(result.data).documentTitle },
     description: t.meta.description,
     robots: NO_INDEX,
-    openGraph: {
-      type: 'website',
-      locale: 'pl_PL',
-      siteName: PRODUCT_NAME,
-      title: t.meta.ogTitle,
-      description: t.meta.description,
-    },
+    openGraph: OPEN_GRAPH,
   };
 }
 

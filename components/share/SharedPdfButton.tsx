@@ -10,12 +10,6 @@ import { downloadReportPdf } from '@/lib/pdf/download';
 import type { Branding, ReportData } from '@/lib/report/types';
 import s from './SharedPdfButton.module.css';
 
-/**
- * Pobranie PDF z opcjonalnym logo autora (adres z tej samej domeny). Opcję logo dodaje moduł edytora
- * w lib/pdf/download.ts; do tego czasu drugi argument jest pomijany, a PDF ma nazwę autora zamiast logo.
- */
-const download: (data: ReportData, options?: { logoSrc?: string }) => Promise<string> = downloadReportPdf;
-
 type SharedPdfButtonProps = {
   data: ReportData;
   branding: Branding;
@@ -36,7 +30,8 @@ export function SharedPdfButton({ data, branding, logoSrc }: SharedPdfButtonProp
     if (status === 'busy') return;
     setStatus('busy');
     try {
-      await download(data, logoSrc ? { logoSrc } : undefined);
+      // Logo autora z tej samej domeny (/r/{token}/logo); bez niego PDF ma nazwę i inicjały autora.
+      await downloadReportPdf(data, logoSrc ? { logoSrc } : undefined);
       setStatus('idle');
       toast({ message: t.pdf.downloaded });
       track('pdf_downloaded', { mode: 'account', branding });

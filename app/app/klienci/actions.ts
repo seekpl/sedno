@@ -5,14 +5,20 @@
  *
  * - Tylko zalogowany użytkownik i tylko z włączonymi kontami; właściciela ustawia baza (auth.uid(), RLS).
  * - zod na wejściu: nazwa 1–80 znaków po oczyszczeniu, branża z listy (lib/data/panel.ts).
- * - Limit: 30 nowych klientów na 10 minut na konto (ochrona przed zalewem wierszy).
+ * - Limit: 30 nowych klientów na 10 minut na konto (ochrona przed zalewem wierszy); osobno baza pilnuje
+ *   górnej granicy CLIENTS_PER_ACCOUNT_MAX klientów na konto (komunikat z przyczyną zamiast ogólnego).
  * - Akcja nie rzuca wyjątku i nie zwraca treści błędów bazy; nazwy klienta nie logujemy.
  */
 import { revalidatePath } from 'next/cache';
 import { features } from '@/config/features';
 import { getCurrentUser } from '@/lib/auth/session';
 import { panel as t } from '@/lib/copy/panel';
-import { clientInputSchema, createClient as insertClient } from '@/lib/data/panel';
+import {
+  CLIENTS_PER_ACCOUNT_MAX,
+  clientInputSchema,
+  createClient as insertClient,
+  PanelDataError,
+} from '@/lib/data/panel';
 import { rateLimit } from '@/lib/server/rate-limit';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { z } from '@/lib/zod';
@@ -37,7 +43,10 @@ function field(formData: FormData, name: string): string | undefined {
 export async function createClient(_prev: AddClientState, formData: FormData): Promise<AddClientState> {
   try {
     return await create(formData);
-  } catch {
+  } catch (error) {
+    if (error instanceof PanelDataError && error.step === 'limit') {
+      return { status: 'error', message: t.add.errors.accountLimit(CLIENTS_PER_ACCOUNT_MAX) };
+    }
     console.error('[sedno] Dodanie klienta nie powiodło się.');
     return { status: 'error', message: t.add.errors.failed };
   }

@@ -13,19 +13,20 @@ import s from './Settings.module.css';
 const t = settings.logo;
 const IDLE: LogoState = { status: 'idle' };
 
-/** Typy przyjmowane przez pole pliku (i sprawdzane wstępnie w przeglądarce). */
+/** Typy przyjmowane przez pole pliku (filtr okna wyboru pliku). */
 export const LOGO_ACCEPT = 'image/png,image/jpeg,image/webp';
-const ACCEPTED_TYPES = LOGO_ACCEPT.split(',');
 
 /**
- * Wstępne sprawdzenie w przeglądarce (rozmiar i zgłoszony typ), żeby nie wysyłać pliku, który serwer i tak
- * odrzuci — Next odrzuca ciało akcji większe niż 3 MB, zanim akcja zdąży odpowiedzieć przyczyną. O typie
- * rozstrzyga serwer po sygnaturze bajtów.
+ * Wstępne sprawdzenie w przeglądarce, żeby nie wysyłać pliku, który serwer na pewno odrzuci — Next odrzuca
+ * ciało akcji większe niż 3 MB, zanim akcja zdąży odpowiedzieć przyczyną. Typ zgłoszony przez przeglądarkę
+ * bywa nietypowy dla poprawnego pliku (image/pjpeg, image/x-png, pusty), więc odrzucamy tu tylko SVG i pliki,
+ * które nie są obrazami. O typie rozstrzyga serwer po sygnaturze bajtów.
  */
 export function precheckLogo(file: { size: number; type: string }): LogoErrorCode | null {
   if (file.size === 0) return 'empty';
   if (file.size > LOGO_MAX_BYTES) return 'tooBig';
-  if (file.type && !ACCEPTED_TYPES.includes(file.type)) return 'unsupported';
+  const type = file.type.toLowerCase();
+  if (type.includes('svg') || (type !== '' && !type.startsWith('image/'))) return 'unsupported';
   return null;
 }
 

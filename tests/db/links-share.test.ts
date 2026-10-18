@@ -8,7 +8,14 @@ import { anon, createUser, deleteUser, sampleReportData, sql, type TestUser } fr
 
 vi.mock('server-only', () => ({}));
 
-const { createLink, getActiveLink, LinkReportNotFoundError, revokeLink } = await import('@/lib/data/links');
+const {
+  createLink,
+  getActiveLink,
+  LINKS_PER_REPORT_MAX,
+  LinkQuotaError,
+  LinkReportNotFoundError,
+  revokeLink,
+} = await import('@/lib/data/links');
 const { saveReport } = await import('@/lib/data/reports');
 
 let alice: TestUser;
@@ -96,6 +103,32 @@ describe('tworzenie linku', () => {
     const link = await createLink(alice.db, reportId, { token: () => tokens.shift()! });
     expect(link.token).toBe(fresh);
     expect(await activeCount(reportId)).toBe(1);
+  });
+
+  it('równoczesne „Utwórz link”: zostaje jeden aktywny, najnowszy', async () => {
+    const links = await Promise.all([1, 2, 3].map(() => createLink(alice.db, reportId)));
+    expect(await activeCount(reportId)).toBe(1);
+    const newest = [...links].sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0]!;
+    expect((await getActiveLink(alice.db, reportId))?.token).toBe(newest.token);
+  });
+
+  it('limit linków do raportu: LinkQuotaError, a dotychczasowy link dalej działa', async () => {
+    const quotaReport = await addReport(alice, 'Fizjo Ruch', '2026-08');
+    const active = await createLink(alice.db, quotaReport);
+    // Do limitu (także wyłączone linki) brakuje jednego wpisu po wstawieniu 98 wyłączonych.
+    await sql(
+      `insert into public.share_links (token, report_id, owner_id, revoked_at)
+         select substr(md5(random()::text) || md5(random()::text), 1, 22), $1, $2, now()
+           from generate_series(1, $3::int)`,
+      [quotaReport, alice.id, LINKS_PER_REPORT_MAX - 2],
+    );
+    const last = await createLink(alice.db, quotaReport);
+    expect((await getActiveLink(alice.db, quotaReport))?.token).toBe(last.token);
+    await expect(createLink(alice.db, quotaReport)).rejects.toBeInstanceOf(LinkQuotaError);
+    // Nieudane utworzenie nie wyłącza adresu, który klient już ma.
+    expect((await getActiveLink(alice.db, quotaReport))?.token).toBe(last.token);
+    expect((await shared(last.token))?.data.client.name).toBe('Fizjo Ruch');
+    expect(await shared(active.token)).toBeNull();
   });
 
   it('link do cudzego albo nieistniejącego raportu: brak raportu, bez wpisu w bazie', async () => {

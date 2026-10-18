@@ -88,6 +88,26 @@ describe('usunięcie konta', () => {
     await sql('delete from public.events where id = $1', [event!.id]);
   });
 
+  it('usuwa też plik logo w innym formacie niż ten z profilu (np. pozostałość po zmianie logo)', async () => {
+    const stale = await createUser('delete-stale');
+    const kind = checkLogo(png);
+    if (!kind.ok) throw new Error('png');
+    const current = await saveLogo(stale.id, png, kind);
+    const jpeg = Uint8Array.from([0xff, 0xd8, 0xff, 0xe0, 1, 2, 3]);
+    const leftover = `${stale.id}/logo.jpg`;
+    const upload = await admin.storage
+      .from('logos')
+      .upload(leftover, jpeg, { contentType: 'image/jpeg', upsert: true });
+    expect(upload.error).toBeNull();
+    expect(await readLogo(leftover)).not.toBeNull();
+
+    await deleteAccount(admin, stale.id);
+
+    expect(await readLogo(current)).toBeNull();
+    expect(await readLogo(leftover)).toBeNull();
+    expect((await admin.auth.admin.getUserById(stale.id)).data.user).toBeNull();
+  });
+
   it('konto bez logo też się usuwa', async () => {
     const bare = await createUser('delete-bare');
     await deleteAccount(admin, bare.id);

@@ -42,6 +42,15 @@ describe('profil', () => {
     expect(await getProfile(a.db)).toMatchObject({ displayName: 'Anna', brandName: 'Kadr Social' });
   });
 
+  it('znaki formatujące (zerowa szerokość, kierunek tekstu) nie trafiają do bazy', async () => {
+    const saved = await updateProfile(a.db, a.id, {
+      displayName: 'An\u200Bna',
+      brandName: '\u202EKadr\u2066 Social\uFEFF',
+    });
+    expect(saved).toEqual({ displayName: 'Anna', brandName: 'Kadr Social' });
+    expect(await profileRow(a.id)).toMatchObject({ display_name: 'Anna', brand_name: 'Kadr Social' });
+  });
+
   it('puste pola zapisują null', async () => {
     await updateProfile(a.db, a.id, { displayName: 'Anna', brandName: 'Kadr' });
     expect(await updateProfile(a.db, a.id, { displayName: ' ', brandName: '' })).toEqual({

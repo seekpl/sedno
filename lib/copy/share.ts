@@ -13,6 +13,14 @@ export const share = {
     heading: 'Raport otwierano zbyt często.',
     detail: 'Z tego połączenia było wiele otwarć w ciągu minuty. Odśwież stronę za minutę.',
   },
+  /**
+   * Strona dla robota podglądu linku (komunikatory): bez treści raportu i bez sprawdzania, czy link działa.
+   * Tytuł i opis podglądu biorą się z meta (ogólne, bez liczb i bez nazwy klienta).
+   */
+  preview: {
+    heading: 'Raport miesięczny.',
+    detail: 'Raport jest dostępny po otwarciu linku w przeglądarce.',
+  },
   /** Błąd serwera przy odczycie (np. baza nie odpowiada) — nie mylimy go z wygasłym linkiem. */
   failed: {
     heading: 'Raport się nie wczytał.',

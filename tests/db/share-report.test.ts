@@ -1,17 +1,17 @@
 /**
  * Raport publiczny na lokalnym stosie (lib/data/shared.ts, app/r/[token]/logo/route.ts): aktywny link daje
  * raport po schemacie i liczy jedno wyświetlenie na wywołanie; odwołany, przeterminowany, nieznany i zły
- * token → not-found bez zmiany licznika; logo tylko przez aktywny link (trasa: 404 dla odwołanego) i bez
- * liczenia wyświetleń.
+ * token → not-found bez zmiany licznika; robot podglądu linku nie liczy wyświetlenia; logo tylko przez aktywny
+ * link (trasa: 404 dla odwołanego) i bez liczenia wyświetleń.
  */
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ANON_KEY, SERVICE_ROLE_KEY, SUPABASE_URL } from '../../scripts/local-supabase/config';
 import { admin, createUser, deleteUser, sampleReportData, sql, testToken, type TestUser } from './helpers';
 
 vi.mock('server-only', () => ({}));
-const h = vi.hoisted(() => ({ ip: '203.0.113.7' }));
+const h = vi.hoisted(() => ({ ip: '203.0.113.7', ua: 'Mozilla/5.0 (iPhone) Safari/604.1' }));
 vi.mock('next/headers', () => ({
-  headers: async () => new Headers({ 'x-forwarded-for': h.ip }),
+  headers: async () => new Headers({ 'x-forwarded-for': h.ip, 'user-agent': h.ua }),
 }));
 vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', SUPABASE_URL);
 vi.stubEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY', ANON_KEY);
@@ -70,6 +70,7 @@ afterAll(async () => {
 beforeEach(() => {
   resetRateLimits();
   h.ip = '203.0.113.7';
+  h.ua = 'Mozilla/5.0 (iPhone) Safari/604.1';
 });
 
 describe('getSharedReport na lokalnym stosie', () => {
@@ -123,6 +124,15 @@ describe('getSharedReport na lokalnym stosie', () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
     expect(await shared.getSharedReport(token)).toEqual({ status: 'not-found' });
     vi.restoreAllMocks();
+  });
+
+  it('podgląd linku w komunikatorze (robot) nie liczy wyświetlenia i nie dostaje raportu', async () => {
+    const before = await views(tokens.active);
+    h.ua = 'facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)';
+    expect(await shared.loadSharedReport(tokens.active)).toEqual({ status: 'preview' });
+    h.ua = 'WhatsApp/2.23.20.0 A';
+    expect(await shared.loadSharedReport(tokens.active)).toEqual({ status: 'preview' });
+    expect(await views(tokens.active)).toBe(before);
   });
 
   it('60 otwarć na minutę z jednego IP; kolejne nie liczą wyświetleń', async () => {

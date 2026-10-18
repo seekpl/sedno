@@ -6,7 +6,7 @@ import { z } from '@/lib/zod';
 
 /**
  * Linki do raportu (PROMPT.md §8, §11): token z CSPRNG (lib/links/token.ts), ważność 12 miesięcy (domyślna
- * wartość kolumny), jeden aktywny link na raport — nowy link wyłącza poprzedni. Wszystko przez RLS jako
+ * wartość kolumny), jeden aktywny link na raport — nowy link wyłącza starsze. Wszystko przez RLS jako
  * zalogowany użytkownik: link powstaje tylko do własnego raportu (polityka i klucz obcy z właścicielem),
  * cudzy token po prostu nic nie znajduje. Tokenów nie logujemy.
  */
@@ -27,6 +27,20 @@ export class LinkReportNotFoundError extends Error {
   constructor() {
     super('Linki: nie ma takiego raportu.');
     this.name = 'LinkReportNotFoundError';
+  }
+}
+
+/**
+ * Najwięcej linków do jednego raportu (także wyłączonych) — limit bazy (trigger share_links_enforce_quota
+ * w supabase/migrations/20261013000100_accounts_hardening.sql).
+ */
+export const LINKS_PER_REPORT_MAX = 100;
+
+/** Raport ma już najwięcej linków, ile pozwala baza (kod 23514 z triggera limitu). */
+export class LinkQuotaError extends Error {
+  constructor() {
+    super('Linki: raport ma już najwięcej linków.');
+    this.name = 'LinkQuotaError';
   }
 }
 
@@ -65,9 +79,28 @@ export async function getActiveLink(
 /** Ile razy próbujemy nowy token, gdyby (praktycznie niemożliwe przy 131 bitach) już istniał. */
 const TOKEN_ATTEMPTS = 3;
 
+/** Wstawienie nowego linku z kolejnymi tokenami, gdyby token już istniał. */
+async function insertLink(db: Db, reportId: string, nextToken: () => string): Promise<ShareLinkInfo> {
+  for (let attempt = 0; attempt < TOKEN_ATTEMPTS; attempt++) {
+    const token = nextToken();
+    if (!isShareTokenFormat(token)) throw new LinksDataError('create');
+    const { data, error } = await db
+      .from('share_links')
+      .insert({ token, report_id: reportId })
+      .select(LINK_COLUMNS)
+      .single();
+    if (!error && data) return toInfo(data);
+    if (error?.code === '23514') throw new LinkQuotaError();
+    if (error?.code !== '23505') throw new LinksDataError('create');
+  }
+  throw new LinksDataError('create');
+}
+
 /**
- * Nowy link do zapisanego raportu. Wcześniejsze aktywne linki tego raportu są wyłączane, więc klient ma
- * zawsze jeden działający adres. Rzuca LinkReportNotFoundError dla cudzego lub nieistniejącego raportu.
+ * Nowy link do zapisanego raportu. Najpierw powstaje nowy link, potem wcześniejsze aktywne linki tego
+ * raportu są wyłączane, więc klient ma jeden działający adres, a nieudane utworzenie (np. limit linków)
+ * nie wyłącza adresu, który klient już ma. Przy dwóch równoczesnych żądaniach zostaje najnowszy link.
+ * Rzuca LinkReportNotFoundError dla cudzego lub nieistniejącego raportu, LinkQuotaError po limicie bazy.
  */
 export async function createLink(
   db: Db,
@@ -82,25 +115,18 @@ export async function createLink(
   if (report.error) throw new LinksDataError('read');
   if (!report.data) throw new LinkReportNotFoundError();
 
+  const link = await insertLink(db, reportId, nextToken);
+
+  // Tylko linki starsze od nowego: równoległe „Utwórz link” nie wyłączy linku, który powstał później.
   const revoked = await db
     .from('share_links')
     .update({ revoked_at: now.toISOString() })
     .eq('report_id', reportId)
-    .is('revoked_at', null);
+    .is('revoked_at', null)
+    .neq('token', link.token)
+    .lt('created_at', link.createdAt);
   if (revoked.error) throw new LinksDataError('revoke');
-
-  for (let attempt = 0; attempt < TOKEN_ATTEMPTS; attempt++) {
-    const token = nextToken();
-    if (!isShareTokenFormat(token)) throw new LinksDataError('create');
-    const { data, error } = await db
-      .from('share_links')
-      .insert({ token, report_id: reportId })
-      .select(LINK_COLUMNS)
-      .single();
-    if (!error && data) return toInfo(data);
-    if (error?.code !== '23505') throw new LinksDataError('create');
-  }
-  throw new LinksDataError('create');
+  return link;
 }
 
 /**

@@ -98,6 +98,17 @@ describe('Ustawienia — układ i treść', () => {
     expect(within(plan).getByText(spaced(formatPrice(PLANS.solo.netMonthly))).className).toContain('sd-num');
     expect(within(plan).getByText(t.plan.soon).className).toContain('sd-badge');
     expect(within(plan).getByText(`${t.plan.perMonth} · do 10 klientów`)).toBeTruthy();
+    const features = within(plan)
+      .getAllByRole('listitem')
+      .map((li) => li.textContent);
+    expect(features).toEqual([
+      'Twoje logo zamiast naszej stopki',
+      'Historia i porównanie miesięcy',
+      `Bez limitu raportów dla ${PLANS.solo.clients} klientów`,
+    ]);
+    for (const li of within(plan).getAllByRole('listitem'))
+      expect(li.querySelector('svg[aria-hidden="true"]')).toBeTruthy();
+    expect(plan.textContent).not.toContain('Najczęściej wybierany');
     expect(within(plan).queryAllByRole('button')).toEqual([]);
     expect(within(plan).queryAllByRole('link')).toEqual([]);
     expect(plan.textContent).toContain('Przygotowano w Sedno');
@@ -145,6 +156,15 @@ describe('Ustawienia — profil i marka', () => {
     expect(brandName().maxLength).toBe(80);
     const hint = document.getElementById(brandName().getAttribute('aria-describedby')!.split(' ')[0]!);
     expect(hint?.textContent).toBe(t.profile.brandName.hint);
+    const nameHint = document.getElementById(displayName().getAttribute('aria-describedby')!);
+    expect(nameHint?.textContent).toBe(t.profile.displayName.hint);
+  });
+
+  it('podpowiedzi mówią prawdę o raporcie: imię zastępuje pustą nazwę, nowa nazwa po zapisie w edytorze', () => {
+    // Edytor: autor = nazwa na raporcie albo imię (lib/data/reports.ts, getReportAuthor), zapisywany przy
+    // każdym zapisie raportu (saveReport).
+    expect(t.profile.displayName.hint).toContain('„Nazwa na raporcie” jest puste');
+    expect(t.profile.brandName.hint).toContain('przy następnym zapisie');
   });
 
   it('„Zapisz” → „Zapisano” w regionie statusu; znika po kolejnej zmianie', async () => {
@@ -221,8 +241,16 @@ describe('Ustawienia — logo', () => {
     expect(precheckLogo({ size: 0, type: 'image/png' })).toBe('empty');
     expect(precheckLogo({ size: LOGO_MAX_BYTES + 1, type: 'image/png' })).toBe('tooBig');
     expect(precheckLogo({ size: 10, type: 'image/svg+xml' })).toBe('unsupported');
+    expect(precheckLogo({ size: 10, type: 'IMAGE/SVG+XML' })).toBe('unsupported');
+    expect(precheckLogo({ size: 10, type: 'application/pdf' })).toBe('unsupported');
     expect(precheckLogo({ size: 10, type: 'image/webp' })).toBeNull();
     expect(precheckLogo({ size: 10, type: '' })).toBeNull();
+  });
+
+  it('nietypowy typ poprawnego obrazu (image/pjpeg, image/x-png) idzie do serwera, który sprawdza bajty', () => {
+    expect(precheckLogo({ size: 10, type: 'image/pjpeg' })).toBeNull();
+    expect(precheckLogo({ size: 10, type: 'image/x-png' })).toBeNull();
+    expect(precheckLogo({ size: LOGO_MAX_BYTES, type: 'image/png' })).toBeNull();
   });
 
   it('za duży plik: przyczyna i naprawa w polu, bez wysyłania', async () => {
@@ -355,6 +383,51 @@ describe('Ustawienia — usunięcie konta', () => {
       fireEvent.click(within(dialog).getByRole('button', { name: t.deleteAccount.modal.submit }));
     });
     expect((await within(dialog).findByRole('alert')).textContent).toContain(t.deleteAccount.errors.failed);
+  });
+
+  it('w trakcie usuwania okna nie da się zamknąć: Esc, tło i „Zostaw konto” (aria-disabled z wyjaśnieniem)', async () => {
+    renderView();
+    open();
+    const dialog = screen.getByRole('dialog');
+    fireEvent.change(within(dialog).getByLabelText(t.deleteAccount.modal.confirmLabel), {
+      target: { value: 'usuń' },
+    });
+    let finish: (state: DeleteAccountState) => void = () => {};
+    action.deleteAccount.mockImplementationOnce(
+      () => new Promise<DeleteAccountState>((resolve) => (finish = resolve)),
+    );
+    await act(async () => {
+      fireEvent.click(within(dialog).getByRole('button', { name: t.deleteAccount.modal.submit }));
+    });
+    const status = await within(dialog).findByText(t.deleteAccount.modal.pending);
+    expect(status.getAttribute('role')).toBe('status');
+    const cancel = within(dialog).getByRole('button', { name: t.deleteAccount.modal.cancel });
+    expect(cancel.getAttribute('aria-disabled')).toBe('true');
+    expect(cancel.getAttribute('aria-describedby')).toBe(status.id);
+    expect(
+      within(dialog).getByRole('button', { name: t.deleteAccount.modal.submit }).getAttribute('aria-busy'),
+    ).toBe('true');
+
+    act(() => {
+      fireEvent.keyDown(document, { key: 'Escape' });
+    });
+    act(() => {
+      fireEvent.click(cancel);
+    });
+    act(() => {
+      fireEvent.mouseDown(dialog.parentElement as HTMLElement);
+    });
+    expect(screen.getByRole('dialog')).toBe(dialog);
+
+    // Serwer odpowiedział błędem: okno znów da się zamknąć.
+    await act(async () => {
+      finish({ status: 'error', message: t.deleteAccount.errors.failed });
+    });
+    await waitFor(() => expect(cancel.getAttribute('aria-disabled')).toBeNull());
+    act(() => {
+      fireEvent.keyDown(document, { key: 'Escape' });
+    });
+    expect(screen.queryByRole('dialog')).toBeNull();
   });
 
   it('„Zostaw konto” zamyka okno bez wywołania akcji', () => {

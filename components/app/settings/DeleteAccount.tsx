@@ -6,6 +6,7 @@ import {
   useCallback,
   useEffect,
   useId,
+  useRef,
   useState,
   type FormEvent,
 } from 'react';
@@ -22,12 +23,19 @@ const INITIAL_STATE: DeleteAccountState = { status: 'idle' };
 
 /**
  * „Usuń konto”: przycisk i okno z wyraźnym potwierdzeniem (wpisanie słowa „usuń”). Okno ma pułapkę fokusu
- * i Esc (Modal), fokus startuje w polu potwierdzenia i wraca na przycisk po zamknięciu. Po usunięciu
- * akcja przekierowuje na stronę główną.
+ * i Esc (Modal), fokus startuje w polu potwierdzenia i wraca na przycisk po zamknięciu. W trakcie usuwania
+ * okna nie da się zamknąć (Esc, tło, „Zostaw konto”) — zamknięcie sugerowałoby, że konto zostaje, a serwer
+ * i tak by je usunął. Po usunięciu akcja przekierowuje na stronę główną.
  */
 export function DeleteAccount({ className }: { className?: string }) {
   const [open, setOpen] = useState(false);
-  const onClose = useCallback(() => setOpen(false), []);
+  const pending = useRef(false);
+  const onClose = useCallback(() => {
+    if (!pending.current) setOpen(false);
+  }, []);
+  const onPendingChange = useCallback((value: boolean) => {
+    pending.current = value;
+  }, []);
   return (
     <>
       <Button variant="danger" className={className} onClick={() => setOpen(true)}>
@@ -37,7 +45,7 @@ export function DeleteAccount({ className }: { className?: string }) {
         open={open}
         onClose={onClose}
         title={t.modal.title}
-        actions={<DeleteAccountForm onCancel={onClose} />}
+        actions={<DeleteAccountForm onCancel={onClose} onPendingChange={onPendingChange} />}
       >
         {t.modal.body}
       </Modal>
@@ -48,13 +56,21 @@ export function DeleteAccount({ className }: { className?: string }) {
 /**
  * Formularz w oknie. Montowany przy każdym otwarciu, więc zaczyna od pustego pola. Akcję wywołujemy sami
  * w onSubmit (bez automatycznego czyszczenia formularza), więc po błędzie wpisane słowo zostaje. Błąd pod
- * polem (aria-describedby) i fokus na polu.
+ * polem (aria-describedby) i fokus na polu. W trakcie usuwania „Zostaw konto” jest niedostępne
+ * (aria-disabled) z wyjaśnieniem w regionie statusu.
  */
-function DeleteAccountForm({ onCancel }: { onCancel: () => void }) {
+function DeleteAccountForm({
+  onCancel,
+  onPendingChange,
+}: {
+  onCancel: () => void;
+  onPendingChange: (pending: boolean) => void;
+}) {
   const [state, formAction, pending] = useActionState(deleteAccount, INITIAL_STATE);
   const [confirm, setConfirm] = useState('');
   const id = useId();
   const confirmId = `${id}-confirm`;
+  const pendingId = `${id}-pending`;
   const fieldError = state.status === 'error' ? state.fieldError : undefined;
   const message = state.status === 'error' ? state.message : undefined;
 
@@ -62,8 +78,13 @@ function DeleteAccountForm({ onCancel }: { onCancel: () => void }) {
     event.preventDefault();
     if (pending) return;
     const data = new FormData(event.currentTarget);
+    onPendingChange(true);
     startTransition(() => formAction(data));
   };
+
+  useEffect(() => {
+    onPendingChange(pending);
+  }, [pending, onPendingChange]);
 
   useEffect(() => {
     if (state.status === 'error' && state.fieldError) document.getElementById(confirmId)?.focus();
@@ -83,6 +104,7 @@ function DeleteAccountForm({ onCancel }: { onCancel: () => void }) {
         spellCheck={false}
         maxLength={100}
         required
+        readOnly={pending}
         wide
       />
       {message && (
@@ -90,8 +112,17 @@ function DeleteAccountForm({ onCancel }: { onCancel: () => void }) {
           {message}
         </Alert>
       )}
+      <p id={pendingId} role="status" className={pending ? 'sd-secondary' : 'sd-visually-hidden'}>
+        {pending ? t.modal.pending : ''}
+      </p>
       <div className={`sd-modal__actions ${s.modalButtons}`}>
-        <Button onClick={onCancel}>{t.modal.cancel}</Button>
+        <Button
+          onClick={onCancel}
+          unavailable={pending}
+          aria-describedby={pending ? pendingId : undefined}
+        >
+          {t.modal.cancel}
+        </Button>
         <Button type="submit" variant="danger" busy={pending}>
           {t.modal.submit}
         </Button>

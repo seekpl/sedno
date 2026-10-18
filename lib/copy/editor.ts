@@ -82,6 +82,10 @@ export const editor = {
     draft: 'Zapisz szkic',
     /** Toast po „Zapisz szkic”. */
     saved: 'Szkic zapisany',
+    /** Raport „Gotowy” albo „Wysłany” nie jest szkicem: zapis zostawia status, a link pokazuje zmiany. */
+    changes: 'Zapisz zmiany',
+    /** Toast po „Zapisz zmiany”. */
+    changesSaved: 'Zmiany zapisane',
     toSend: 'Przejdź do wysyłki',
     /** Przy aktywnym linku: zapis zmienia to, co widzi klient. */
     linkNote: 'Klient ma link do tego raportu. Po zapisaniu zobaczy zmiany pod tym samym adresem.',
@@ -95,6 +99,9 @@ export const editor = {
     invalid: 'Raport ma niepoprawne dane. Odśwież stronę i spróbuj ponownie.',
     failed: 'Serwer nie odpowiedział. Sprawdź połączenie i spróbuj ponownie.',
     rateLimited: 'Za dużo nowych linków w krótkim czasie. Spróbuj ponownie za kilka minut.',
+    /** Limit linków do jednego raportu (także wyłączonych). */
+    linkQuota: (max: number) =>
+      `Ten raport ma już ${formatNumber(max)} ${plural(max, ['link', 'linki', 'linków'])}, a to limit dla jednego raportu. Wyślij klientowi raport jako PDF.`,
   },
   send: {
     status: 'Status raportu',

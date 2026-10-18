@@ -15,9 +15,13 @@ const empty = (status: number, extra: Record<string, string> = {}) =>
  * Eksport danych konta (PROMPT.md §8 „Eksport danych: JSON wszystkich raportów”, §15 RODO): profil,
  * klienci, raporty (ReportData) i linki zalogowanego użytkownika jako plik JSON do pobrania. Zapytania
  * przez sesję (RLS — tylko własne wiersze). Treści eksportu nie logujemy.
+ * Ciasteczka sesji (SameSite=Lax) idą też z przejściem z obcej strony, więc żądanie z innej witryny
+ * (Sec-Fetch-Site: cross-site / same-site) dostaje 403 — obca strona nie wywoła pobrania ani nie zużyje limitu.
  */
-export async function GET(): Promise<Response> {
+export async function GET(request: Request): Promise<Response> {
   if (!features.accounts) return empty(404);
+  const site = request.headers.get('sec-fetch-site');
+  if (site === 'cross-site' || site === 'same-site') return empty(403);
   const user = await getCurrentUser();
   if (!user) return empty(401);
   if (!rateLimit(`settings:export:${user.id}`, LIMIT, WINDOW_MS)) return empty(429, { 'Retry-After': '60' });
@@ -38,6 +42,7 @@ export async function GET(): Promise<Response> {
       'Content-Disposition': `attachment; filename="${exportFileName(now)}"`,
       'Cache-Control': 'no-store',
       'X-Content-Type-Options': 'nosniff',
+      'Cross-Origin-Resource-Policy': 'same-origin',
     },
   });
 }

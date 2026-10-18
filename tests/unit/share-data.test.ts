@@ -110,6 +110,18 @@ describe('loadSharedReport', () => {
     });
   });
 
+  it('adres logo zapisany w danych (author.logoUrl) pomija — logo tylko przez /r/{token}/logo', async () => {
+    const author = { name: 'Kadr Social', logoUrl: 'https://sledzenie.example/piksel.png' };
+    sb.rpc.mockResolvedValue({ data: { ...OK, data: { ...EXAMPLE_REPORT, author } }, error: null });
+    const result = await shared.loadSharedReport(TOKEN);
+    expect(result).toEqual({
+      status: 'ok',
+      ...OK,
+      data: { ...EXAMPLE_REPORT, author: { name: 'Kadr Social' } },
+    });
+    expect(JSON.stringify(result)).not.toContain('sledzenie.example');
+  });
+
   it('link wygasły, odwołany albo nieznany (null z bazy) → not-found', async () => {
     sb.rpc.mockResolvedValue({ data: null, error: null });
     expect(await shared.loadSharedReport(TOKEN)).toEqual({ status: 'not-found' });
@@ -144,6 +156,38 @@ describe('loadSharedReport', () => {
     expect(sb.rpc).toHaveBeenCalledTimes(60);
     h.headers = new Map([['x-forwarded-for', '198.51.100.1']]);
     expect((await shared.loadSharedReport(TOKEN)).status).toBe('ok');
+  });
+
+  it.each([
+    'facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)',
+    'facebookexternalhit/1.1 Facebot Twitterbot/1.0',
+    'WhatsApp/2.23.20.0 A',
+    'Slackbot-LinkExpanding 1.0 (+https://api.slack.com/robots)',
+    'TelegramBot (like TwitterBot)',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119 Safari/537.36 Edg/119 MicrosoftPreview/2.0 +https://aka.ms/MicrosoftPreview',
+    'Mozilla/5.0 (compatible; Discordbot/2.0; +https://discordapp.com)',
+    'LinkedInBot/1.0 (compatible; Mozilla/5.0; Apache-HttpClient +http://www.linkedin.com)',
+    'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
+  ])('robot podglądu linku „%s” → preview: bez bazy, bez wyświetlenia i bez limitu', async (ua) => {
+    h.headers.set('user-agent', ua);
+    expect(await shared.loadSharedReport(TOKEN)).toEqual({ status: 'preview' });
+    expect(sb.rpc).not.toHaveBeenCalled();
+    expect(sb.createClient).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    // Przeglądarki ludzi, także wbudowane w aplikacje (Facebook, Instagram, LinkedIn, Telegram, WhatsApp).
+    'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1',
+    'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Mobile Safari/537.36',
+    'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 [FBAN/FBIOS;FBAV/470.0]',
+    'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Instagram 340.0',
+    'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Mobile Safari/537.36 LinkedInApp',
+    'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Mobile Safari/537.36 Telegram-Android/11.0',
+    'Mozilla/5.0 (Linux; Android 14; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/126.0 Mobile Safari/537.36 WhatsApp/2.24',
+  ])('przeglądarka człowieka „%s” → raport i wyświetlenie', async (ua) => {
+    h.headers.set('user-agent', ua);
+    expect((await shared.loadSharedReport(TOKEN)).status).toBe('ok');
+    expect(sb.rpc).toHaveBeenCalledOnce();
   });
 
   it('bez flagi kont → not-found bez zapytania', async () => {

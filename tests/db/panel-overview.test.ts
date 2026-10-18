@@ -9,7 +9,8 @@ import { anon, createUser, deleteUser, sampleReportData, sql, type TestUser } fr
 
 vi.mock('server-only', () => ({}));
 
-const { createClient, currentPlan, monthOverview, PanelDataError } = await import('@/lib/data/panel');
+const { CLIENTS_PER_ACCOUNT_MAX, createClient, currentPlan, monthOverview, PanelDataError } =
+  await import('@/lib/data/panel');
 type ClientInput = import('@/lib/data/panel').ClientInput;
 
 let alice: TestUser;
@@ -283,6 +284,31 @@ describe('createClient', () => {
     await expect(createClient(carol.db, { name: 'Kadr', industry: 'kasyno' as never })).rejects.toThrow();
     const after = await sql('select count(*)::int as n from public.clients where owner_id = $1', [carol.id]);
     expect(after[0]?.n).toBe(before[0]?.n);
+  });
+
+  it('niewidoczne znaki formatujące nie trafiają do bazy', async () => {
+    const created = await createClient(carol.db, { name: '\u200bTrzeci\u202e klient\u00ad' });
+    expect((await stored(created.id))?.name).toBe('Trzeci klient');
+  });
+
+  it('górna granica klientów na konto z bazy → PanelDataError „limit”, bez nowego wiersza', async () => {
+    const dave = await createUser('panel-limit');
+    try {
+      await sql(
+        `insert into public.clients (owner_id, name) select $1, 'Klient ' || g from generate_series(1, $2::int) g`,
+        [dave.id, CLIENTS_PER_ACCOUNT_MAX],
+      );
+      const error = await createClient(dave.db, { name: 'Jeden za dużo' }).catch((e: unknown) => e);
+      expect(error).toBeInstanceOf(PanelDataError);
+      expect((error as InstanceType<typeof PanelDataError>).step).toBe('limit');
+      const count = await sql<{ n: number }>(
+        'select count(*)::int as n from public.clients where owner_id = $1',
+        [dave.id],
+      );
+      expect(count[0]?.n).toBe(CLIENTS_PER_ACCOUNT_MAX);
+    } finally {
+      await deleteUser(dave.id);
+    }
   });
 
   it('bez sesji zapis jest odrzucony', async () => {

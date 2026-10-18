@@ -1,3 +1,4 @@
+import { cookies } from 'next/headers';
 import type { NextRequest } from 'next/server';
 import { features } from '@/config/features';
 import { safeNextPath } from '@/lib/auth/next-path';
@@ -13,9 +14,20 @@ const querySchema = z.object({
   next: z.string().max(2048).optional().catch(undefined),
 });
 
-/** Przekierowanie 303 na ścieżkę tej samej domeny. Ciasteczka sesji dołącza Next.js (cookies()). */
+/**
+ * Weryfikatory PKCE w ciasteczkach (@supabase/ssr: stały `…-code-verifier`, miejsca `…-flow-{id}-code-verifier`
+ * i ich indeks `…-flows-code-verifier`). Po udanym logowaniu są bezużyteczne, a biblioteka bez identyfikatora
+ * przepływu w adresie usuwa tylko stały klucz — resztę usuwamy sami, żeby nie zostawały w przeglądarce.
+ */
+const VERIFIER_COOKIE = /^sb-.+-auth-token-(?:.+-)?code-verifier(?:\.\d+)?$/;
+
+/**
+ * Przekierowanie 303 na ścieżkę tej samej domeny. Ciasteczka sesji dołącza Next.js (cookies()). Znaki spoza
+ * ASCII (np. z ręcznie zbudowanego ?next=) kodujemy, bo nagłówek Location ich nie przyjmuje.
+ */
 function redirectTo(path: string): Response {
-  return new Response(null, { status: 303, headers: { Location: path, 'Cache-Control': 'no-store' } });
+  const location = path.replace(/[^\x21-\x7e]/gu, (char) => encodeURIComponent(char));
+  return new Response(null, { status: 303, headers: { Location: location, 'Cache-Control': 'no-store' } });
 }
 
 /**
@@ -43,6 +55,10 @@ export async function GET(request: NextRequest): Promise<Response> {
         `[sedno] Wymiana kodu logowania nie powiodła się (${error.code ?? error.status ?? 'brak kodu'}).`,
       );
       return redirectTo(LINK_ERROR_PATH);
+    }
+    const store = await cookies();
+    for (const { name } of store.getAll()) {
+      if (VERIFIER_COOKIE.test(name)) store.delete(name);
     }
   } catch {
     console.error('[sedno] Wymiana kodu logowania nie powiodła się.');
