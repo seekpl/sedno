@@ -5,7 +5,7 @@
 import pg from 'pg';
 import { DB_URL } from '../../scripts/local-supabase/config';
 
-async function query<T extends pg.QueryResultRow>(text: string, values: unknown[] = []): Promise<T[]> {
+export async function query<T extends pg.QueryResultRow>(text: string, values: unknown[] = []): Promise<T[]> {
   const client = new pg.Client({ connectionString: DB_URL });
   await client.connect();
   try {
