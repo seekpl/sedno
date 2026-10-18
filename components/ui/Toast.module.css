@@ -13,3 +13,10 @@
 .region > * {
   pointer-events: auto;
 }
+
+/* Od 768 px toast przy prawej krawędzi, jak w EkranPanel.html (justify-self: end); na telefonie na środku. */
+@media (min-width: 768px) {
+  .region {
+    justify-items: end;
+  }
+}
