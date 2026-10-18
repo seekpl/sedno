@@ -1,0 +1,65 @@
+/* Logowanie: spokojna wąska kolumna (bez makiety; kontrolki jak w brand/reference/components/TextField.html). */
+
+.panel {
+  display: grid;
+  gap: var(--space-4);
+  justify-items: start;
+}
+
+.panel > * {
+  width: 100%;
+}
+
+/* Długi adres e-mail nie może poszerzyć strony na telefonie. */
+.panel p {
+  overflow-wrap: anywhere;
+}
+
+.title:focus {
+  outline: none;
+}
+
+.title:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 4px;
+}
+
+.form {
+  display: grid;
+  gap: var(--space-4);
+  justify-items: start;
+  margin-top: var(--space-2);
+}
+
+.form > * {
+  width: 100%;
+}
+
+.form > .submit {
+  width: auto;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+
+.legal {
+  margin-top: var(--space-2);
+}
+
+/* Telefon: cele dotyku co najmniej 48 px (PROMPT.md §15), przyciski na całą szerokość. */
+@media (max-width: 767px) {
+  .form > .submit,
+  .actions > button {
+    width: 100%;
+    height: var(--control-l);
+  }
+
+  /* Linki w zdaniu: pole dotyku 48 px przez dopełnienie elementu inline (nie zmienia wysokości wierszy). */
+  .legal a {
+    padding-block: calc((var(--control-l) - 1lh) / 2);
+  }
+}

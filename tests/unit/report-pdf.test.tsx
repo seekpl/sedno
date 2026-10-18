@@ -5,6 +5,7 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import zlib from 'node:zlib';
 import { renderToBuffer, type DocumentProps } from '@react-pdf/renderer';
 import { createElement, type ReactElement } from 'react';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
@@ -35,10 +36,42 @@ const DROP = report({
   },
 });
 
-async function render(data: ReportData): Promise<Buffer> {
-  const element = createElement(ReportPdf, { data }) as unknown as ReactElement<DocumentProps>;
+async function render(data: ReportData, logoSrc?: string): Promise<Buffer> {
+  const element = createElement(ReportPdf, {
+    data,
+    ...(logoSrc ? { logoSrc } : {}),
+  }) as unknown as ReactElement<DocumentProps>;
   return renderToBuffer(element);
 }
+
+/** Najprostszy poprawny PNG (RGBA, jednolity kolor) o podanych wymiarach — logo do testów. */
+function png(width: number, height: number): Uint8Array<ArrayBuffer> {
+  const chunk = (type: string, data: Buffer) => {
+    const length = Buffer.alloc(4);
+    length.writeUInt32BE(data.length);
+    const body = Buffer.concat([Buffer.from(type, 'latin1'), data]);
+    const crc = Buffer.alloc(4);
+    crc.writeUInt32BE(zlib.crc32(body));
+    return Buffer.concat([length, body, crc]);
+  };
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(width, 0);
+  ihdr.writeUInt32BE(height, 4);
+  ihdr.set([8, 6, 0, 0, 0], 8);
+  const row = Buffer.concat([Buffer.from([0]), Buffer.alloc(width * 4, 0x40)]);
+  const raw = Buffer.concat(Array.from({ length: height }, () => row));
+  return Uint8Array.from(
+    Buffer.concat([
+      Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+      chunk('IHDR', ihdr),
+      chunk('IDAT', zlib.deflateSync(raw)),
+      chunk('IEND', Buffer.alloc(0)),
+    ]),
+  );
+}
+
+const pngDataUri = (width: number, height: number) =>
+  `data:image/png;base64,${Buffer.from(png(width, height)).toString('base64')}`;
 
 type Extracted = { text: string; pageTexts: string[]; pages: number; info: Record<string, unknown> };
 
@@ -141,6 +174,27 @@ async function scanPage(buf: Buffer, pageNumber = 1): Promise<PageScan> {
   });
   await task.destroy();
   return { items, strokes, fills };
+}
+
+/** Obrazy na stronie (paintImageXObject) jako prostokąty w punktach strony. */
+async function imageBoxes(buf: Buffer): Promise<Box[]> {
+  const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs');
+  const { OPS } = pdfjs;
+  const task = pdfjs.getDocument({ data: new Uint8Array(buf) });
+  const page = await (await task.promise).getPage(1);
+  const list = await page.getOperatorList();
+  let ctm: Matrix = IDENTITY;
+  const stack: Matrix[] = [];
+  const boxes: Box[] = [];
+  list.fnArray.forEach((fn, i) => {
+    const args = (list.argsArray[i] ?? []) as unknown[];
+    if (fn === OPS.save) stack.push(ctm);
+    else if (fn === OPS.restore) ctm = stack.pop() ?? ctm;
+    else if (fn === OPS.transform) ctm = multiply(ctm, args as unknown as Matrix);
+    else if (fn === OPS.paintImageXObject) boxes.push(boxOf(ctm, [0, 0, 1, 1]));
+  });
+  await task.destroy();
+  return boxes;
 }
 
 const PEN = tokens.colors.light.reportPen.toLowerCase();
@@ -390,6 +444,49 @@ describe('zakreślenie w PDF', () => {
   });
 });
 
+describe('ReportPdf: logo autora', () => {
+  it('logo zastępuje awatar z inicjałami i nazwę; PDF zostaje jednostronicowy', async () => {
+    const buf = await render(DROP, pngDataUri(200, 50));
+    const result = await extract(buf);
+    expect(result.pages).toBe(1);
+    const page = result.pageTexts[0]!;
+    expect(page).toContain(`Raport miesięczny dla: ${CLIENT}`);
+    expect(page).not.toMatch(/\bKS\b/);
+    expect(page).not.toContain('Kadr Social');
+    // Autor zostaje w metadanych dokumentu.
+    expect(result.info.Author).toBe('Kadr Social');
+    const [box, ...rest] = await imageBoxes(buf);
+    expect(rest).toHaveLength(0);
+    // Pole 160 × 40 pt w lewym górnym rogu treści (margines 44 pt, góra strony 842 − 40 pt).
+    expect(box!.maxX - box!.minX).toBeCloseTo(160, 0);
+    expect(box!.maxY - box!.minY).toBeCloseTo(40, 0);
+    expect(box!.minX).toBeCloseTo(44, 0);
+    expect(box!.maxY).toBeLessThanOrEqual(841.89 - 40 + 0.5);
+  }, 30_000);
+
+  it('szerokie i wysokie logo mieści się w polu 160 × 40 pt z zachowaniem proporcji', async () => {
+    for (const [w, h] of [
+      [2000, 50],
+      [50, 400],
+    ] as const) {
+      const buf = await render(DROP, pngDataUri(w, h));
+      expect((await extract(buf)).pages).toBe(1);
+      const [box] = await imageBoxes(buf);
+      const width = box!.maxX - box!.minX;
+      const height = box!.maxY - box!.minY;
+      expect(width).toBeLessThanOrEqual(160.5);
+      expect(height).toBeLessThanOrEqual(40.5);
+      expect(width / height).toBeCloseTo(w / h, 1);
+    }
+  }, 30_000);
+
+  it('bez logo: inicjały i nazwa autora, bez obrazów', async () => {
+    const buf = await render(DROP);
+    expect(await imageBoxes(buf)).toHaveLength(0);
+    expect((await extract(buf)).pageTexts[0]).toContain('KS Kadr Social');
+  }, 30_000);
+});
+
 describe('downloadReportPdf', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
@@ -423,6 +520,47 @@ describe('downloadReportPdf', () => {
     expect(revoke).not.toHaveBeenCalled();
     vi.runAllTimers();
     expect(revoke).toHaveBeenCalledWith('blob:sedno-test');
+  }, 30_000);
+
+  it('z logoSrc pobiera logo z tej samej domeny i osadza je w PDF', async () => {
+    const link = { href: '', download: '', rel: '', click: vi.fn(), remove: vi.fn() };
+    vi.stubGlobal('document', { createElement: vi.fn(() => link), body: { append: vi.fn() } });
+    const logo = png(120, 40);
+    const fetchMock = vi.fn(async () => new Response(logo, { headers: { 'content-type': 'image/png' } }));
+    vi.stubGlobal('fetch', fetchMock);
+    let blob: Blob | undefined;
+    vi.spyOn(URL, 'createObjectURL').mockImplementation((b) => {
+      blob = b as Blob;
+      return 'blob:sedno-logo';
+    });
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined);
+
+    await downloadReportPdf(DROP, { logoSrc: '/app/logo' });
+
+    expect(fetchMock).toHaveBeenCalledWith('/app/logo', { credentials: 'same-origin', cache: 'no-store' });
+    const buf = Buffer.from(await blob!.arrayBuffer());
+    expect(await imageBoxes(buf)).toHaveLength(1);
+  }, 30_000);
+
+  it('logo, które się nie wczytało, nie blokuje PDF (nazwa autora zamiast logo)', async () => {
+    const link = { href: '', download: '', rel: '', click: vi.fn(), remove: vi.fn() };
+    vi.stubGlobal('document', { createElement: vi.fn(() => link), body: { append: vi.fn() } });
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response('brak', { status: 404 })),
+    );
+    let blob: Blob | undefined;
+    vi.spyOn(URL, 'createObjectURL').mockImplementation((b) => {
+      blob = b as Blob;
+      return 'blob:sedno-no-logo';
+    });
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined);
+
+    await downloadReportPdf(DROP, { logoSrc: '/r/AbCdEfGhIjKlMnOpQrStUv/logo' });
+
+    const buf = Buffer.from(await blob!.arrayBuffer());
+    expect(await imageBoxes(buf)).toHaveLength(0);
+    expect((await extract(buf)).pageTexts[0]).toContain('Kadr Social');
   }, 30_000);
 });
 

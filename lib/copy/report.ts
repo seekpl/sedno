@@ -45,6 +45,8 @@ export const report = {
     `Dane z ${monthGen} obejmują ${days} z ${monthDays} dni.`,
   /** Przypis, gdy miesiąc jeszcze trwa: „Dane do 12 października.” */
   inProgressNote: (date: string) => `Dane do ${date}.`,
+  /** Tekst alternatywny logo autora, gdy raport nie ma nazwy autora. */
+  logoAlt: 'Logo autora raportu',
   /** report.footer — „Przygotowano w [logo Sedno]” */
   footer: 'Przygotowano w',
   /** Tytuł strony z raportem i metadane PDF: „Raport za wrzesień 2026 — Studio Lumi” */

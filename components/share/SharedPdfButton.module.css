@@ -1,0 +1,21 @@
+.actions {
+  display: grid;
+  justify-items: end;
+  gap: var(--space-3);
+}
+
+.error {
+  width: 100%;
+}
+
+/* Telefon: przycisk na całą szerokość, wysokość 48 px (PROMPT.md §15). */
+@media (max-width: 767px) {
+  .actions {
+    justify-items: stretch;
+  }
+
+  .button {
+    width: 100%;
+    height: var(--control-l);
+  }
+}

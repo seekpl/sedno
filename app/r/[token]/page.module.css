@@ -1,0 +1,50 @@
+/* Raport publiczny: arkusz jak w brand/reference/screens/EkranRaport.html (i /przyklad). */
+
+.page {
+  min-height: 100vh;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.main {
+  max-width: calc(var(--report-sheet) + 2 * var(--space-7));
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-7) var(--space-9);
+  display: grid;
+  gap: var(--space-4);
+}
+
+.toolbar {
+  width: 100%;
+  max-width: var(--report-sheet);
+  margin-inline: auto;
+}
+
+.sheet {
+  width: 100%;
+  max-width: var(--report-sheet);
+  margin-inline: auto;
+  background: var(--report-paper);
+  border: 1px solid var(--report-line);
+  border-radius: var(--radius-l);
+  box-shadow: var(--shadow-2);
+  overflow: hidden;
+}
+
+/* Telefon: raport na całą szerokość, bez ramki arkusza (zapytanie kontenera w raporcie daje układ telefonu). */
+@media (max-width: 767px) {
+  .main {
+    padding: var(--space-4) 0 var(--space-7);
+  }
+
+  .toolbar {
+    padding-inline: var(--space-4);
+  }
+
+  .sheet {
+    border: 0;
+    border-block: 1px solid var(--report-line);
+    border-radius: 0;
+    box-shadow: none;
+  }
+}

@@ -1,0 +1,46 @@
+/* Logowanie: wąska kolumna na tle paper, logo strony 28 px (brand/docs/3-logo.md). */
+
+.page {
+  min-height: 100vh;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.header {
+  max-width: calc(var(--container-text) + 2 * var(--space-7));
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-7) 0;
+}
+
+.home {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--control-l);
+}
+
+.logo {
+  height: 28px; /* ref: brand/docs/3-logo.md (logo na stronie 28 px) */
+  width: auto;
+  display: block;
+}
+
+.main {
+  max-width: calc(var(--container-text) + 2 * var(--space-7));
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-7) var(--space-9);
+}
+
+/* Telefon: logo 22 px w polu dotyku 48 px (docs/decisions.md, p. 14 i 74). */
+@media (max-width: 767px) {
+  .header {
+    padding: var(--space-3) var(--space-4) 0;
+  }
+
+  .logo {
+    height: 22px; /* ref: brand/reference/screens/EkranLandingMobile.html (logo 22 px) */
+  }
+
+  .main {
+    padding: var(--space-6) var(--space-4) var(--space-7);
+  }
+}

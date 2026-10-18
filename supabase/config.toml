@@ -1,0 +1,116 @@
+# Konfiguracja projektu Supabase dla Supabase CLI (supabase start / supabase config push).
+#
+# W tym repozytorium lokalny stos działa bez Dockera (scripts/local-supabase, docs/decisions.md p. 92) i
+# nie czyta tego pliku: ma te same wartości w scripts/local-supabase/{config,index}.ts. Ten plik opisuje
+# docelowe ustawienia projektu w chmurze; wartości produkcyjne (adres strony, SMTP) ustawia właściciel
+# (docs/launch-checklist.md). Miejsca niepewne oznaczono „DO SPRAWDZENIA”.
+
+project_id = "sedno"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+# DO SPRAWDZENIA: wersja Postgresa projektu w chmurze (lokalnie Postgres z systemu).
+major_version = 17
+
+[db.seed]
+enabled = false
+
+[studio]
+enabled = false
+
+# Lokalna skrzynka (Mailpit; w CLI sekcja nadal nazywa się „inbucket”).
+[inbucket]
+enabled = true
+port = 54324
+
+[storage]
+enabled = true
+file_size_limit = "2MiB"
+
+# Prywatny zasobnik logo (migracja 20261013000000_accounts.sql): tylko PNG/JPEG/WebP do 2 MB, bez SVG.
+[storage.buckets.logos]
+public = false
+file_size_limit = "2MiB"
+allowed_mime_types = ["image/png", "image/jpeg", "image/webp"]
+
+[realtime]
+enabled = false
+
+[edge_runtime]
+enabled = false
+
+[analytics]
+enabled = false
+
+[auth]
+enabled = true
+# Adres aplikacji; linki z e-maili wracają na {site_url}/auth/potwierdz?next=… (app/auth/potwierdz/route.ts).
+# Produkcja: adres z NEXT_PUBLIC_SITE_URL (docs/launch-checklist.md).
+site_url = "http://localhost:3000"
+# Dozwolone adresy powrotu: tylko trasa wymiany kodu (z dowolnym ?next=). 3100 — serwer testów e2e.
+additional_redirect_urls = [
+  "http://localhost:3000/auth/potwierdz**",
+  "http://localhost:3100/auth/potwierdz**",
+]
+jwt_expiry = 3600
+enable_refresh_token_rotation = true
+refresh_token_reuse_interval = 10
+# Konto powstaje przy pierwszym kliknięciu w link (signInWithOtp z shouldCreateUser).
+enable_signup = true
+enable_anonymous_sign_ins = false
+enable_manual_linking = false
+
+[auth.rate_limit]
+# E-maile wysyłane przez Auth na godzinę (cały projekt). Działa tylko z własnym SMTP; wbudowany serwer
+# Supabase ma twardy, bardzo niski limit. DO SPRAWDZENIA po pierwszym tygodniu ruchu.
+email_sent = 60
+# Logowania i rejestracje na 5 minut z jednego adresu IP (aplikacja ma własny limit: 5 na 10 minut).
+sign_in_sign_ups = 30
+# Weryfikacje linków na 5 minut z jednego adresu IP.
+token_verifications = 30
+token_refresh = 150
+
+[auth.email]
+enable_signup = true
+# Nowy adres dostaje e-mail „confirmation”, znany — „magic link” (ta sama treść, supabase/templates).
+enable_confirmations = true
+double_confirm_changes = true
+secure_password_change = false
+# Najwyżej jeden e-mail na adres co minutę (komunikat w lib/copy/auth.ts: providerRateLimited).
+max_frequency = "60s"
+# Ważność linku: godzina — tekst auth.checkInbox i e-mail mówią „przez godzinę”.
+otp_expiry = 3600
+otp_length = 6
+
+# Szablony generuje pnpm emails (scripts/build-email-templates.ts) z lib/copy/auth.ts.
+[auth.email.template.magic_link]
+subject = "Twój link do logowania w Sedno"
+content_path = "./supabase/templates/magic-link.html"
+
+[auth.email.template.confirmation]
+subject = "Twój link do logowania w Sedno"
+content_path = "./supabase/templates/confirmation.html"
+
+# Produkcja: własny SMTP z serwerami w UE (RODO) — dostawcę wybiera właściciel (docs/launch-checklist.md).
+# DO SPRAWDZENIA: host, port i nadawca po wyborze dostawcy; hasło tylko w zmiennej środowiskowej.
+[auth.email.smtp]
+enabled = false
+host = "env(SMTP_HOST)"
+port = 587
+user = "env(SMTP_USER)"
+pass = "env(SMTP_PASS)"
+admin_email = "env(SMTP_ADMIN_EMAIL)"
+sender_name = "Sedno"
+
+# Tylko link e-mail: bez SMS i bez zewnętrznych dostawców logowania, w tym Instagrama i Mety (CLAUDE.md,
+# zasada 4). Dostawcy zewnętrzni są w Supabase domyślnie wyłączeni.
+[auth.sms]
+enable_signup = false
+enable_confirmations = false

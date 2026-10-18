@@ -1,6 +1,6 @@
 'use client';
 
-import { useId, useState, type Dispatch } from 'react';
+import { useId, useState, type Dispatch, type ReactNode } from 'react';
 import { PhoneFrame } from '@/components/report/PhoneFrame';
 import { Report } from '@/components/report/Report';
 import { Alert } from '@/components/ui/Alert';
@@ -54,6 +54,21 @@ type EffectsStepProps = {
   onKeepNote: () => void;
   onRestoreHeadline: () => void;
   onClearMark: () => void;
+  /** Nagłówek zamiast wbudowanego (edytor z kontem: link „Klienci”, h1 z klientem i miesiącem, lista kroków). */
+  header?: ReactNode;
+  /** Zamiast karty „Na raporcie” z polami autora i klienta (edytor z kontem: autor i klient z konta). */
+  identity?: ReactNode;
+  /** Zamiast chipa pliku i komunikatu „Wczytano …” (edytor z kontem bez pliku: liczby z zapisanego raportu). */
+  source?: ReactNode;
+  /**
+   * Zapisany raport za M−1 (edytor z kontem). Pola ręczne, których porównanie i tak pochodzi z historii,
+   * są ukryte; `note` mówi, skąd są liczby „{M−1}: …”.
+   */
+  history?: { actions: boolean; summary: boolean; note: string };
+  /** Zamiast „Zobacz raport” / „Przejdź do PDF” (edytor z kontem: „Zapisz szkic”, „Przejdź do wysyłki”). */
+  footer?: ReactNode;
+  /** Logo autora w podglądzie na żywo (/app/logo). */
+  logoSrc?: string;
 };
 
 /**
@@ -74,6 +89,12 @@ export function EffectsStep({
   onKeepNote,
   onRestoreHeadline,
   onClearMark,
+  header,
+  identity,
+  source,
+  history,
+  footer,
+  logoSrc,
 }: EffectsStepProps) {
   const id = useId();
   const sizes = buttonSizes(isPhone);
@@ -99,68 +120,79 @@ export function EffectsStep({
     if (coverage === 'partial') setPreviousOpen(true);
   }
 
+  // Pola ręczne M−1 tylko tam, gdzie wpisana liczba trafi do porównania (plik i historia mają pierwszeństwo).
+  const showPreviousActions = !history?.actions;
+  const showPreviousViews = coverage !== 'full' && !history?.summary;
+
   const previousHint = (value: number | null | undefined) =>
     value == null ? undefined : reportCopy.previousValue(previous.nom, formatNumber(value));
 
   return (
     <div className={s.effects}>
       <div className={s.form}>
-        {isWide ? (
-          <header className={s.wideHeader}>
-            <h1 id={ids.heading} tabIndex={-1} className={cx('heading-2', s.title)}>
-              {t.headingWide(clientName || t.newClient, forms.nom)}
-            </h1>
-            <StepList current={2} />
-          </header>
-        ) : (
-          <StepHeader id={ids.heading} caption={tool.stepCaption(2)} title={t.heading} />
+        {header ??
+          (isWide ? (
+            <header className={s.wideHeader}>
+              <h1 id={ids.heading} tabIndex={-1} className={cx('heading-2', s.title)}>
+                {t.headingWide(clientName || t.newClient, forms.nom)}
+              </h1>
+              <StepList current={2} />
+            </header>
+          ) : (
+            <StepHeader id={ids.heading} caption={tool.stepCaption(2)} title={t.heading} />
+          ))}
+
+        {source ?? (
+          <>
+            {state.file && (
+              <div className={s.fileRow}>
+                <FileChip name={state.file.name} size={formatFileSize(state.file.size)} />
+                <Button variant="ghost" size={sizes.main} onClick={onPickFile}>
+                  {t.changeFile}
+                </Button>
+              </div>
+            )}
+
+            <Alert
+              variant="success"
+              role="status"
+              title={t.loaded.title(formatNumber(posts), plural(posts, t.loaded.posts), forms.gen)}
+            >
+              {t.loaded.body(formatDateRange(new Date(report.dataRange.from), new Date(report.dataRange.to)))}
+            </Alert>
+          </>
         )}
 
-        {state.file && (
-          <div className={s.fileRow}>
-            <FileChip name={state.file.name} size={formatFileSize(state.file.size)} />
-            <Button variant="ghost" size={sizes.main} onClick={onPickFile}>
-              {t.changeFile}
-            </Button>
-          </div>
+        {identity ?? (
+          <section className={cx('sd-card', s.card)} aria-labelledby={`${id}-on-report`}>
+            <h2 id={`${id}-on-report`} className="heading-3">
+              {t.onReport.title}
+            </h2>
+            <div className={s.fields}>
+              <TextField
+                label={t.onReport.author.label}
+                hint={t.onReport.author.hint}
+                value={state.authorName}
+                maxLength={AUTHOR_NAME_MAX}
+                autoComplete="organization"
+                wide
+                onChange={(e) => onAuthorName(e.target.value)}
+              />
+              <TextField
+                id={ids.client}
+                label={t.onReport.client.label}
+                hint={t.onReport.client.hint}
+                error={clientError}
+                value={state.clientName}
+                placeholder={t.onReport.client.placeholder}
+                maxLength={CLIENT_NAME_MAX}
+                autoComplete="off"
+                wide
+                onChange={(e) => dispatch({ type: 'SET_CLIENT', name: e.target.value })}
+              />
+            </div>
+          </section>
         )}
-
-        <Alert
-          variant="success"
-          role="status"
-          title={t.loaded.title(formatNumber(posts), plural(posts, t.loaded.posts), forms.gen)}
-        >
-          {t.loaded.body(formatDateRange(new Date(report.dataRange.from), new Date(report.dataRange.to)))}
-        </Alert>
-
-        <section className={cx('sd-card', s.card)} aria-labelledby={`${id}-on-report`}>
-          <h2 id={`${id}-on-report`} className="heading-3">
-            {t.onReport.title}
-          </h2>
-          <div className={s.fields}>
-            <TextField
-              label={t.onReport.author.label}
-              hint={t.onReport.author.hint}
-              value={state.authorName}
-              maxLength={AUTHOR_NAME_MAX}
-              autoComplete="organization"
-              wide
-              onChange={(e) => onAuthorName(e.target.value)}
-            />
-            <TextField
-              id={ids.client}
-              label={t.onReport.client.label}
-              hint={t.onReport.client.hint}
-              error={clientError}
-              value={state.clientName}
-              placeholder={t.onReport.client.placeholder}
-              maxLength={CLIENT_NAME_MAX}
-              autoComplete="off"
-              wide
-              onChange={(e) => dispatch({ type: 'SET_CLIENT', name: e.target.value })}
-            />
-          </div>
-        </section>
 
         <section className={cx('sd-card', s.card)} aria-labelledby={`${id}-actions`}>
           <div className={s.cardHead}>
@@ -187,7 +219,9 @@ export function EffectsStep({
             ))}
           </div>
 
-          {coverage === 'partial' && result.previousFilePartialFrom && (
+          {history && <p className={cx('body-s', s.cardLead)}>{history.note}</p>}
+
+          {coverage === 'partial' && result.previousFilePartialFrom && !history?.summary && (
             <Alert
               variant="info"
               title={t.previous.partial.title(formatDate(new Date(result.previousFilePartialFrom)))}
@@ -196,41 +230,45 @@ export function EffectsStep({
             </Alert>
           )}
 
-          <details
-            className={s.details}
-            open={previousOpen}
-            onToggle={(e) => setPreviousOpen(e.currentTarget.open)}
-          >
-            <summary className={s.summary}>{t.previous.summary(previous.gen)}</summary>
-            <div className={s.detailsBody}>
-              <p className={cx('body-s', s.cardLead)}>{t.previous.lead}</p>
-              <div className={s.numbers}>
-                {ACTION_ORDER.map((key) => (
+          {(showPreviousActions || showPreviousViews) && (
+            <details
+              className={s.details}
+              open={previousOpen}
+              onToggle={(e) => setPreviousOpen(e.currentTarget.open)}
+            >
+              <summary className={s.summary}>{t.previous.summary(previous.gen)}</summary>
+              <div className={s.detailsBody}>
+                <p className={cx('body-s', s.cardLead)}>{t.previous.lead}</p>
+                {showPreviousActions && (
+                  <div className={s.numbers}>
+                    {ACTION_ORDER.map((key) => (
+                      <NumberField
+                        key={`${previousMonth}-${key}`}
+                        label={t.previous.actionLabel(reportCopy.actionLabel(key), previous.loc)}
+                        value={previousActions[key]}
+                        invalidMessage={t.actions.invalid}
+                        fullWidth
+                        wide
+                        onChange={(value) => dispatch({ type: 'SET_PREVIOUS_ACTION', key, value })}
+                      />
+                    ))}
+                  </div>
+                )}
+                {showPreviousViews && (
                   <NumberField
-                    key={`${previousMonth}-${key}`}
-                    label={t.previous.actionLabel(reportCopy.actionLabel(key), previous.loc)}
-                    value={previousActions[key]}
+                    key={`${previousMonth}-views`}
+                    label={t.previous.viewsLabel(previous.loc)}
+                    hint={t.previous.viewsHint(previous.nom)}
+                    value={manualViewsFor(state.manualViews, previousMonth)}
                     invalidMessage={t.actions.invalid}
                     fullWidth
                     wide
-                    onChange={(value) => dispatch({ type: 'SET_PREVIOUS_ACTION', key, value })}
+                    onChange={(value) => dispatch({ type: 'SET_PREVIOUS_VIEWS', value })}
                   />
-                ))}
+                )}
               </div>
-              {coverage !== 'full' && (
-                <NumberField
-                  key={`${previousMonth}-views`}
-                  label={t.previous.viewsLabel(previous.loc)}
-                  hint={t.previous.viewsHint(previous.nom)}
-                  value={manualViewsFor(state.manualViews, previousMonth)}
-                  invalidMessage={t.actions.invalid}
-                  fullWidth
-                  wide
-                  onChange={(value) => dispatch({ type: 'SET_PREVIOUS_VIEWS', value })}
-                />
-              )}
-            </div>
-          </details>
+            </details>
+          )}
 
           <KeyMetricChooser
             report={report}
@@ -287,16 +325,18 @@ export function EffectsStep({
           onKeepNote={onKeepNote}
         />
 
-        <div className={s.footer}>
-          <Button
-            variant="primary"
-            size={isWide ? 'm' : 'l'}
-            block={!isWide}
-            onClick={() => dispatch({ type: 'GO_TO', step: 'preview' })}
-          >
-            {isWide ? t.toPdf : t.toPreview}
-          </Button>
-        </div>
+        {footer ?? (
+          <div className={s.footer}>
+            <Button
+              variant="primary"
+              size={isWide ? 'm' : 'l'}
+              block={!isWide}
+              onClick={() => dispatch({ type: 'GO_TO', step: 'preview' })}
+            >
+              {isWide ? t.toPdf : t.toPreview}
+            </Button>
+          </div>
+        )}
       </div>
 
       {isWide && (
@@ -305,7 +345,7 @@ export function EffectsStep({
             {tool.preview.liveLabel}
           </p>
           <PhoneFrame scale={0.9} label={tool.preview.frameLabel}>
-            <Report data={report} headingLevel={2} />
+            <Report data={report} headingLevel={2} logoSrc={logoSrc} />
           </PhoneFrame>
         </aside>
       )}

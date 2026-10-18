@@ -1,0 +1,71 @@
+/*
+ * Układ historii raportów (tabela jak w brand/reference/screens/EkranPanel.html i components/DataTable.html,
+ * paginacja jak w components/Pagination.html). Wygląd kontrolek wyłącznie z klas sd-*; tu tylko układ
+ * i odstępy z tokenów. Telefon: karty zamiast tabeli (DataTable), cele dotyku 48 px.
+ */
+
+.page {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.intro {
+  display: grid;
+  gap: 6px; /* ref: brand/reference/screens/EkranPanel.html (odstęp h1 i podtytułu) */
+}
+
+.title:focus {
+  outline: none;
+}
+
+.title:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+@media (min-width: 768px) {
+  .title {
+    font-size: 32px; /* ref: brand/reference/screens/EkranPanel.html .h1 (heading-1) */
+    line-height: 38px; /* ref: brand/reference/screens/EkranPanel.html .h1 (heading-1) */
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+}
+
+.linkState {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.rowAction {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+@media (max-width: 767px) {
+  /* Cele dotyku 48 px na telefonie (PROMPT.md §15). */
+  .rowAction :global(.sd-btn),
+  .touch:global(.sd-btn) {
+    height: var(--control-l);
+  }
+
+  .rowAction :global(.sd-btn) {
+    width: 100%;
+  }
+
+  .footer {
+    justify-content: center;
+  }
+
+  .footer :global(.sd-pages a),
+  .footer :global(.sd-pages span) {
+    min-width: var(--control-l);
+    height: var(--control-l);
+  }
+}

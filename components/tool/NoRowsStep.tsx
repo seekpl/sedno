@@ -1,5 +1,6 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import { Alert } from '@/components/ui/Alert';
 import { Button } from '@/components/ui/Button';
 import { FileChip } from '@/components/ui/FileChip';
@@ -26,8 +27,13 @@ type NoRowsStepProps = {
   months: readonly MonthKey[];
   range: { from: Date; to: Date };
   isPhone: boolean;
-  onMonth: (month: MonthKey) => void;
+  /** Przełączenie na miesiąc z pliku. Bez niego (edytor z kontem: miesiąc z adresu) nie ma tych przycisków. */
+  onMonth?: (month: MonthKey) => void;
   onPickFile: () => void;
+  /** Nagłówek zamiast „Krok 1 z 3 / Wgraj eksport za …” (edytor z kontem). */
+  header?: ReactNode;
+  /** Dodatkowe działania w alercie (edytor z kontem: powrót do zapisanego raportu). */
+  extraActions?: ReactNode;
 };
 
 /**
@@ -44,27 +50,33 @@ export function NoRowsStep({
   isPhone,
   onMonth,
   onPickFile,
+  header,
+  extraActions,
 }: NoRowsStepProps) {
   const sizes = buttonSizes(isPhone);
   const forms = monthForms(month);
   const errors = csv.errors.E_NO_ROWS_IN_MONTH;
   return (
     <div className={s.narrow}>
-      <StepHeader id={headingId} caption={tool.stepCaption(1)} title={tool.upload.heading(forms.nom)} />
+      {header ?? (
+        <StepHeader id={headingId} caption={tool.stepCaption(1)} title={tool.upload.heading(forms.nom)} />
+      )}
       {file && <FileChip name={file.name} size={formatFileSize(file.size)} />}
       <Alert
         variant="error"
         title={errors.title(forms.gen)}
         actions={
           <>
-            {monthsToOffer(months, month, maxMonth).map((m) => (
-              <Button key={m} size={sizes.small} block={isPhone} onClick={() => onMonth(m)}>
-                {tool.noRows.switchTo(monthLabel(m))}
-              </Button>
-            ))}
+            {onMonth &&
+              monthsToOffer(months, month, maxMonth).map((m) => (
+                <Button key={m} size={sizes.small} block={isPhone} onClick={() => onMonth(m)}>
+                  {tool.noRows.switchTo(monthLabel(m))}
+                </Button>
+              ))}
             <Button variant="ghost" size={sizes.small} block={isPhone} onClick={onPickFile}>
               {tool.upload.retry}
             </Button>
+            {extraActions}
           </>
         }
       >

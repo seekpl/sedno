@@ -1,5 +1,6 @@
 'use client';
 
+import type { ReactNode, Ref } from 'react';
 import { Button } from '@/components/ui/Button';
 import { FileChip } from '@/components/ui/FileChip';
 import { Progress } from '@/components/ui/Progress';
@@ -39,6 +40,34 @@ export function describeUploadError(error: UploadError): { title: string; body: 
   }
 }
 
+/**
+ * Jeden ukryty wybór pliku poza krokiem 1 („Wgraj inny plik”, „Wgraj pełny plik”, „Wybierz inny plik”).
+ * W kroku 1 ma go komponent Upload. Plik trafia tylko do onFile — nigdzie dalej.
+ */
+export function HiddenFilePicker({
+  ref,
+  onFile,
+}: {
+  ref: Ref<HTMLInputElement>;
+  onFile: (file: File) => void;
+}) {
+  return (
+    <input
+      ref={ref}
+      type="file"
+      accept={FILE_ACCEPT}
+      className="sd-visually-hidden"
+      tabIndex={-1}
+      aria-hidden="true"
+      onChange={(e) => {
+        const file = e.target.files?.[0];
+        e.target.value = '';
+        if (file) onFile(file);
+      }}
+    />
+  );
+}
+
 type UploadStepProps = {
   headingId: string;
   monthNom: string;
@@ -47,6 +76,10 @@ type UploadStepProps = {
   isPhone: boolean;
   onFile: (file: File) => void;
   onOpenMapping: () => void;
+  /** Nagłówek zamiast „Krok 1 z 3 / Wgraj eksport za …” (edytor z kontem: klient, miesiąc i lista kroków). */
+  header?: ReactNode;
+  /** Informacja nad polem wgrywania (edytor z kontem: plik nie jest zapisywany, tylko liczby). */
+  notice?: ReactNode;
 };
 
 /**
@@ -61,13 +94,16 @@ export function UploadStep({
   isPhone,
   onFile,
   onOpenMapping,
+  header,
+  notice,
 }: UploadStepProps) {
   const sizes = buttonSizes(isPhone);
   const error = parse.status === 'error' ? describeUploadError(parse.error) : null;
 
   return (
     <div className={s.narrow}>
-      <StepHeader id={headingId} caption={tool.stepCaption(1)} title={t.heading(monthNom)} />
+      {header ?? <StepHeader id={headingId} caption={tool.stepCaption(1)} title={t.heading(monthNom)} />}
+      {notice}
 
       {parse.status === 'parsing' ? (
         <div className={cx('sd-card', s.parsing)}>

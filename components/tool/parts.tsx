@@ -41,11 +41,20 @@ export function StepHeader({ id, caption, title }: { id: string; caption?: strin
   );
 }
 
-/** Lista kroków nad formularzem (EkranUzupelnij.html): zrobione — ikona i słowo, bieżący — pióro. */
-export function StepList({ current }: { current: 1 | 2 | 3 }) {
+/**
+ * Lista kroków nad formularzem (EkranUzupelnij.html): zrobione — ikona i słowo, bieżący — pióro.
+ * `items` — nazwy kroków (domyślnie /nowy; edytor z kontem ma „3. Wyślij”).
+ */
+export function StepList({
+  current,
+  items = tool.steps.items,
+}: {
+  current: 1 | 2 | 3;
+  items?: readonly string[];
+}) {
   return (
     <ol className={s.steps} aria-label={tool.steps.label}>
-      {tool.steps.items.map((label, i) => {
+      {items.map((label, i) => {
         const step = i + 1;
         const done = step < current;
         const active = step === current;

@@ -305,6 +305,32 @@ describe('Report: warianty treści', () => {
     expect(container.querySelector('.sd-avatar')).toBeNull();
   });
 
+  it('logo z konta (logoSrc z tej samej domeny) zastępuje awatar i nazwę; nazwa zostaje tekstem alternatywnym', () => {
+    const { container } = render(<Report data={EXAMPLE_REPORT} logoSrc="/app/logo" />);
+    const img = screen.getByRole('img', { name: 'Kadr Social' });
+    expect(img.getAttribute('src')).toBe('/app/logo');
+    expect(container.querySelector('.sd-avatar')).toBeNull();
+    expect(container.querySelector('.sd-r-brand')?.textContent).not.toContain('Kadr Social');
+    expect(screen.getByText('dla: Studio Lumi')).toBeTruthy();
+  });
+
+  it('logoSrc ma pierwszeństwo przed adresem logo w danych', () => {
+    render(
+      <Report
+        data={report({ author: { name: 'Kadr Social', logoUrl: 'https://example.com/logo.png' } })}
+        logoSrc="/r/AbCdEfGhIjKlMnOpQrStUv/logo"
+      />,
+    );
+    expect(screen.getByRole('img', { name: 'Kadr Social' }).getAttribute('src')).toBe(
+      '/r/AbCdEfGhIjKlMnOpQrStUv/logo',
+    );
+  });
+
+  it('logo bez nazwy autora ma opis „Logo autora raportu”', () => {
+    render(<Report data={report({ author: { name: '' } })} logoSrc="/app/logo" />);
+    expect(screen.getByRole('img', { name: 'Logo autora raportu' })).toBeTruthy();
+  });
+
   it('awatar z inicjałami jest ukryty przed czytnikami (nazwa stoi obok)', () => {
     const { container } = render(<Report data={EXAMPLE_REPORT} />);
     const avatar = container.querySelector('.sd-avatar');

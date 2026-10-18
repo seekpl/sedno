@@ -5,7 +5,7 @@
  * Moduł importuje @react-pdf/renderer, więc ładujemy go tylko dynamicznie (lib/pdf/download.ts).
  * Biblioteka nie tworzy PDF tagowanego — dostępną wersją raportu jest link (docs/decisions.md).
  */
-import { Document, Page, Path, StyleSheet, Svg, Text, View } from '@react-pdf/renderer';
+import { Document, Image, Page, Path, StyleSheet, Svg, Text, View } from '@react-pdf/renderer';
 import type { ReactNode } from 'react';
 import { circledPath } from '@/lib/brand/svg.generated';
 import { tokens } from '@/lib/brand/tokens.generated';
@@ -129,6 +129,8 @@ const s = StyleSheet.create({
     lineHeight: 1,
     color: color.paper,
   },
+  // Logo autora w miejscu awatara: wysokość awatara, szerokość najwyżej 160 pt, proporcje zachowane.
+  logo: { height: 40, maxWidth: 160, flexShrink: 0, objectFit: 'contain', objectPositionX: 0 },
   authorText: { flexGrow: 1, flexShrink: 1, flexBasis: 0 },
   authorName: { fontWeight: PDF_WEIGHT.bold, ...type(16, 24) },
   client: { color: color.secondary, ...type(13, 24) },
@@ -321,8 +323,11 @@ function Reach({ view }: { view: ReportView }) {
   );
 }
 
-/** logoSrc: logo autora z tej samej domeny (konta, Faza 2) — kontrakt fali 2, renderowanie w module edytora. */
-export function ReportPdf({ data }: { data: ReportData; logoSrc?: string }) {
+/**
+ * logoSrc: logo autora jako adres data: PNG/JPEG (lib/pdf/logo.ts przygotowuje je z /app/logo albo
+ * /r/{token}/logo). Logo zastępuje awatar z inicjałami i nazwę — jak w raporcie HTML. Bez logo: inicjały i nazwa.
+ */
+export function ReportPdf({ data, logoSrc }: { data: ReportData; logoSrc?: string }) {
   const view = reportView(data);
   const threeMetrics = view.metrics.length === 3;
   return (
@@ -337,13 +342,17 @@ export function ReportPdf({ data }: { data: ReportData; logoSrc?: string }) {
         {/* 1. Marka autora, klient, miesiąc i zakres dat */}
         <View style={s.brand}>
           <View style={s.author}>
-            {view.author.initials ? (
+            {logoSrc ? (
+              // Adres data: — bez pamięci podręcznej react-pdf, żeby zmienione logo nie zostało stare.
+              // eslint-disable-next-line jsx-a11y/alt-text -- <Image> z react-pdf nie ma atrybutu alt (PDF nietagowany)
+              <Image style={s.logo} src={logoSrc} cache={false} />
+            ) : view.author.initials ? (
               <View style={s.avatar}>
                 <Text style={s.avatarText}>{view.author.initials}</Text>
               </View>
             ) : null}
             <View style={s.authorText}>
-              {view.author.name ? <Text style={s.authorName}>{view.author.name}</Text> : null}
+              {view.author.name && !logoSrc ? <Text style={s.authorName}>{view.author.name}</Text> : null}
               <Text style={s.client}>{view.forClientLong}</Text>
             </View>
           </View>

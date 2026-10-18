@@ -1,0 +1,132 @@
+/*
+ * Układ Ustawień (karty jak w brand/reference/screens/EkranCennik.html). Wygląd kontrolek wyłącznie z klas
+ * sd-* (brand/components.css); tu tylko układ i odstępy z tokenów. Od 1024 px dwie kolumny jak w makiecie
+ * (1,5 : 1), niżej jedna. Telefon: przyciski z celem dotyku 48 px.
+ */
+
+.page {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.title:focus {
+  outline: none;
+}
+
+@media (min-width: 768px) {
+  .title {
+    font-size: 32px; /* ref: brand/reference/screens/EkranCennik.html .h1 (heading-1) */
+    line-height: 38px; /* ref: brand/reference/screens/EkranCennik.html .h1 (heading-1) */
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+}
+
+.columns {
+  display: grid;
+  gap: var(--space-5);
+  align-items: start;
+}
+
+.column {
+  display: grid;
+  gap: var(--space-5);
+  align-content: start;
+  min-width: 0;
+}
+
+@media (min-width: 1024px) {
+  .columns {
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+    gap: var(--space-6);
+  }
+}
+
+/* Karta sekcji (sd-card): nagłówek, treść, działania jedno pod drugim. */
+.card {
+  display: grid;
+  gap: var(--space-4);
+  align-content: start;
+  min-width: 0;
+}
+
+.cardHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.heading:focus {
+  outline: none;
+}
+
+.form {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.formActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+/* Logo: podgląd na tle jak sd-file, obraz w naturalnych proporcjach. */
+.logoPreview {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  padding: var(--space-4);
+  border-radius: var(--radius-s);
+  background: var(--surface-sunken);
+}
+
+.logoImage {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 64px;
+}
+
+/* Plan: cena jak w makiecie cennika. */
+.planCards {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.price {
+  font-family: var(--font-display);
+  font-size: 40px; /* ref: brand/reference/screens/EkranCennik.html (cena planu) */
+  line-height: 44px; /* ref: brand/reference/screens/EkranCennik.html (cena planu) */
+  font-weight: 700;
+}
+
+/* Okno „Usuń konto”: formularz zajmuje cały wiersz działań okna (sd-modal__actions). */
+.modalForm {
+  flex: 1 1 100%;
+  display: grid;
+  gap: var(--space-4);
+}
+
+.modalButtons {
+  margin-top: var(--space-1);
+}
+
+@media (max-width: 767px) {
+  /* Cele dotyku 48 px na telefonie (PROMPT.md §15). */
+  .card :global(.sd-btn),
+  .modalButtons :global(.sd-btn) {
+    height: var(--control-l);
+  }
+
+  .formActions :global(.sd-btn),
+  .action:global(.sd-btn) {
+    width: 100%;
+  }
+}

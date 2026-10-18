@@ -43,12 +43,19 @@
   overflow-wrap: anywhere;
 }
 
+/*
+ * Logo autora w miejscu awatara: wysokość awatara (36 px telefon, --control-m na arkuszu), szerokość najwyżej
+ * czterokrotność --control-m (160 px) i 40% szerokości raportu, proporcje zachowane (object-fit).
+ * Szerokie albo wysokie logo nie wypycha klienta ani miesiąca.
+ */
 .logo {
   display: block;
-  height: 36px;
+  flex: none;
+  height: 36px; /* ref: brand/reference/screens/EkranRaport.html (awatar autora na telefonie) */
   width: auto;
-  max-width: 160px;
+  max-width: min(calc(4 * var(--control-m)), 40cqi);
   object-fit: contain;
+  object-position: left center;
 }
 
 .authorName {
@@ -179,7 +186,7 @@
   }
 
   .logo {
-    height: 40px;
+    height: var(--control-m);
   }
 
   .authorName {

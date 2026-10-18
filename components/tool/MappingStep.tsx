@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type FormEvent } from 'react';
+import { useState, type FormEvent, type ReactNode } from 'react';
 import { Button } from '@/components/ui/Button';
 import { FileChip } from '@/components/ui/FileChip';
 import { FieldShell, fieldDescribedBy } from '@/components/ui/TextField';
@@ -36,6 +36,8 @@ type MappingStepProps = {
   isPhone: boolean;
   onSubmit: (mapping: ColumnMapping) => void;
   onPickFile: () => void;
+  /** Nagłówek zamiast „Przypisz kolumny” (edytor z kontem). Tytuł ekranu zostaje wtedy jako h2. */
+  header?: ReactNode;
 };
 
 /**
@@ -51,6 +53,7 @@ export function MappingStep({
   isPhone,
   onSubmit,
   onPickFile,
+  header,
 }: MappingStepProps) {
   const sizes = buttonSizes(isPhone);
   const headers = [...new Set(mapping.headers.map((h) => h.trim()).filter(Boolean))];
@@ -90,7 +93,14 @@ export function MappingStep({
 
   return (
     <div className={s.narrow}>
-      <StepHeader id={ids.heading} caption={tool.stepCaption(1)} title={t.heading} />
+      {header ? (
+        <>
+          {header}
+          <h2 className="heading-3">{t.heading}</h2>
+        </>
+      ) : (
+        <StepHeader id={ids.heading} caption={tool.stepCaption(1)} title={t.heading} />
+      )}
       {file && <FileChip name={file.name} size={formatFileSize(file.size)} />}
       <p>{t.lead}</p>
 

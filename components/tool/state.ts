@@ -1,13 +1,17 @@
 /**
- * Stan narzędzia /nowy (1. Wgraj → 2. Efekty → 3. Podgląd i PDF) jako czysty reduktor — do useReducer i testów.
+ * Stan narzędzia /nowy (1. Wgraj → 2. Efekty → 3. Podgląd i PDF) i edytora raportu z kontem
+ * (1. Eksport → 2. Efekty i komentarz → 3. Wyślij) jako czysty reduktor — do useReducer i testów.
  * Wiersze z pliku (ParsedExport) żyją wyłącznie tutaj, w pamięci karty: nigdy w localStorage, sessionStorage
  * ani w adresie strony (zasada 1). Wszystko, co wpisuje SMM-owiec, przeżywa wgranie nowego pliku.
+ * W edytorze z kontem punktem wyjścia bywa zapisany raport (`base`) — bez wierszy, tylko z liczbami.
  */
 import type { ParseError, ParsedExport, RequiredField } from '@/lib/csv/types';
 import { addMonths, type MonthKey } from '@/lib/i18n/pl';
-import type { ActionKey, Actions, KeyMetric } from '@/lib/report/types';
+import { editsFromReport, type ReportEdits } from '@/lib/report/edits';
+import type { ActionKey, Actions, KeyMetric, ReportData } from '@/lib/report/types';
 
-export type Step = 'upload' | 'mapping' | 'effects' | 'preview';
+/** 'preview' — krok 3 w /nowy (podgląd i PDF), 'send' — krok 3 edytora z kontem (link, PDF, wysłanie). */
+export type Step = 'upload' | 'mapping' | 'effects' | 'preview' | 'send';
 
 /** Błąd wczytywania: błąd formatu z parsera albo nieoczekiwany błąd przeglądarki przy czytaniu pliku. */
 export type UploadError = ParseError | { code: 'E_READ' };
@@ -37,6 +41,11 @@ export type ToolState = {
   loadId: number;
   parse: ParseStatus;
   parsed: ParsedExport | null;
+  /**
+   * Zapisany raport (edytor z kontem): punkt wyjścia, gdy w tej karcie nie wczytano pliku. Zapis nie ma
+   * wierszy, więc liczby z podsumowania zostają z zapisu, a pola edytora nakłada na nie lib/report/edits.ts.
+   */
+  base: ReportData | null;
   mapping: MappingState | null;
   authorName: string;
   clientName: string;
@@ -93,6 +102,7 @@ export function initialToolState(month: MonthKey): ToolState {
     loadId: 0,
     parse: { status: 'idle' },
     parsed: null,
+    base: null,
     mapping: null,
     authorName: '',
     clientName: '',
@@ -107,6 +117,56 @@ export function initialToolState(month: MonthKey): ToolState {
     incompleteNote: true,
     incompleteCollapsed: false,
     pdf: { status: 'idle' },
+  };
+}
+
+/**
+ * Stan edytora z kontem. Z zapisanym raportem: pola edytora z zapisu (lib/report/edits.ts) i krok 2
+ * (albo wskazany), bez zapisu — krok 1. Efekty M i liczby ręczne M−1 trafiają do swoich miesięcy jak w /nowy.
+ */
+export function initialEditorState({
+  month,
+  base,
+  step,
+}: {
+  month: MonthKey;
+  base: ReportData | null;
+  step?: 'upload' | 'effects' | 'send';
+}): ToolState {
+  const state = initialToolState(month);
+  if (!base) return state;
+  const edits = editsFromReport(base);
+  const previousMonth = addMonths(month, -1);
+  return {
+    ...state,
+    step: step ?? 'effects',
+    base,
+    effects: { [month]: edits.actions, [previousMonth]: edits.previous.actions },
+    manualViews: { [previousMonth]: edits.previous.views },
+    keyMetric: edits.keyMetric,
+    headline: edits.headline,
+    commentWorked: edits.commentWorked,
+    commentMark: edits.commentMark,
+    planNext: edits.planNext,
+    incompleteNote: edits.incompleteNote,
+  };
+}
+
+/** Pola edytora ze stanu (do lib/report/edits.ts: applyEdits). */
+export function editsFromState(state: ToolState): ReportEdits {
+  const previousMonth = addMonths(state.month, -1);
+  return {
+    actions: effectsFor(state.effects, state.month),
+    previous: {
+      actions: effectsFor(state.effects, previousMonth),
+      views: manualViewsFor(state.manualViews, previousMonth),
+    },
+    keyMetric: state.keyMetric,
+    headline: state.headline,
+    commentWorked: state.commentWorked,
+    commentMark: state.commentMark,
+    planNext: state.planNext,
+    incompleteNote: state.incompleteNote,
   };
 }
 
@@ -132,7 +192,13 @@ export type ToolAction =
   | { type: 'SET_MARK'; text: string }
   | { type: 'CLEAR_MARK' }
   | { type: 'KEEP_NOTE' }
-  | { type: 'GO_TO'; step: 'effects' | 'preview' }
+  | { type: 'GO_TO'; step: 'effects' | 'preview' | 'send' }
+  /** Edytor z kontem: krok 1 bez wybierania pliku (np. „Wgraj eksport ponownie”). */
+  | { type: 'OPEN_UPLOAD' }
+  /** Edytor z kontem: powrót do zapisanego raportu bez wczytanego pliku. */
+  | { type: 'DISCARD_FILE' }
+  /** Edytor z kontem: raport zapisany — staje się punktem wyjścia (np. po zamknięciu pliku). */
+  | { type: 'SAVED'; data: ReportData }
   | { type: 'REQUEST_CLIENT_NAME' }
   | { type: 'PDF_START' }
   | { type: 'PDF_SUCCESS'; client: string }
@@ -259,8 +325,27 @@ export function toolReducer(state: ToolState, action: ToolAction): ToolState {
     case 'KEEP_NOTE':
       return { ...state, incompleteNote: true, incompleteCollapsed: true };
 
+    case 'OPEN_UPLOAD':
+      if (state.parse.status === 'parsing') return state;
+      return { ...state, step: 'upload', parse: { status: 'idle' } };
+
+    case 'DISCARD_FILE':
+      if (!state.base) return state;
+      return {
+        ...state,
+        step: 'effects',
+        file: null,
+        parse: { status: 'idle' },
+        parsed: null,
+        mapping: null,
+        incompleteCollapsed: false,
+      };
+
+    case 'SAVED':
+      return { ...state, base: action.data };
+
     case 'GO_TO':
-      if (!state.parsed) return state;
+      if (!state.parsed && !state.base) return state;
       return {
         ...state,
         step: action.step,

@@ -17,6 +17,7 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "tokens": "tsx scripts/build-tokens.ts",
+    "emails": "tsx scripts/build-email-templates.ts",
     "assets": "tsx scripts/build-svg-assets.ts && tsx scripts/sync-brand-files.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

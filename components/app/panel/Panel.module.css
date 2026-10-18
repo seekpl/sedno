@@ -1,0 +1,109 @@
+/*
+ * Układ panelu klientów (brand/reference/screens/EkranPanel.html). Wygląd kontrolek wyłącznie z klas sd-*
+ * (brand/components.css); tu tylko układ i odstępy z tokenów. Telefon: karty zamiast tabeli (DataTable),
+ * przyciski i linki z celem dotyku 48 px.
+ */
+
+.panel {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.intro {
+  display: grid;
+  gap: 6px; /* ref: brand/reference/screens/EkranPanel.html (odstęp h1 i podtytułu) */
+}
+
+/* Telefon: heading-2 (24/30), od 768 px: heading-1 (32/38) jak h1 w EkranPanel.html. */
+.title:focus {
+  outline: none;
+}
+
+.title:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+@media (min-width: 768px) {
+  .title {
+    font-size: 32px; /* ref: brand/reference/screens/EkranPanel.html .h1 (heading-1) */
+    line-height: 38px; /* ref: brand/reference/screens/EkranPanel.html .h1 (heading-1) */
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.stats > * {
+  align-content: start;
+}
+
+.progress {
+  margin-top: var(--space-2);
+}
+
+.rowAction {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Okno „Dodaj klienta”: formularz zajmuje cały wiersz działań okna (sd-modal__actions). */
+.addForm {
+  flex: 1 1 100%;
+  display: grid;
+  gap: var(--space-4);
+}
+
+.addButtons {
+  margin-top: var(--space-1);
+}
+
+@media (max-width: 767px) {
+  .actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .stats {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-3);
+  }
+
+  /* Cele dotyku 48 px na telefonie (PROMPT.md §15). */
+  .actions :global(.sd-btn),
+  .touch:global(.sd-btn),
+  .addButtons :global(.sd-btn),
+  .rowAction :global(.sd-btn) {
+    height: var(--control-l);
+  }
+
+  .rowAction :global(.sd-btn) {
+    width: 100%;
+  }
+
+  .touchLink {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--control-l);
+  }
+}

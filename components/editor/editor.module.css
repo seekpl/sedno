@@ -1,0 +1,138 @@
+/*
+ * Edytor raportu z kontem (EkranUzupelnij.html; krok 3 bez makiety — z komponentów marki).
+ * Wygląd kontrolek wyłącznie z klas sd-* (brand/components.css); tu tylko układ i odstępy z tokenów.
+ * Kroki 1–2 korzystają z układu narzędzia (components/tool/tool.module.css).
+ */
+
+/* ---------- Nagłówek: link „Klienci”, h1, lista kroków ---------- */
+
+.header {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.titleBlock {
+  display: grid;
+  gap: 6px; /* ref: brand/reference/screens/EkranUzupelnij.html */
+  justify-items: start;
+}
+
+.back {
+  font-size: 14px; /* ref: brand/reference/screens/EkranUzupelnij.html */
+}
+
+/* Cel dotyku 48 px na telefonie bez zmiany wyglądu. */
+@media (pointer: coarse), (max-width: 767px) {
+  .back {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--control-l);
+  }
+}
+
+/* ---------- Krok 2: autor z konta i przyciski zapisu ---------- */
+
+.identity {
+  color: var(--ink-secondary);
+  overflow-wrap: anywhere;
+}
+
+@media (pointer: coarse), (max-width: 767px) {
+  .inlineLink {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--control-l);
+  }
+}
+
+.muted {
+  color: var(--ink-secondary);
+}
+
+.footer {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.footerButtons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-3);
+}
+
+/* ---------- Krok 3: wysyłka ---------- */
+
+.send {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.sendGrid {
+  display: grid;
+  gap: var(--space-6);
+  align-items: start;
+}
+
+/*
+ * Od 1024 px: działania w lewej kolumnie (kolejność jak w kodzie), raport jako arkusz obok. Kolumna działań
+ * jest na tyle wąska, żeby arkusz miał co najmniej 560 px (układ A4 raportu, zapytanie kontenera).
+ */
+@media (min-width: 1024px) {
+  .sendGrid {
+    grid-template-columns: minmax(0, 320px) minmax(0, 1fr);
+    gap: var(--space-5);
+  }
+}
+
+@media (min-width: 1280px) {
+  .sendGrid {
+    grid-template-columns: minmax(0, 400px) minmax(0, 1fr);
+    gap: var(--space-6);
+  }
+}
+
+.panel {
+  display: grid;
+  gap: var(--space-4);
+  align-content: start;
+  min-width: 0;
+}
+
+.status {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.statusLine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.card {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+/* Arkusz raportu (klasa .sheet narzędzia) — najwyżej szerokość arkusza A4 z tokenów. */
+.sheet {
+  width: 100%;
+  max-width: var(--report-sheet);
+  min-width: 0;
+}
+
+/* Link-przycisk „Odśwież stronę”: 48 px na telefonie. */
+@media (pointer: coarse), (max-width: 767px) {
+  .touch {
+    min-height: var(--control-l);
+  }
+}

@@ -3,6 +3,7 @@ import { KeyNumber } from '@/components/ui/KeyNumber';
 import { Logo } from '@/components/ui/Logo';
 import { Mark } from '@/components/ui/Mark';
 import { Metric } from '@/components/ui/Metric';
+import { report as reportCopy } from '@/lib/copy/report';
 import { cx } from '@/lib/cx';
 import { reportView, type MetricView } from '@/lib/report/format';
 import type { ReportData } from '@/lib/report/types';
@@ -15,8 +16,9 @@ type ReportProps = {
   headingLevel?: 1 | 2;
   className?: string;
   /**
-   * Adres logo autora z tej samej domeny (/app/logo, /r/[token]/logo) — konta, Faza 2. Bez logo nagłówek
-   * pokazuje nazwę i inicjały autora. (Kontrakt fali 2; renderowanie dodaje moduł edytora.)
+   * Adres logo autora z tej samej domeny (/app/logo w edytorze, /r/[token]/logo na raporcie publicznym).
+   * Logo zastępuje awatar z inicjałami i nazwę (nazwa zostaje tekstem alternatywnym). Bez logo nagłówek
+   * pokazuje nazwę i inicjały autora.
    */
   logoSrc?: string;
 };
@@ -26,8 +28,10 @@ type ReportProps = {
  * Dwa wyglądy z jednego markupu przez zapytania kontenera: wąski = telefon (EkranRaport.html), szeroki = arkusz A4.
  * Komponent serwerowy, bez stanu. Raport pisze bezosobowo — wszystkie teksty z lib/copy/report.ts.
  */
-export function Report({ data, headingLevel = 1, className }: ReportProps) {
+export function Report({ data, headingLevel = 1, className, logoSrc }: ReportProps) {
   const view = reportView(data);
+  // Logo z konta (ta sama domena) ma pierwszeństwo przed adresem https zapisanym w danych.
+  const logo = logoSrc ?? view.author.logoUrl;
   const Title = headingLevel === 1 ? 'h1' : 'h2';
   const Section = headingLevel === 1 ? 'h2' : 'h3';
 
@@ -36,10 +40,11 @@ export function Report({ data, headingLevel = 1, className }: ReportProps) {
       <article className={s.sheet}>
         <div className="sd-r-brand">
           <div className={s.author}>
-            {view.author.logoUrl ? (
-              // Logo autora z jego konta (Faza 2). next/image wymagałby listy hostów; rozmiar ustala CSS.
+            {logo ? (
+              // Logo autora z jego konta. next/image wymagałby listy hostów; rozmiar ustala CSS (wysokość
+              // awatara, szerokość najwyżej 160 px), więc szerokie albo wysokie logo nie rozpycha nagłówka.
               // eslint-disable-next-line @next/next/no-img-element
-              <img className={s.logo} src={view.author.logoUrl} alt={view.author.name} />
+              <img className={s.logo} src={logo} alt={view.author.name || reportCopy.logoAlt} />
             ) : (
               view.author.initials && (
                 <span className={cx('sd-avatar', s.avatar)} aria-hidden="true">
@@ -48,9 +53,7 @@ export function Report({ data, headingLevel = 1, className }: ReportProps) {
               )
             )}
             <div className={s.authorText}>
-              {view.author.name && !view.author.logoUrl && (
-                <div className={s.authorName}>{view.author.name}</div>
-              )}
+              {view.author.name && !logo && <div className={s.authorName}>{view.author.name}</div>}
               <div className={cx('sd-r-secondary', s.client)}>
                 <span className={s.narrowOnly}>{view.forClient}</span>
                 <span className={s.wideOnly}>{view.forClientLong}</span>
