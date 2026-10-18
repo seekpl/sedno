@@ -184,6 +184,8 @@ function authEnv(): Env {
     GOTRUE_JWT_EXP: '3600',
     GOTRUE_JWT_AUD: 'authenticated',
     GOTRUE_JWT_ADMIN_ROLES: 'service_role',
+    // Rola w tokenie sesji (claim „role”) — jak w Supabase; bez tego GoTrue wydaje role "" i PostgREST odrzuca token.
+    GOTRUE_JWT_DEFAULT_GROUP_NAME: 'authenticated',
     GOTRUE_DISABLE_SIGNUP: 'false',
     GOTRUE_EXTERNAL_EMAIL_ENABLED: 'true',
     GOTRUE_MAILER_AUTOCONFIRM: 'false',

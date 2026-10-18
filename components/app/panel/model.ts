@@ -42,8 +42,8 @@ export type RowAction = {
 };
 
 /**
- * Działanie w wierszu panelu: Wysłany → „Otwórz”, Gotowy → „Wyślij” (krok 3 edytora), Szkic → „Dokończ”,
- * brak raportu → „Wgraj”. Każde prowadzi do edytora raportu klienta za miesiąc.
+ * Działanie w wierszu panelu: Wysłany → „Otwórz” i Gotowy → „Wyślij” (oba krok 3 edytora: status, link, PDF),
+ * Szkic → „Dokończ”, brak raportu → „Wgraj”. Każde prowadzi do edytora raportu klienta za miesiąc.
  */
 export function rowAction(
   status: PanelStatus,
@@ -54,7 +54,7 @@ export function rowAction(
   return {
     label: copy.label,
     rest: copy.rest(client.name),
-    href: editorHref(client.id, month, status === 'ready' ? 3 : undefined),
+    href: editorHref(client.id, month, status === 'ready' || status === 'sent' ? 3 : undefined),
   };
 }
 

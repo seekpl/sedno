@@ -112,7 +112,7 @@ test('plik nie opuszcza przeglądarki: cały przepływ /nowy, PDF i lista oczeku
   await page.goto('/#cennik');
   const notify = page.getByText('Powiadom mnie o starcie').first();
   await notify.click();
-  await page.getByLabel('Adres e-mail').first().fill('test-prywatnosci@example.com');
+  await page.getByLabel('Adres e-mail').first().fill(`test-prywatnosci-${Date.now()}@example.com`);
   await page.getByRole('checkbox').first().check();
   await page.getByRole('button', { name: 'Zapisz mnie na listę' }).first().click();
   await expect(page.getByText('Zapisano na listę').first()).toBeVisible();

@@ -49,7 +49,7 @@ describe('działanie w wierszu', () => {
     expect(rowAction('sent', CLIENT, '2026-09')).toEqual({
       label: 'Otwórz',
       rest: 'raport: Studio Lumi',
-      href: `/app/klienci/${CLIENT.id}/2026-09`,
+      href: `/app/klienci/${CLIENT.id}/2026-09?krok=3`,
     });
     expect(rowAction('ready', CLIENT, '2026-09')).toEqual({
       label: 'Wyślij',

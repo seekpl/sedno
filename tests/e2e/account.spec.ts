@@ -100,8 +100,8 @@ test('logowanie, klient, raport, link otwarty bez logowania, wyłączenie linku'
   await page.goto('/app/raporty');
   await expect(page.getByRole('heading', { level: 1, name: 'Raporty' })).toBeVisible();
   const table = page.getByRole('table', { name: 'Raporty, od najnowszego miesiąca' });
-  await expect(table.getByText('Studio Lumi')).toBeVisible();
-  await expect(table.getByText('Wyłączony')).toBeVisible();
+  await expect(table.getByText('Studio Lumi', { exact: true })).toBeVisible();
+  await expect(table.getByText('Wyłączony', { exact: true })).toBeVisible();
 
   await closeAll(owner, visitor);
 });
@@ -121,8 +121,10 @@ test('drugi użytkownik nie widzi cudzego klienta ani raportu', async ({ browser
   await login(b, testEmail('bartek', info.workerIndex));
   await b.goto(`/app/klienci?m=${MONTH}`);
   await expect(b.getByText('Bistro Pod Lipą')).toHaveCount(0);
-  const res = await b.goto(editorUrl);
-  expect(res?.status()).toBe(404);
+  // Cudzy klient wygląda jak nieistniejący (RLS). Edytor ma loading.tsx, więc notFound() przychodzi
+  // w strumieniu — sprawdzamy treść, nie kod odpowiedzi.
+  await b.goto(editorUrl);
+  await expect(b.getByRole('heading', { level: 1, name: 'Tego nie ma na Twoim koncie' })).toBeVisible();
   await expect(b.getByText('Bistro Pod Lipą')).toHaveCount(0);
   await b.goto('/app/raporty');
   await expect(b.getByText('Bistro Pod Lipą')).toHaveCount(0);
@@ -153,7 +155,7 @@ test('/app bez sesji prowadzi do logowania, a po linku wraca pod ten sam adres',
   const second = await other.newPage();
   await second.goto(mail.link);
   await expect(second).toHaveURL(/\/logowanie\?blad=link/);
-  await expect(second.getByRole('alert')).toBeVisible();
+  await expect(second.getByRole('alert').filter({ hasText: 'Link do logowania nie działa' })).toBeVisible();
 
   // Wylogowanie kończy sesję.
   await page.goto('/app/ustawienia');
@@ -188,15 +190,16 @@ test('Ustawienia: nazwa i logo na raporcie publicznym, eksport danych, usunięci
   await page.goto(`/app/klienci?m=${MONTH}`);
   await addClient(page, 'Fizjo Ruch');
   await page.getByRole('link', { name: 'Wgraj eksport: Fizjo Ruch' }).click();
-  await expect(page.getByText('Autor na raporcie: Kadr Social, z Twoim logo.')).toBeVisible();
   await fillReport(page);
+  await expect(page.getByText('Autor na raporcie: Kadr Social, z Twoim logo.')).toBeVisible();
   await page.getByRole('button', { name: 'Przejdź do wysyłki' }).click();
   const url = await createLink(page);
   const client = await visitor.newPage();
   await client.goto(url);
-  await expect(client.getByText('Kadr Social').first()).toBeVisible();
-  const logo = client.locator(`img[src^="${new URL(url).pathname}/logo"]`).first();
+  // Logo zastępuje nazwę autora; nazwa zostaje tekstem alternatywnym obrazka.
+  const logo = client.getByRole('img', { name: 'Kadr Social' }).first();
   await expect(logo).toBeVisible();
+  expect(await logo.getAttribute('src')).toMatch(new RegExp(`^${new URL(url).pathname}/logo`));
   expect(await logo.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
 
   // Eksport danych: JSON tylko z własnymi danymi.

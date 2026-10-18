@@ -186,7 +186,7 @@ describe('tabela (od 768 px)', () => {
     const tbl = within(table());
     const expectLink = (name: string, href: string) =>
       expect(tbl.getByRole('link', { name }).getAttribute('href')).toBe(href);
-    expectLink('Otwórz raport: Studio Lumi', `/app/klienci/${ID(1)}/2026-09`);
+    expectLink('Otwórz raport: Studio Lumi', `/app/klienci/${ID(1)}/2026-09?krok=3`);
     expectLink('Wyślij raport: Bistro Pod Lipą', `/app/klienci/${ID(2)}/2026-09?krok=3`);
     expectLink('Dokończ raport: Fizjo Ruch', `/app/klienci/${ID(3)}/2026-09`);
     expectLink('Wgraj eksport: Kwiaciarnia Pąk', `/app/klienci/${ID(4)}/2026-09`);

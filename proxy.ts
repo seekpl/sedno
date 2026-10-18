@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { features } from '@/config/features';
-import { AFTER_LOGIN_PATH } from '@/lib/auth/next-path';
+import { safeNextPath } from '@/lib/auth/next-path';
 import { buildCsp, createNonce } from '@/lib/security/csp';
 import { refreshSession } from '@/lib/supabase/proxy-session';
 
@@ -8,7 +8,7 @@ import { refreshSession } from '@/lib/supabase/proxy-session';
  * Trasy dynamiczne (/nowy, /app, /r, /logowanie):
  * - CSP z nonce (docs/decisions.md, p. 16). Next.js odczytuje nonce z nagłówka CSP żądania.
  * - /app i /logowanie: odświeżenie sesji Supabase; /app bez sesji → /logowanie?next=…, zalogowany na
- *   /logowanie → panel (docs/decisions.md, p. 93).
+ *   /logowanie → ?next= (tylko ścieżki /app) albo panel (docs/decisions.md, p. 93).
  * Strony marketingowe dostają statyczną CSP z next.config.ts.
  */
 export async function proxy(request: NextRequest) {
@@ -27,7 +27,8 @@ export async function proxy(request: NextRequest) {
     return session.applyCookies(NextResponse.redirect(login));
   }
   if (session && pathname === '/logowanie' && session.user) {
-    return session.applyCookies(NextResponse.redirect(new URL(AFTER_LOGIN_PATH, request.url)));
+    const next = safeNextPath(request.nextUrl.searchParams.get('next'));
+    return session.applyCookies(NextResponse.redirect(new URL(next, request.url)));
   }
 
   // Nagłówki żądania po odświeżeniu sesji (nowe ciasteczka widzą Server Components).

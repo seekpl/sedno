@@ -1,0 +1,6 @@
+/* Granica błędu i brak zasobu w /app: nagłówek i komunikat z odstępami z tokenów, jak na pozostałych ekranach konta. */
+.wrap {
+  display: grid;
+  gap: var(--space-5);
+  max-width: var(--container-text);
+}
