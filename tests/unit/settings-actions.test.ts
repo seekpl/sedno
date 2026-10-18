@@ -45,8 +45,11 @@ vi.mock('@/lib/data/profile', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/data/profile')>()),
   updateProfile: mocks.saveProfile,
 }));
-vi.mock('@/lib/logo/store', () => ({ saveLogo: mocks.saveLogo, removeLogo: mocks.removeLogo }));
-vi.mock('@/lib/data/account', () => ({ deleteAccount: mocks.deleteAccount }));
+vi.mock('@/lib/logo/store', () => ({ saveLogo: mocks.saveLogo }));
+vi.mock('@/lib/data/account', () => ({
+  deleteAccount: mocks.deleteAccount,
+  removeAccountLogo: mocks.removeLogo,
+}));
 
 const { updateProfile, uploadLogo, removeLogo, deleteAccount } = await import('@/app/app/ustawienia/actions');
 const { profileInputSchema } = await import('@/lib/data/profile');
@@ -217,8 +220,16 @@ describe('Logo — uploadLogo', () => {
     expect(mocks.saveLogo).not.toHaveBeenCalled();
   });
 
+  it('obraz większy niż 4000 px na boku (z nagłówka PNG): „tooLargeImage”, bez zapisu', async () => {
+    // PNG 20 000 × 10 px: kilkadziesiąt bajtów, ale ponad pół gigabajta po zdekodowaniu w przeglądarce klienta.
+    const ihdr = [0, 0, 0, 13, 0x49, 0x48, 0x44, 0x52, 0, 0, 0x4e, 0x20, 0, 0, 0, 10, 8, 6, 0, 0, 0];
+    const huge = file([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, ...ihdr], 'logo.png', 'image/png');
+    expect(await uploadLogo(IDLE, form({ logo: huge }))).toEqual({ status: 'error', code: 'tooLargeImage' });
+    expect(mocks.saveLogo).not.toHaveBeenCalled();
+  });
+
   it('każdy kod błędu pliku ma przyczynę i naprawę w tekstach', () => {
-    for (const code of ['noFile', 'empty', 'tooBig', 'unsupported'] as const) {
+    for (const code of ['noFile', 'empty', 'tooBig', 'tooLargeImage', 'unsupported'] as const) {
       expect(t.logo.errors[code].title.length).toBeGreaterThan(5);
       expect(t.logo.errors[code].hint.length).toBeGreaterThan(10);
     }
@@ -253,11 +264,24 @@ describe('Logo — uploadLogo', () => {
 });
 
 describe('Logo — removeLogo', () => {
-  it('usuwa logo użytkownika z sesji', async () => {
+  it('usuwa logo użytkownika z sesji (klucz serwisowy, bo logo_path zmienia tylko serwer)', async () => {
     const result = await removeLogo();
     expect(result).toMatchObject({ status: 'success', result: 'removed', hasLogo: false });
-    expect(mocks.removeLogo).toHaveBeenCalledWith(USER.id);
+    expect(mocks.removeLogo).toHaveBeenCalledWith(mocks.admin, USER.id);
     expect(mocks.revalidatePath).toHaveBeenCalledWith('/app/ustawienia');
+  });
+
+  it('błąd bazy albo magazynu: komunikat zamiast „Logo usunięte”, bez szczegółów w logu', async () => {
+    mocks.removeLogo.mockRejectedValue(new Error('storage down: secret'));
+    expect(await removeLogo()).toEqual({ status: 'error', message: t.logo.errors.failed });
+    expect(mocks.revalidatePath).not.toHaveBeenCalled();
+    expect(JSON.stringify(vi.mocked(console.error).mock.calls)).not.toContain('secret');
+  });
+
+  it('bez flagi kont nic nie usuwa', async () => {
+    mocks.features.accounts = false;
+    expect(await removeLogo()).toEqual({ status: 'error', message: t.logo.errors.failed });
+    expect(mocks.removeLogo).not.toHaveBeenCalled();
   });
 
   it('bez sesji nic nie usuwa', async () => {
@@ -271,7 +295,9 @@ describe('Usuń konto — deleteAccount', () => {
   it.each(['usuń', '  USUŃ ', 'Usun'])(
     'potwierdzenie „%s”: usuwa konto, wylogowuje i przekierowuje',
     async (word) => {
-      await expect(deleteAccount(IDLE, form({ confirm: word }))).rejects.toEqual(new RedirectError('/'));
+      await expect(deleteAccount(IDLE, form({ confirm: word }))).rejects.toEqual(
+        new RedirectError('/konto-usuniete'),
+      );
       expect(mocks.deleteAccount).toHaveBeenCalledWith(mocks.admin, USER.id);
       expect(mocks.signOut).toHaveBeenCalledWith({ scope: 'local' });
       expect(mocks.cookieDelete.mock.calls.map(([name]) => name)).toEqual([
@@ -327,7 +353,9 @@ describe('Usuń konto — deleteAccount', () => {
     mocks.cookieDelete.mockImplementation(() => {
       throw new Error('cookies');
     });
-    await expect(deleteAccount(IDLE, form({ confirm: 'usuń' }))).rejects.toEqual(new RedirectError('/'));
+    await expect(deleteAccount(IDLE, form({ confirm: 'usuń' }))).rejects.toEqual(
+      new RedirectError('/konto-usuniete'),
+    );
     expect(mocks.deleteAccount).toHaveBeenCalledTimes(1);
   });
 
@@ -346,7 +374,10 @@ describe('Usuń konto — deleteAccount', () => {
 describe('profileInputSchema — czyszczenie jak nazwa klienta', () => {
   it('usuwa znaki zerowej szerokości i sterowanie kierunkiem tekstu, zwija spacje, puste → null', () => {
     expect(
-      profileInputSchema.parse({ displayName: ' An\u200Bna\u202E ', brandName: 'Kadr\u2066\t\nSocial\uFEFF' }),
+      profileInputSchema.parse({
+        displayName: ' An\u200Bna\u202E ',
+        brandName: 'Kadr\u2066\t\nSocial\uFEFF',
+      }),
     ).toEqual({ displayName: 'Anna', brandName: 'Kadr Social' });
     expect(profileInputSchema.parse({ displayName: '\u200B\u200E', brandName: ' \u0007 ' })).toEqual({
       displayName: null,
@@ -356,10 +387,12 @@ describe('profileInputSchema — czyszczenie jak nazwa klienta', () => {
 
   it('nazwa na raporcie bez emoji; imię zachowuje emoji, także złożone (łącznik U+200D zostaje)', () => {
     const coder = '\u{1F469}\u200D\u{1F4BB}';
-    expect(profileInputSchema.parse({ displayName: `Anna ${coder}`, brandName: `Kadr ${coder} ✨` })).toEqual({
-      displayName: `Anna ${coder}`,
-      brandName: 'Kadr',
-    });
+    expect(profileInputSchema.parse({ displayName: `Anna ${coder}`, brandName: `Kadr ${coder} ✨` })).toEqual(
+      {
+        displayName: `Anna ${coder}`,
+        brandName: 'Kadr',
+      },
+    );
   });
 
   it('brak pola: null (to samo czyszczenie co pusty tekst)', () => {
@@ -367,7 +400,9 @@ describe('profileInputSchema — czyszczenie jak nazwa klienta', () => {
   });
 
   it('limit 80 znaków po oczyszczeniu (znaki formatujące się nie liczą)', () => {
-    expect(profileInputSchema.parse({ brandName: `${'a'.repeat(80)}\u200B\u200B` }).brandName).toHaveLength(80);
+    expect(profileInputSchema.parse({ brandName: `${'a'.repeat(80)}\u200B\u200B` }).brandName).toHaveLength(
+      80,
+    );
     expect(profileInputSchema.safeParse({ brandName: 'a'.repeat(81) }).success).toBe(false);
   });
 });

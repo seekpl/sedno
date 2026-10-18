@@ -1,6 +1,7 @@
 /**
  * Usunięcie konta (lib/data/account.ts) na lokalnym stosie: znika użytkownik Supabase Auth, profil,
  * klienci, raporty, linki i plik logo; zdarzenia zostają bez właściciela; cudze dane bez zmian.
+ * „Usuń logo” (removeAccountLogo): znika ścieżka w profilu i pliki, cudze logo zostaje.
  */
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { ANON_KEY, SERVICE_ROLE_KEY, SUPABASE_URL } from '../../scripts/local-supabase/config';
@@ -11,7 +12,8 @@ vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', SUPABASE_URL);
 vi.stubEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY', ANON_KEY);
 vi.stubEnv('SUPABASE_SERVICE_ROLE_KEY', SERVICE_ROLE_KEY);
 
-const { deleteAccount } = await import('@/lib/data/account');
+const { deleteAccount, removeAccountLogo } = await import('@/lib/data/account');
+const { getLogoPath } = await import('@/lib/data/profile');
 const { readLogo, saveLogo } = await import('@/lib/logo/store');
 const { checkLogo } = await import('@/lib/logo/validate');
 
@@ -113,5 +115,39 @@ describe('usunięcie konta', () => {
     await deleteAccount(admin, bare.id);
     expect((await admin.auth.admin.getUserById(bare.id)).data.user).toBeNull();
     expect(await counts(bare.id)).toEqual({ profiles: 0, clients: 0, reports: 0, links: 0 });
+  });
+});
+
+describe('usunięcie logo', () => {
+  it('czyści logo_path i usuwa pliki we wszystkich formatach; konto, dane i cudze logo zostają', async () => {
+    const [owner, neighbour] = await Promise.all([createUser('logo-remove'), createUser('logo-keep')]);
+    try {
+      const kind = checkLogo(png);
+      if (!kind.ok) throw new Error('png');
+      const path = await saveLogo(owner.id, png, kind);
+      const leftover = `${owner.id}/logo.webp`;
+      const webp = Uint8Array.from([0x52, 0x49, 0x46, 0x46, 0, 0, 0, 0, 0x57, 0x45, 0x42, 0x50, 1]);
+      const upload = await admin.storage
+        .from('logos')
+        .upload(leftover, webp, { contentType: 'image/webp', upsert: true });
+      expect(upload.error).toBeNull();
+      const neighbourPath = await saveLogo(neighbour.id, png, kind);
+      expect(await getLogoPath(owner.db)).toBe(path);
+
+      await removeAccountLogo(admin, owner.id);
+
+      expect(await getLogoPath(owner.db)).toBeNull();
+      expect(await readLogo(path)).toBeNull();
+      expect(await readLogo(leftover)).toBeNull();
+      expect((await admin.auth.admin.getUserById(owner.id)).data.user).not.toBeNull();
+      expect(await counts(owner.id)).toMatchObject({ profiles: 1 });
+      expect(await getLogoPath(neighbour.db)).toBe(neighbourPath);
+      expect(await readLogo(neighbourPath)).not.toBeNull();
+
+      // Drugi raz (nic do usunięcia) to nie błąd.
+      await expect(removeAccountLogo(admin, owner.id)).resolves.toBeUndefined();
+    } finally {
+      await Promise.all([deleteAccount(admin, owner.id), deleteAccount(admin, neighbour.id)]);
+    }
   });
 });

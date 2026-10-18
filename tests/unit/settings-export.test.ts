@@ -36,19 +36,31 @@ const NOW = new Date('2026-10-13T21:30:00Z');
 
 type Tables = Record<string, Record<string, unknown>[]>;
 
-/** Klient udający PostgREST: zwraca tylko podane wiersze (tak jak RLS — wyłącznie własne). */
-function fakeDb(tables: Tables, profile: Record<string, unknown> | null) {
-  const calls: { table: string; range?: [number, number] }[] = [];
+/**
+ * Klient udający PostgREST: zwraca tylko podane wiersze (tak jak RLS — wyłącznie własne), najwyżej
+ * `maxRows` naraz (max_rows), z liczbą wszystkich wierszy, gdy zapytanie o nią prosi (count: 'exact').
+ */
+function fakeDb(tables: Tables, profile: Record<string, unknown> | null, maxRows = 1000) {
+  const calls: { table: string; range?: [number, number]; count?: boolean }[] = [];
   const db = {
     from(table: string) {
       const rows = tables[table] ?? [];
+      let count = false;
       const builder = {
-        select: () => builder,
+        select: (_columns?: string, options?: { count?: string }) => {
+          count = options?.count === 'exact';
+          return builder;
+        },
         order: () => builder,
         eq: () => builder,
         range: (from: number, to: number) => {
-          calls.push({ table, range: [from, to] });
-          return Promise.resolve({ data: rows.slice(from, to + 1), error: null });
+          calls.push({ table, range: [from, to], count });
+          const end = Math.min(to + 1, from + maxRows);
+          return Promise.resolve({
+            data: rows.slice(from, end),
+            count: count ? rows.length : null,
+            error: null,
+          });
         },
         maybeSingle: () => {
           calls.push({ table });
@@ -189,7 +201,7 @@ describe('exportAccount', () => {
     expect(result.links).toEqual([]);
   });
 
-  it('pobiera wszystkie wiersze porcjami po 1000', async () => {
+  it('pobiera wszystkie wiersze porcjami po 1000; liczy tylko w pierwszej porcji', async () => {
     const reports = Array.from({ length: 2345 }, (_, i) => ({
       ...TABLES.reports![0],
       id: `r-${i}`,
@@ -197,11 +209,26 @@ describe('exportAccount', () => {
     const { db, calls } = fakeDb({ ...TABLES, reports }, PROFILE);
     const result = await exportAccount(db as never, {}, NOW);
     expect(result.reports).toHaveLength(2345);
-    expect(calls.filter((c) => c.table === 'reports').map((c) => c.range)).toEqual([
-      [0, 999],
-      [1000, 1999],
-      [2000, 2999],
+    expect(calls.filter((c) => c.table === 'reports')).toEqual([
+      { table: 'reports', range: [0, 999], count: true },
+      { table: 'reports', range: [1000, 1999], count: false },
+      { table: 'reports', range: [2000, 2999], count: false },
     ]);
+  });
+
+  it('serwer oddaje mniej wierszy, niż prosimy (max_rows 500): eksport i tak jest pełny', async () => {
+    const reports = Array.from({ length: 1234 }, (_, i) => ({ ...TABLES.reports![0], id: `r-${i}` }));
+    const { db, calls } = fakeDb({ ...TABLES, reports }, PROFILE, 500);
+    const result = await exportAccount(db as never, {}, NOW);
+    expect(result.reports).toHaveLength(1234);
+    expect(calls.filter((c) => c.table === 'reports').map((c) => c.range?.[0])).toEqual([0, 500, 1000]);
+  });
+
+  it('dokładnie 1000 wierszy: bez zapytania o zakres poza wierszami', async () => {
+    const reports = Array.from({ length: 1000 }, (_, i) => ({ ...TABLES.reports![0], id: `r-${i}` }));
+    const { db, calls } = fakeDb({ ...TABLES, reports }, PROFILE);
+    expect((await exportAccount(db as never, {}, NOW)).reports).toHaveLength(1000);
+    expect(calls.filter((c) => c.table === 'reports')).toHaveLength(1);
   });
 
   it('błąd zapytania: wyjątek bez treści błędu bazy', async () => {

@@ -14,7 +14,7 @@ import { deleteAccount, type DeleteAccountState } from '@/app/app/ustawienia/act
 import { Alert } from '@/components/ui/Alert';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
-import { TextField } from '@/components/ui/TextField';
+import { fieldDescribedBy, TextField } from '@/components/ui/TextField';
 import { settings } from '@/lib/copy/settings';
 import s from './Settings.module.css';
 
@@ -23,9 +23,10 @@ const INITIAL_STATE: DeleteAccountState = { status: 'idle' };
 
 /**
  * „Usuń konto”: przycisk i okno z wyraźnym potwierdzeniem (wpisanie słowa „usuń”). Okno ma pułapkę fokusu
- * i Esc (Modal), fokus startuje w polu potwierdzenia i wraca na przycisk po zamknięciu. W trakcie usuwania
- * okna nie da się zamknąć (Esc, tło, „Zostaw konto”) — zamknięcie sugerowałoby, że konto zostaje, a serwer
- * i tak by je usunął. Po usunięciu akcja przekierowuje na stronę główną.
+ * i Esc (Modal), fokus startuje w polu potwierdzenia i wraca na przycisk po zamknięciu. Ostrzeżenie z treści
+ * okna opisuje pole (aria-describedby), więc czytnik przeczyta je razem z etykietą zaraz po otwarciu.
+ * W trakcie usuwania okna nie da się zamknąć (Esc, tło, „Zostaw konto”) — zamknięcie sugerowałoby, że konto
+ * zostaje, a serwer i tak by je usunął. Po usunięciu akcja przekierowuje na stronę główną.
  */
 export function DeleteAccount({ className }: { className?: string }) {
   const [open, setOpen] = useState(false);
@@ -36,6 +37,7 @@ export function DeleteAccount({ className }: { className?: string }) {
   const onPendingChange = useCallback((value: boolean) => {
     pending.current = value;
   }, []);
+  const warningId = `${useId()}-warning`;
   return (
     <>
       <Button variant="danger" className={className} onClick={() => setOpen(true)}>
@@ -45,9 +47,11 @@ export function DeleteAccount({ className }: { className?: string }) {
         open={open}
         onClose={onClose}
         title={t.modal.title}
-        actions={<DeleteAccountForm onCancel={onClose} onPendingChange={onPendingChange} />}
+        actions={
+          <DeleteAccountForm onCancel={onClose} onPendingChange={onPendingChange} warningId={warningId} />
+        }
       >
-        {t.modal.body}
+        <span id={warningId}>{t.modal.body}</span>
       </Modal>
     </>
   );
@@ -62,9 +66,12 @@ export function DeleteAccount({ className }: { className?: string }) {
 function DeleteAccountForm({
   onCancel,
   onPendingChange,
+  warningId,
 }: {
   onCancel: () => void;
   onPendingChange: (pending: boolean) => void;
+  /** Ostrzeżenie z treści okna — pierwszy opis pola potwierdzenia. */
+  warningId: string;
 }) {
   const [state, formAction, pending] = useActionState(deleteAccount, INITIAL_STATE);
   const [confirm, setConfirm] = useState('');
@@ -106,6 +113,9 @@ function DeleteAccountForm({
         required
         readOnly={pending}
         wide
+        aria-describedby={[warningId, fieldDescribedBy(confirmId, undefined, fieldError)]
+          .filter(Boolean)
+          .join(' ')}
       />
       {message && (
         <Alert variant="error" title={t.errorTitle}>
@@ -116,11 +126,7 @@ function DeleteAccountForm({
         {pending ? t.modal.pending : ''}
       </p>
       <div className={`sd-modal__actions ${s.modalButtons}`}>
-        <Button
-          onClick={onCancel}
-          unavailable={pending}
-          aria-describedby={pending ? pendingId : undefined}
-        >
+        <Button onClick={onCancel} unavailable={pending} aria-describedby={pending ? pendingId : undefined}>
           {t.modal.cancel}
         </Button>
         <Button type="submit" variant="danger" busy={pending}>

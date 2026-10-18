@@ -14,6 +14,7 @@ const ROUTES = [
   '/prywatnosc',
   '/regulamin',
   '/kontakt',
+  '/konto-usuniete',
   '/nowy',
 ];
 

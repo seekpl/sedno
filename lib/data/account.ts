@@ -14,7 +14,7 @@ import type { Database, Enums, Json } from '@/lib/supabase/database.types';
  */
 type Db = SupabaseClient<Database>;
 
-/** Ile wierszy pobieramy jednym zapytaniem (PostgREST w Supabase ma domyślny limit 1000). */
+/** Ile wierszy prosimy jednym zapytaniem (supabase/config.toml: max_rows = 1000). */
 const PAGE = 1000;
 
 export type AccountExport = {
@@ -63,21 +63,35 @@ export class AccountDataError extends Error {
   }
 }
 
-type Page<T> = { data: T[] | null; error: unknown };
+type Page<T> = { data: T[] | null; error: unknown; count?: number | null };
 
-/** Wszystkie wiersze zapytania, porcjami po PAGE (stała kolejność zapewnia `query`). */
+/**
+ * Wszystkie wiersze zapytania porcjami (stałą kolejność zapewnia `query`). Pierwsza porcja liczy wszystkie
+ * wiersze (`count` — przy przesunięciu 0 PostgREST nigdy nie odpowiada 416), kolejne zaczynają się tam,
+ * gdzie skończyła poprzednia. Dzięki temu eksport jest pełny także wtedy, gdy serwer oddaje mniej wierszy,
+ * niż prosimy (max_rows mniejsze niż PAGE). Porcje bez liczenia — zakres poza wierszami daje wtedy pustą
+ * listę, nie błąd.
+ */
 async function fetchAll<T>(
   step: AccountDataError['step'],
-  query: (from: number, to: number) => PromiseLike<Page<T>>,
+  query: (from: number, to: number, count: boolean) => PromiseLike<Page<T>>,
 ): Promise<T[]> {
-  const rows: T[] = [];
-  for (let from = 0; ; from += PAGE) {
-    const { data, error } = await query(from, from + PAGE - 1);
+  const first = await query(0, PAGE - 1, true);
+  if (first.error || !first.data) throw new AccountDataError(step);
+  const rows: T[] = [...first.data];
+  const total = first.count ?? (first.data.length < PAGE ? first.data.length : Infinity);
+  while (rows.length < total) {
+    const { data, error } = await query(rows.length, rows.length + PAGE - 1, false);
     if (error || !data) throw new AccountDataError(step);
+    // Wiersze usunięte w trakcie eksportu: koniec listy przed policzoną liczbą.
+    if (data.length === 0) break;
     rows.push(...data);
-    if (data.length < PAGE) return rows;
   }
+  return rows;
 }
+
+/** Opcje select: liczenie wszystkich wierszy tylko w pierwszej porcji. */
+const counted = (count: boolean) => (count ? { count: 'exact' as const } : undefined);
 
 /** 'YYYY-MM-01' → 'YYYY-MM'. */
 const monthOf = (period: string) => period.slice(0, 7);
@@ -98,26 +112,26 @@ export async function exportAccount(
   if (profile.error) throw new AccountDataError('profile');
 
   const [clients, reports, links] = await Promise.all([
-    fetchAll('clients', (from, to) =>
+    fetchAll('clients', (from, to, count) =>
       db
         .from('clients')
-        .select('id, name, industry, created_at, archived_at')
+        .select('id, name, industry, created_at, archived_at', counted(count))
         .order('created_at', { ascending: true })
         .order('id', { ascending: true })
         .range(from, to),
     ),
-    fetchAll('reports', (from, to) =>
+    fetchAll('reports', (from, to, count) =>
       db
         .from('reports')
-        .select('id, client_id, period, status, sent_at, created_at, updated_at, data')
+        .select('id, client_id, period, status, sent_at, created_at, updated_at, data', counted(count))
         .order('period', { ascending: false })
         .order('id', { ascending: true })
         .range(from, to),
     ),
-    fetchAll('links', (from, to) =>
+    fetchAll('links', (from, to, count) =>
       db
         .from('share_links')
-        .select('token, report_id, created_at, expires_at, revoked_at, views')
+        .select('token, report_id, created_at, expires_at, revoked_at, views', counted(count))
         .order('created_at', { ascending: true })
         .order('token', { ascending: true })
         .range(from, to),
@@ -179,6 +193,34 @@ const LOGO_BUCKET = 'logos';
 const LOGO_EXTENSIONS: readonly LogoKind['ext'][] = ['png', 'jpg', 'webp'];
 
 /**
+ * Usuwa wszystkie pliki logo właściciela (każdy format). Usunięcie nieistniejących ścieżek nie jest błędem;
+ * błąd oznacza, że magazyn nie odpowiedział — wtedy AccountDataError('logo').
+ */
+async function removeLogoFiles(admin: Db, userId: string): Promise<void> {
+  const removed = await admin.storage
+    .from(LOGO_BUCKET)
+    .remove(LOGO_EXTENSIONS.map((ext) => logoPath(userId, ext)));
+  if (removed.error) throw new AccountDataError('logo');
+}
+
+/**
+ * „Usuń logo” w Ustawieniach, ze sprawdzaniem błędów: interfejs nie może pokazać „Logo usunięte”, gdy nic
+ * się nie zmieniło (ta sama kolejność co removeLogo w lib/logo/store.ts, ale klientem przekazanym przez
+ * akcję). Najpierw czyścimy logo_path — raport (także u klienta, /r/{token}) od razu pokazuje nazwę zamiast
+ * logo i nigdy nie wskazuje nieistniejącego pliku — potem usuwamy pliki. Błąd → AccountDataError('logo'); ponowne „Usuń logo”
+ * dokańcza sprzątanie. Kolumnę logo_path zmienia tylko serwer, więc `admin` to klient z kluczem serwisowym,
+ * a `userId` — zalogowany użytkownik sprawdzony przez wywołującego.
+ */
+export async function removeAccountLogo(admin: Db, userId: string): Promise<void> {
+  const cleared = await admin
+    .from('profiles')
+    .update({ logo_path: null } as never)
+    .eq('id', userId);
+  if (cleared.error) throw new AccountDataError('logo');
+  await removeLogoFiles(admin, userId);
+}
+
+/**
  * Usuwa konto: najpierw pliki logo (wszystkie formaty; błąd magazynu przerywa usuwanie, żeby nie zostawić
  * pliku bez właściciela — po usunięciu konta nikt już by go nie usunął), potem użytkownika Supabase Auth.
  * Kaskada w bazie usuwa profil, klientów, raporty i linki; zdarzenia zostają anonimowe
@@ -190,12 +232,16 @@ export async function deleteAccount(admin: Db, userId: string): Promise<void> {
   if (profile.error) throw new AccountDataError('profile');
   const current = profile.data?.logo_path ?? null;
 
-  // Usunięcie nieistniejących ścieżek nie jest błędem; błąd oznacza, że magazyn nie odpowiedział.
-  const removed = await admin.storage
-    .from(LOGO_BUCKET)
-    .remove(LOGO_EXTENSIONS.map((ext) => logoPath(userId, ext)));
-  if (removed.error) throw new AccountDataError('logo');
-  if (current && (await readLogo(current))) throw new AccountDataError('logo');
+  await removeLogoFiles(admin, userId);
+  if (current) {
+    let stillThere;
+    try {
+      stillThere = await readLogo(current);
+    } catch {
+      throw new AccountDataError('logo');
+    }
+    if (stillThere) throw new AccountDataError('logo');
+  }
 
   const { error } = await admin.auth.admin.deleteUser(userId);
   if (error) throw new AccountDataError('delete');

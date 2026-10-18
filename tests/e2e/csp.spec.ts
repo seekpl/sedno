@@ -15,6 +15,7 @@ const STATIC_ROUTES = [
   '/prywatnosc',
   '/regulamin',
   '/kontakt',
+  '/konto-usuniete',
 ];
 const NONCE_ROUTES = ['/nowy'];
 

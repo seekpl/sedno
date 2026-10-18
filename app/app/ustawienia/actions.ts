@@ -17,9 +17,9 @@ import { redirect } from 'next/navigation';
 import { features } from '@/config/features';
 import { getCurrentUser } from '@/lib/auth/session';
 import { DELETE_CONFIRM_WORD, settings as t } from '@/lib/copy/settings';
-import { deleteAccount as deleteAccountData } from '@/lib/data/account';
+import { deleteAccount as deleteAccountData, removeAccountLogo } from '@/lib/data/account';
 import { profileInputSchema, updateProfile as saveProfile } from '@/lib/data/profile';
-import { removeLogo as removeLogoFiles, saveLogo } from '@/lib/logo/store';
+import { saveLogo } from '@/lib/logo/store';
 import { checkLogo, LOGO_MAX_BYTES } from '@/lib/logo/validate';
 import { rateLimit } from '@/lib/server/rate-limit';
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
@@ -102,7 +102,7 @@ async function updateProfileFor(
 
 /* ---------- Logo ---------- */
 
-export type LogoErrorCode = 'noFile' | 'empty' | 'tooBig' | 'unsupported';
+export type LogoErrorCode = 'noFile' | 'empty' | 'tooBig' | 'tooLargeImage' | 'unsupported';
 
 export type LogoState =
   | { status: 'idle' }
@@ -142,7 +142,12 @@ async function uploadLogoFor(formData: FormData): Promise<LogoState> {
   const bytes = new Uint8Array(await file.arrayBuffer());
   const check = checkLogo(bytes);
   if (!check.ok) {
-    const code = check.reason === 'too-big' ? 'tooBig' : check.reason;
+    const code =
+      check.reason === 'too-big'
+        ? 'tooBig'
+        : check.reason === 'too-large-image'
+          ? 'tooLargeImage'
+          : check.reason;
     return { status: 'error', code };
   }
 
@@ -151,7 +156,11 @@ async function uploadLogoFor(formData: FormData): Promise<LogoState> {
   return { status: 'success', result: 'uploaded', hasLogo: true, version: Date.now().toString(36) };
 }
 
-/** „Usuń logo”: pliki w zasobniku i ścieżka w profilu. Bez danych wejściowych (zawsze logo z sesji). */
+/**
+ * „Usuń logo”: ścieżka w profilu i pliki w zasobniku, z kontrolą błędów (lib/data/account.ts,
+ * removeAccountLogo) — „Logo usunięte” tylko wtedy, gdy naprawdę się udało. Bez danych wejściowych (zawsze
+ * logo z sesji).
+ */
 export async function removeLogo(): Promise<LogoState> {
   try {
     if (!features.accounts) return { status: 'error', message: t.logo.errors.failed };
@@ -160,7 +169,7 @@ export async function removeLogo(): Promise<LogoState> {
     if (!rateLimit(`settings:logo:${user.id}`, LOGO_LIMIT, WINDOW_MS)) {
       return { status: 'error', message: t.logo.errors.rateLimited };
     }
-    await removeLogoFiles(user.id);
+    await removeAccountLogo(createSupabaseAdminClient(), user.id);
     revalidatePath(SETTINGS_PATH);
     return { status: 'success', result: 'removed', hasLogo: false, version: Date.now().toString(36) };
   } catch {
@@ -202,7 +211,7 @@ export async function deleteAccount(
     return { status: 'error', message: t.deleteAccount.errors.failed };
   }
   // Poza try: redirect() przerywa akcję wyjątkiem, który obsługuje Next.
-  redirect('/');
+  redirect('/konto-usuniete');
 }
 
 async function deleteAccountFor(formData: FormData): Promise<DeleteAccountState | null> {

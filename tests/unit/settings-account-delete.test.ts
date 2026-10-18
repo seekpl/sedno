@@ -2,6 +2,7 @@
  * Usunięcie konta w warstwie danych (lib/data/account.ts, deleteAccount): najpierw wszystkie pliki logo
  * właściciela (każdy format), a błąd magazynu przerywa usuwanie — inaczej plik zostałby bez właściciela,
  * bo po usunięciu konta nikt by go już nie usunął. Dopiero potem użytkownik Supabase Auth (kaskada w bazie).
+ * „Usuń logo” (removeAccountLogo): najpierw logo_path = null, potem pliki; każdy błąd jest zgłaszany.
  * Klient z kluczem serwisowym jest podmieniony; prawdziwy stos sprawdza tests/db/account-delete.test.ts.
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -19,7 +20,7 @@ vi.mock('@/lib/supabase/admin', () => ({
   },
 }));
 
-const { AccountDataError, deleteAccount } = await import('@/lib/data/account');
+const { AccountDataError, deleteAccount, removeAccountLogo } = await import('@/lib/data/account');
 
 const USER = '11111111-1111-4111-8111-111111111111';
 
@@ -31,16 +32,23 @@ function fakeAdmin({
   profileError = null as unknown,
   removeError = null as unknown,
   deleteError = null as unknown,
+  updateError = null as unknown,
 } = {}) {
   const calls: string[] = [];
   const removed: string[][] = [];
   const admin = {
     from(table: string) {
+      let updating = false;
       const builder = {
         select: () => builder,
+        update: (values: Record<string, unknown>) => {
+          calls.push(`${table}.update=${JSON.stringify(values)}`);
+          updating = true;
+          return builder;
+        },
         eq: (column: string, value: string) => {
           calls.push(`${table}.${column}=${value}`);
-          return builder;
+          return updating ? Promise.resolve({ error: updateError }) : builder;
         },
         maybeSingle: async () => ({
           data: profileError ? null : { logo_path: logoPath },
@@ -109,6 +117,15 @@ describe('deleteAccount (warstwa danych)', () => {
     expect(calls.some((c) => c.startsWith('auth.'))).toBe(false);
   });
 
+  it('magazyn nie odpowiada przy sprawdzaniu, czy plik zniknął: wyjątek „logo”, konto zostaje', async () => {
+    mocks.readLogo.mockRejectedValue(new Error('storage down: secret'));
+    const { admin, calls } = fakeAdmin();
+    const error = await deleteAccount(admin as never, USER).catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(AccountDataError);
+    expect((error as InstanceType<typeof AccountDataError>).step).toBe('logo');
+    expect(calls.some((c) => c.startsWith('auth.'))).toBe(false);
+  });
+
   it('błąd odczytu profilu: wyjątek przed usuwaniem czegokolwiek', async () => {
     const { admin, calls } = fakeAdmin({ profileError: { message: 'secret' } });
     await expect(deleteAccount(admin as never, USER)).rejects.toBeInstanceOf(AccountDataError);
@@ -119,6 +136,35 @@ describe('deleteAccount (warstwa danych)', () => {
     const { admin } = fakeAdmin({ deleteError: { message: 'auth: secret' } });
     const error = await deleteAccount(admin as never, USER).catch((e: unknown) => e);
     expect((error as InstanceType<typeof AccountDataError>).step).toBe('delete');
+    expect(String(error)).not.toContain('secret');
+  });
+});
+
+describe('removeAccountLogo — „Usuń logo” ze sprawdzaniem błędów', () => {
+  it('najpierw czyści logo_path własnego profilu, potem usuwa pliki we wszystkich formatach', async () => {
+    const { admin, calls, removed } = fakeAdmin();
+    await removeAccountLogo(admin as never, USER);
+    expect(calls).toEqual([
+      'profiles.update={"logo_path":null}',
+      `profiles.id=${USER}`,
+      'storage.logos.remove',
+    ]);
+    expect(removed).toEqual([[`${USER}/logo.png`, `${USER}/logo.jpg`, `${USER}/logo.webp`]]);
+  });
+
+  it('błąd zapisu profilu: wyjątek „logo” bez treści błędu, pliki zostają', async () => {
+    const { admin, calls } = fakeAdmin({ updateError: { message: 'profiles: secret' } });
+    const error = await removeAccountLogo(admin as never, USER).catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(AccountDataError);
+    expect((error as InstanceType<typeof AccountDataError>).step).toBe('logo');
+    expect(String(error)).not.toContain('secret');
+    expect(calls).not.toContain('storage.logos.remove');
+  });
+
+  it('błąd magazynu: wyjątek „logo” (interfejs nie pokaże „Logo usunięte”)', async () => {
+    const { admin } = fakeAdmin({ removeError: { message: 'storage down: secret' } });
+    const error = await removeAccountLogo(admin as never, USER).catch((e: unknown) => e);
+    expect((error as InstanceType<typeof AccountDataError>).step).toBe('logo');
     expect(String(error)).not.toContain('secret');
   });
 });

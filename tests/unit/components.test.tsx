@@ -169,6 +169,9 @@ describe('Modal', () => {
     act(() => opener.click());
     const dialog = screen.getByRole('dialog', { name: 'Usunąć klienta?' });
     expect(dialog.getAttribute('aria-modal')).toBe('true');
+    // Treść okna opisuje je dla czytników ekranu (ostrzeżenie słychać razem z tytułem).
+    const described = document.getElementById(dialog.getAttribute('aria-describedby') ?? '');
+    expect(described?.textContent).toBe('Usuniesz też raporty.');
     const first = screen.getByRole('button', { name: 'Zostaw klienta' });
     const last = screen.getByRole('button', { name: 'Usuń klienta i raporty' });
     expect(document.activeElement).toBe(first);

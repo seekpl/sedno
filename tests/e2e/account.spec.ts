@@ -218,8 +218,9 @@ test('Ustawienia: nazwa i logo na raporcie publicznym, eksport danych, usunięci
   const dialog = page.getByRole('dialog', { name: 'Usunąć konto i wszystkie dane?' });
   await expect(dialog).toBeVisible();
   await dialog.getByRole('textbox').fill('usuń');
-  await dialog.getByRole('button', { name: 'Usuń konto' }).click();
-  await expect(page).toHaveURL(/\/$/);
+  await dialog.getByRole('button', { name: 'Usuń konto i dane' }).click();
+  await expect(page).toHaveURL(/\/konto-usuniete$/);
+  await expect(page.getByRole('heading', { level: 1, name: 'Konto usunięte' })).toBeVisible();
   expect(await query('select 1 from auth.users where email = $1', [email])).toEqual([]);
   const gone = await client.reload();
   expect(gone?.status()).toBe(404);

@@ -11,16 +11,27 @@ type ModalDialogProps = {
   titleId?: string;
 };
 
-/** Sam wygląd okna (sd-modal), bez zachowania — np. do strony z komponentami. */
+/** Sam wygląd okna (sd-modal), bez zachowania — np. do strony z komponentami. Treść opisuje okno (aria-describedby). */
 export function ModalDialog({ title, children, actions, titleId }: ModalDialogProps) {
   const autoId = useId();
   const id = titleId ?? autoId;
+  const bodyId = `${autoId}-tresc`;
   return (
-    <div className="sd-modal" role="dialog" aria-modal="true" aria-labelledby={id}>
+    <div
+      className="sd-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={id}
+      aria-describedby={children ? bodyId : undefined}
+    >
       <h2 id={id} className="sd-modal__title">
         {title}
       </h2>
-      {children && <p className="sd-modal__body">{children}</p>}
+      {children && (
+        <p id={bodyId} className="sd-modal__body">
+          {children}
+        </p>
+      )}
       {actions && <div className="sd-modal__actions">{actions}</div>}
     </div>
   );

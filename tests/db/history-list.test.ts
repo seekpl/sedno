@@ -1,7 +1,7 @@
 /**
  * Historia raportów (lib/data/history.ts) na lokalnym stosie: tylko własne raporty (RLS), kolejność (miesiąc
- * malejąco, potem klient alfabetycznie), strony po 20 z dokładną liczbą, strona spoza zakresu → ostatnia,
- * stan linku (aktywny, wyłączony, wygasły, brak).
+ * malejąco, potem klient alfabetycznie po polsku — także na granicy stron), strony po 20 z dokładną liczbą,
+ * strona spoza zakresu → ostatnia, stan linku (aktywny, wyłączony, wygasły, brak).
  */
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { addMonths } from '@/lib/i18n/pl';
@@ -134,6 +134,43 @@ describe('historia raportów', () => {
       expect(await listReports(fresh.db, 3)).toEqual({ rows: [], total: 0, page: 1, pageCount: 1 });
     } finally {
       await deleteUser(fresh.id);
+    }
+  });
+});
+
+describe('historia — polski porządek nazw klientów', () => {
+  it('Ł, Ś, Ż i małe litery na swoim miejscu, także gdy miesiąc przechodzi na drugą stronę', async () => {
+    // Baza porównuje bajty (C.UTF-8): bez sortowania w aplikacji „Łąka” i „bistro” trafiłyby za „Zeta”.
+    const polish = ['Zeta', 'Łąka', 'bistro', 'Ćma', 'Czar', 'Żabka', 'Śniadania', 'Studio', 'Alfa'];
+    const names = [...polish, ...Array.from({ length: 14 }, (_, i) => `Klient ${i + 1}`)];
+    const owner = await createUser('history-polish');
+    try {
+      const created = await owner.db
+        .from('clients')
+        .insert(names.map((name) => ({ name })))
+        .select('id, name');
+      if (created.error) throw created.error;
+      const reports = await owner.db.from('reports').insert(
+        created.data.map((client) => ({
+          client_id: client.id,
+          period: '2026-09-01',
+          data: sampleReportData('2026-09', client.name),
+        })),
+      );
+      if (reports.error) throw reports.error;
+
+      const first = await listReports(owner.db, 1);
+      const second = await listReports(owner.db, 2);
+      expect(first.total).toBe(23);
+      expect([first.rows.length, second.rows.length]).toEqual([20, 3]);
+      const shown = [...first.rows, ...second.rows].map((r) => r.clientName);
+      expect(shown).toEqual([...names].sort(new Intl.Collator('pl', { numeric: true }).compare));
+      expect(shown.slice(0, 4)).toEqual(['Alfa', 'bistro', 'Czar', 'Ćma']);
+      expect(shown.slice(-5)).toEqual(['Łąka', 'Studio', 'Śniadania', 'Zeta', 'Żabka']);
+      expect(shown.indexOf('Łąka')).toBeLessThan(shown.indexOf('Zeta'));
+      expect(shown.indexOf('Klient 2')).toBeLessThan(shown.indexOf('Klient 10'));
+    } finally {
+      await deleteUser(owner.id);
     }
   });
 });

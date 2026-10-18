@@ -79,6 +79,10 @@ export const settings = {
         title: 'Plik ma więcej niż 2 MB',
         hint: 'Zmniejsz logo, na przykład do 1000 px szerokości, i wgraj je ponownie.',
       },
+      tooLargeImage: {
+        title: 'Logo ma więcej niż 4000 px szerokości albo wysokości',
+        hint: 'Zmniejsz logo, na przykład do 1000 px szerokości, i wgraj je ponownie.',
+      },
       unsupported: {
         title: 'To nie jest plik PNG, JPG ani WebP',
         hint: 'Zapisz logo jako PNG albo JPG i wgraj je ponownie. Plików SVG nie przyjmujemy.',
@@ -92,8 +96,11 @@ export const settings = {
     title: 'Plan',
     /** „Twój plan: Na start” */
     current: (name: string) => `Twój plan: ${name}`,
-    /** Opis planu w wersji testowej (Faza 2: bez ograniczeń planu, docs/decisions.md, p. 94). */
-    free: 'W wersji testowej raporty i linki działają dla wszystkich Twoich klientów. Raport ma stopkę „Przygotowano w Sedno”.',
+    /**
+     * Opis planu w wersji testowej (Faza 2: bez ograniczeń planu, docs/decisions.md, p. 94). Wymienia logo
+     * i historię, żeby lista zalet Solo obok („Wkrótce”) nie sugerowała, że teraz ich nie ma.
+     */
+    free: 'W wersji testowej raporty, linki, logo i historia działają dla wszystkich Twoich klientów. Raport ma stopkę „Przygotowano w Sedno”.',
     solo: 'Raporty i linki dla wszystkich Twoich klientów.',
     soon: 'Wkrótce',
     perMonth: 'netto / miesiąc',
@@ -125,6 +132,15 @@ export const settings = {
       submit: 'Usuń konto i dane',
       /** W trakcie usuwania (region statusu; wyjaśnia też, czemu „Zostaw konto” jest niedostępne). */
       pending: 'Usuwam konto i dane…',
+    },
+    /** Strona po usunięciu konta (/konto-usuniete): przycisk „Usuń konto” → wynik „Konto usunięte”. */
+    done: {
+      title: 'Konto usunięte',
+      body: 'Usunęliśmy konto, klientów, raporty, linki i logo.',
+      links: 'Linki wysłane klientom już nie działają.',
+      again: 'Raport bez konta możesz nadal zrobić w przeglądarce.',
+      cta: 'Zrób raport bez konta',
+      home: 'Przejdź na stronę główną',
     },
     errorTitle: 'Konto nie zostało usunięte.',
     errors: {

@@ -112,6 +112,8 @@ describe('Ustawienia — układ i treść', () => {
     expect(within(plan).queryAllByRole('button')).toEqual([]);
     expect(within(plan).queryAllByRole('link')).toEqual([]);
     expect(plan.textContent).toContain('Przygotowano w Sedno');
+    // Wersja testowa: logo i historia działają już teraz (lista Solo to zapowiedź, nie brakujące funkcje).
+    expect(plan.textContent).toContain('raporty, linki, logo i historia działają');
   });
 
   it('plan Solo: bez karty „Wkrótce”', () => {
@@ -338,6 +340,9 @@ describe('Ustawienia — usunięcie konta', () => {
     expect(dialog.textContent).toContain(t.deleteAccount.modal.body);
     const input = within(dialog).getByLabelText(t.deleteAccount.modal.confirmLabel);
     expect(document.activeElement).toBe(input);
+    // Ostrzeżenie opisuje pole, które dostaje fokus — czytnik przeczyta je od razu po otwarciu.
+    const described = input.getAttribute('aria-describedby')!.split(' ');
+    expect(document.getElementById(described[0]!)?.textContent).toBe(t.deleteAccount.modal.body);
     expect(within(dialog).getByRole('button', { name: t.deleteAccount.modal.submit }).className).toContain(
       'sd-btn--danger',
     );
@@ -364,9 +369,10 @@ describe('Ustawienia — usunięcie konta', () => {
     expect(action.deleteAccount.mock.calls[0]![1].get('confirm')).toBe('tak');
     await waitFor(() => expect(input.getAttribute('aria-invalid')).toBe('true'));
     const ids = input.getAttribute('aria-describedby')!.split(' ');
-    expect(ids.map((id) => document.getElementById(id)?.textContent)).toContain(
+    expect(ids.map((id) => document.getElementById(id)?.textContent)).toEqual([
+      t.deleteAccount.modal.body,
       t.deleteAccount.errors.confirm,
-    );
+    ]);
     expect(document.activeElement).toBe(input);
     expect(input.value).toBe('tak');
   });

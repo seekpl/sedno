@@ -6,7 +6,8 @@ import type { Database, Enums } from '@/lib/supabase/database.types';
 /**
  * Historia raportów /app/raporty (PROMPT.md §10 „Historia raportów (paginacja po 20)”). Pierwszy parametr
  * to klient Supabase z sesją użytkownika (RLS — tylko własne raporty) albo klient testowego użytkownika.
- * Jedno zapytanie na stronę: raporty z nazwą klienta i linkami, z dokładną liczbą wszystkich raportów.
+ * Kolejność ustalamy w aplikacji (polski porządek nazw klientów), szczegóły pobieramy tylko dla 20 raportów
+ * z pokazywanej strony.
  */
 type Db = SupabaseClient<Database>;
 
@@ -60,26 +61,60 @@ export function linkState(links: readonly LinkRow[], now: Date): LinkState {
 
 export const pageCountOf = (total: number) => Math.max(1, Math.ceil(total / HISTORY_PAGE_SIZE));
 
+/** Klucz kolejności raportu: miesiąc, nazwa klienta, identyfikator (rozstrzyga remisy). */
+export type HistoryKey = { id: string; period: string; clientName: string };
+
+/**
+ * Polski porządek alfabetyczny (a, ą, b, c, ć … ł … ś … ź, ż; wielkość liter bez znaczenia przed
+ * rozstrzygnięciem remisu). Baza porównuje bajty (C.UTF-8), więc „Łąka”, „Żabka” albo „bistro” trafiałyby
+ * za „Zeta” — dlatego sortujemy tutaj, nie w zapytaniu.
+ */
+const collator = new Intl.Collator('pl', { numeric: true });
+
+/** Kolejność historii: miesiąc malejąco, w miesiącu klient alfabetycznie (po polsku), potem id. */
+export function compareHistoryKeys(a: HistoryKey, b: HistoryKey): number {
+  if (a.period !== b.period) return a.period < b.period ? 1 : -1;
+  const byName = collator.compare(a.clientName, b.clientName);
+  if (byName !== 0) return byName;
+  return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
+}
+
+/** Ile kluczy prosimy jednym zapytaniem (supabase/config.toml: max_rows = 1000). */
+const KEYS_PAGE = 1000;
+
+type Embedded = { name: string } | { name: string }[] | null;
+
+const clientNameOf = (clients: Embedded) => (Array.isArray(clients) ? clients[0] : clients)?.name ?? '';
+
+/**
+ * Klucze kolejności wszystkich raportów właściciela (kilkadziesiąt bajtów na raport). Pierwsza porcja
+ * liczy wiersze (przy przesunięciu 0 PostgREST nie odpowiada 416), kolejne zaczynają się tam, gdzie
+ * skończyła poprzednia — także gdy serwer oddaje mniej wierszy, niż prosimy.
+ */
+async function fetchKeys(db: Db): Promise<HistoryKey[]> {
+  const page = (from: number, count: boolean) =>
+    db
+      .from('reports')
+      .select('id, period, clients(name)', count ? { count: 'exact' } : undefined)
+      .order('id', { ascending: true })
+      .range(from, from + KEYS_PAGE - 1);
+
+  const first = await page(0, true);
+  if (first.error || !first.data) throw new HistoryDataError();
+  const rows = [...(first.data as { id: string; period: string; clients: Embedded }[])];
+  const total = first.count ?? (rows.length < KEYS_PAGE ? rows.length : Infinity);
+  while (rows.length < total) {
+    const next = await page(rows.length, false);
+    if (next.error || !next.data) throw new HistoryDataError();
+    // Raporty usunięte w trakcie odczytu: koniec listy przed policzoną liczbą.
+    if (next.data.length === 0) break;
+    rows.push(...(next.data as typeof rows));
+  }
+  return rows.map((row) => ({ id: row.id, period: row.period, clientName: clientNameOf(row.clients) }));
+}
+
 const SELECT =
   'id, client_id, period, status, sent_at, clients(name), share_links(created_at, expires_at, revoked_at)';
-
-async function fetchPage(db: Db, page: number) {
-  const from = (page - 1) * HISTORY_PAGE_SIZE;
-  return db
-    .from('reports')
-    .select(SELECT, { count: 'exact' })
-    .order('period', { ascending: false })
-    .order('clients(name)', { ascending: true })
-    .order('id', { ascending: true })
-    .range(from, from + HISTORY_PAGE_SIZE - 1);
-}
-
-/** Liczba wszystkich raportów właściciela (bez pobierania wierszy). */
-async function countReports(db: Db): Promise<number> {
-  const { count, error } = await db.from('reports').select('id', { count: 'exact', head: true });
-  if (error) throw new HistoryDataError();
-  return count ?? 0;
-}
 
 type FetchedRow = {
   id: string;
@@ -87,16 +122,15 @@ type FetchedRow = {
   period: string;
   status: Enums<'report_status_t'>;
   sent_at: string | null;
-  clients: { name: string } | { name: string }[] | null;
+  clients: Embedded;
   share_links: LinkRow[] | null;
 };
 
 function toRow(row: FetchedRow, now: Date): HistoryRow {
-  const client = Array.isArray(row.clients) ? row.clients[0] : row.clients;
   return {
     id: row.id,
     clientId: row.client_id,
-    clientName: client?.name ?? '',
+    clientName: clientNameOf(row.clients),
     month: row.period.slice(0, 7),
     status: row.status,
     sentAt: row.sent_at,
@@ -105,21 +139,28 @@ function toRow(row: FetchedRow, now: Date): HistoryRow {
 }
 
 /**
- * Strona historii: raporty od najnowszego miesiąca, w miesiącu alfabetycznie po kliencie, po 20.
- * Strona spoza zakresu (np. ?strona=99) → ostatnia strona (pole `page` mówi, która). Od drugiej strony
- * najpierw liczymy raporty, żeby nie prosić o zakres poza wierszami (PostgREST odpowiada wtedy 416).
+ * Strona historii: raporty od najnowszego miesiąca, w miesiącu alfabetycznie po kliencie (po polsku), po 20,
+ * z dokładną liczbą wszystkich raportów. Strona spoza zakresu (np. ?strona=99) → ostatnia strona (pole
+ * `page` mówi, która). Dwa zapytania: klucze kolejności wszystkich raportów, potem szczegóły (klient, status,
+ * linki) tylko 20 raportów z tej strony. Liczymy tylko przy przesunięciu 0: zakres poza wierszami
+ * z liczeniem PostgREST odrzuca (416), bez liczenia zwraca pustą listę.
  */
 export async function listReports(db: Db, page: number, now: Date = new Date()): Promise<HistoryPage> {
   const requested = Number.isInteger(page) && page >= 1 ? page : 1;
-  const shown = requested === 1 ? 1 : Math.min(requested, pageCountOf(await countReports(db)));
-  const { data, count, error } = await fetchPage(db, shown);
-  if (error || !data) throw new HistoryDataError();
+  const keys = (await fetchKeys(db)).sort(compareHistoryKeys);
+  const total = keys.length;
+  const pageCount = pageCountOf(total);
+  const shown = Math.min(requested, pageCount);
+  const ids = keys.slice((shown - 1) * HISTORY_PAGE_SIZE, shown * HISTORY_PAGE_SIZE).map((key) => key.id);
+  if (ids.length === 0) return { rows: [], total, page: shown, pageCount };
 
-  const total = count ?? data.length;
-  return {
-    rows: (data as FetchedRow[]).map((row) => toRow(row, now)),
-    total,
-    page: Math.min(shown, pageCountOf(total)),
-    pageCount: pageCountOf(total),
-  };
+  const { data, error } = await db.from('reports').select(SELECT).in('id', ids);
+  if (error || !data) throw new HistoryDataError();
+  const byId = new Map((data as FetchedRow[]).map((row) => [row.id, row]));
+  // Kolejność z kluczy; raport usunięty między zapytaniami po prostu znika ze strony.
+  const rows = ids.flatMap((id) => {
+    const row = byId.get(id);
+    return row ? [toRow(row, now)] : [];
+  });
+  return { rows, total, page: shown, pageCount };
 }
